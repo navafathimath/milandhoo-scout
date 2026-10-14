@@ -1,0 +1,49 @@
+rules_version = '2';
+
+// TrailMark security rules.
+// Only people listed in portal/access can read anything. Roles come from that list:
+//   admin      Group Scout Leader: everything, and the only role that can change access
+//   leader     Scout Leader:       read and write portal data and photos
+//   assistant  Assistant Leader:   read and write portal data and photos
+//   scout      Scout:              read-only, and never sees contacts or medical notes
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn()  { return request.auth != null && request.auth.token.email != null; }
+    function myEmail()   { return request.auth.token.email.lower(); }
+    function accessDoc() { return /databases/$(database)/documents/portal/access; }
+    function members()   { return get(accessDoc()).data.members; }
+    function isMember()  { return signedIn() && exists(accessDoc()) && myEmail() in members(); }
+    function myRole()    { return members()[myEmail()]; }
+    function isStaff()   { return isMember() && myRole() in ['admin', 'leader', 'assistant']; }
+    function isAdmin()   { return isMember() && myRole() == 'admin'; }
+
+    // Who may sign in, and with which role.
+    match /portal/access {
+      allow get: if signedIn();
+      // First sign-in only: the very first person creates the list with themselves as admin.
+      allow create: if signedIn()
+                    && request.resource.data.members.keys().size() == 1
+                    && request.resource.data.members[myEmail()] == 'admin';
+      allow update: if isAdmin() && request.resource.data.members[myEmail()] == 'admin';
+      allow delete: if false;
+    }
+
+    // Contacts and medical notes: leaders only.
+    match /portal/private {
+      allow read, write: if isStaff();
+    }
+
+    // Every other data area (scouts, registers, badges, sessions, events, …).
+    match /portal/{area} {
+      allow read:  if area != 'access' && area != 'private' && isMember();
+      allow write: if area != 'access' && area != 'private' && isStaff();
+    }
+
+    // Uploaded photos, logo and profile pictures.
+    match /images/{imageId} {
+      allow read:  if isMember();
+      allow write: if isStaff() && (request.resource == null || request.resource.data.data.size() < 1048000);
+    }
+  }
+}
