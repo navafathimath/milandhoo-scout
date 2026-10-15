@@ -826,7 +826,7 @@ async function buildSeed(){
   return {
     v:3, seededAt:now,
     settings:{ groupName:'Milandhoo School Scout Troop', school:'Sunrise International School', logo:null, year:AY.label,
-      terms:[{name:'Term 1', start:`${y}-08-01`, end:`${y}-12-15`},{name:'Term 2', start:`${y+1}-01-05`, end:`${y+1}-03-28`},{name:'Term 3', start:`${y+1}-04-12`, end:`${y+1}-06-30`}],
+      terms:[{name:'Term 1', start:`${y}-08-01`, end:`${y}-12-31`},{name:'Term 2', start:`${y+1}-01-01`, end:`${y+1}-06-30`}],
       sessionTypes:['Regular meeting','Camp','Event','Special session','Hike'], lowAttendance:75 },
     users, patrols, scouts, badges, syllabus, registers, sessions, events, albums, photos, notifications, audit, resets:{},
   };
@@ -1040,7 +1040,10 @@ try { collapsed = localStorage.getItem('tm_collapsed')==='1'; } catch(e){}
 function applyTheme(){ let t = 'system'; try { t = localStorage.getItem('tm_theme') || 'system'; } catch(e){} if(t==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); return t; }
 function isDark(){ const t = document.documentElement.getAttribute('data-theme'); return t ? t==='dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
 
-function renderApp(){
+/* The troop uses two terms. Older portals were set up with three default terms: fold Term 3 into Term 2 once. */
+function twoTerms(){ const t = S?.settings?.terms; if(!t || S.settings.termsSet || t.length!==3 || ME?.role!=='admin' || t.map(x => x.name).join()!=='Term 1,Term 2,Term 3') return;
+  S.settings.terms = [t[0], { name:'Term 2', start:t[1].start, end:t[2].end }]; S.settings.termsSet = true; audit('Changed to two terms (Term 3 merged into Term 2)'); save(); }
+function renderApp(){ twoTerms();
   if(!ME){ $('#app').innerHTML = loginView(); return; }
   const nav = navList();
   const bn = isScout() ? [['me','Me','users'],['calendar','Calendar','calendar'],['gallery','Photos','image'],['notifications','Alerts','bell']] : [['dashboard','Home','compass'],['attendance','Attendance','clipboard'],['scouts','Scouts','users'],['calendar','Calendar','calendar']];
@@ -1076,7 +1079,7 @@ function updateChrome(){
   $$('[data-bnav]').forEach(b => b.classList.toggle('on', b.dataset.bnav===top || (!inBn && b.dataset.bnav==='more')));
   const u = unread(); $$('[data-unread]').forEach(el => { el.textContent = u > 9 ? '9+' : u; el.classList.toggle('hide', !u); });
 }
-function renderMain(){
+function renderMain(){ twoTerms();
   if(isScout() && !['me','calendar','gallery','album','notifications','highlights'].includes(R.route)) R.route = 'me';
   if(!isScout() && R.route==='me') R.route = 'dashboard';
   const v = VIEWS[R.route] || VIEWS.dashboard;
@@ -2265,7 +2268,8 @@ VIEWS.settings = () => { if(ME.role!=='admin') return empty('lock','Only the Gro
     <div class="row" style="justify-content:flex-end"><button class="btn primary">Save</button></div></div></form>
   <form class="card" data-f="setYear"><div class="card-h"><h2>Academic year & terms</h2></div><div class="stack">
     ${field('Academic year label', inp('year', st.year))}
-    ${st.terms.map((t,i) => `<div class="row nw" style="gap:6px"><input class="inp" name="tname" value="${esc(t.name)}" style="width:110px;flex:none" aria-label="Term name"><input class="inp" type="date" name="tstart" value="${t.start}" aria-label="Start"><input class="inp" type="date" name="tend" value="${t.end}" aria-label="End"></div>`).join('')}
+    ${st.terms.map((t,i) => `<div class="row nw" style="gap:6px"><input class="inp" name="tname" value="${esc(t.name)}" style="width:110px;flex:none" aria-label="Term name"><input class="inp" type="date" name="tstart" value="${t.start}" aria-label="Start"><input class="inp" type="date" name="tend" value="${t.end}" aria-label="End">${st.terms.length > 1 ? `<button type="button" class="icon-btn" data-a="termDel" data-i="${i}" aria-label="Remove ${esc(t.name)}">${ic('x','sm')}</button>` : ''}</div>`).join('')}
+    <div><button type="button" class="btn sm" data-a="termAdd">${ic('plus','sm')} Add term</button></div>
     ${field('Low-attendance alert below (%)', inp('low', st.lowAttendance, 'type="number" min="10" max="100"'))}
     <div class="row" style="justify-content:flex-end"><button class="btn primary">Save</button></div></div></form>
   <form class="card" data-f="setTypes"><div class="card-h"><h2>Session types</h2></div><div class="stack">${field('One per line (used when creating registers)', ta('types', st.sessionTypes.join('\n')))}<div class="row" style="justify-content:flex-end"><button class="btn primary">Save</button></div></div></form>
@@ -2278,7 +2282,10 @@ C.logoFile = async el => { const f = el.files[0]; if(!f) return; try { const url
   dropImg(S.settings.logo); S.settings.logo = putImg(c.toDataURL('image/jpeg', .9)); audit('Uploaded a new group logo'); save(); renderApp(); toast('Logo updated'); } catch(e){ toast('That image could not be read'); } };
 A.logoRemove = () => { dropImg(S.settings.logo); S.settings.logo = null; audit('Removed the group logo'); save(); renderApp(); };
 F.setGroup = d => { S.settings.groupName = d.groupName || S.settings.groupName; S.settings.school = d.school; audit('Updated group details'); save(); renderApp(); toast('Saved'); };
-F.setYear = d => { const n = [].concat(d.tname), a = [].concat(d.tstart), b = [].concat(d.tend); S.settings.terms = n.map((x,i) => ({ name:x, start:a[i], end:b[i] })); S.settings.year = d.year; S.settings.lowAttendance = Math.max(10, Math.min(100, +d.low || 75)); audit('Updated academic year and terms'); refresh(); toast('Saved'); };
+A.termDel = el => { const t = S.settings.terms[+el.dataset.i]; if(!t || S.settings.terms.length < 2) return; confirmBox(`Remove <b>${esc(t.name)}</b>? Registers and records are kept; only the term filter goes.`, () => { S.settings.terms.splice(+el.dataset.i, 1); S.settings.termsSet = true; audit(`Removed ${t.name}`); refresh(); toast('Term removed'); }, 'Remove'); };
+A.termAdd = () => { const last = S.settings.terms[S.settings.terms.length-1]; const st = last ? iso(addDays(new Date(last.end+'T00:00'), 1)) : TODAY();
+  S.settings.termsSet = true; S.settings.terms.push({ name:`Term ${S.settings.terms.length+1}`, start:st, end:iso(addDays(new Date(st+'T00:00'), 90)) }); refresh(); };
+F.setYear = d => { const n = [].concat(d.tname ?? []), a = [].concat(d.tstart ?? []), b = [].concat(d.tend ?? []); S.settings.terms = n.map((x,i) => ({ name:x, start:a[i], end:b[i] })); S.settings.termsSet = true; S.settings.year = d.year; S.settings.lowAttendance = Math.max(10, Math.min(100, +d.low || 75)); audit('Updated academic year and terms'); refresh(); toast('Saved'); };
 F.setTypes = d => { const t = String(d.types).split('\n').map(x=>x.trim()).filter(Boolean); if(t.length) S.settings.sessionTypes = t; audit('Updated session types'); refresh(); toast('Saved'); };
 A.backup = async () => { if(Cloud.on){ toast('Collecting photos…'); await Cloud.fetchAllImgs(); } const imgs = await Store.all('img'); saveFile(`milandhoo-scout-backup-${TODAY()}.json`, JSON.stringify({ app:'trailmark', state:S, images:imgs })); };
 C.restore = async el => { const f = el.files[0]; if(!f) return; try { const j = JSON.parse(await f.text()); if(j.app!=='trailmark' || !j.state?.scouts) throw 0;
