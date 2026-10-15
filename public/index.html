@@ -1554,7 +1554,7 @@ VIEWS.register = () => {
   ${ses ? `<p class="small muted" style="margin:-12px 0 14px">Linked session: <a href="#" data-a="go" data-r="session" data-id="${ses.id}">${esc(ses.title)}</a></p>` : ''}
   ${r.status==='final' ? `<div class="alert ${ME.role==='admin'?'':'info'}" style="margin-bottom:12px;align-items:center">${ic('lock','sm')}<span style="flex:1">${R.q.unlock ? 'Admin edit mode. Every change is written to the audit log.' : `Finalized ${r.finalizedAt?ago(r.finalizedAt):''}. ${ME.role==='admin' ? 'Only you, as Group Scout Leader, can edit it.' : 'Only the Group Scout Leader can edit it.'}`}</span>${ME.role==='admin' ? `<button class="btn sm" data-a="regUnlock">${R.q.unlock?'Lock again':'Edit register'}</button>` : ''}</div>` : ''}
   <div class="counter" id="reg-counter">${counterHTML(c)}</div>
-  ${!locked ? `<div class="row" style="margin:6px 0 12px"><button class="btn" data-a="markAll" data-id="${r.id}">${ic('check','sm')} Mark all present</button><span class="small muted">Then change the exceptions.</span></div>` : '<div style="height:8px"></div>'}
+  ${!locked ? `<div class="row" style="margin:6px 0 12px" id="mark-all">${markAllHTML(r)}</div>` : '<div style="height:8px"></div>'}
   <div class="card" style="padding:0;overflow:hidden" id="reg-list">${list.map(s => regRow(r, s, locked)).join('') || empty('users','No scouts in this patrol')}</div>
   ${!locked && r.status==='draft' ? `<div class="row reg-actions" style="justify-content:flex-end;margin-top:14px"><button class="btn lg" data-a="regDraft">${ic('check','sm')} Save draft</button><button class="btn primary lg" data-a="regFinalize" data-id="${r.id}">${ic('lock','sm')} Finalize</button></div>` : ''}
   ${(r.log||[]).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h3>Change log</h3></div><div class="list">${r.log.slice().reverse().map(l => `<div class="li small"><span class="muted num" style="width:120px">${new Date(l.ts).toLocaleString()}</span><span class="grow">${esc(user(l.user)?.name||'')}: ${esc(l.text)}</span></div>`).join('')}</div></div>` : ''}`;
@@ -1569,9 +1569,15 @@ function regChanged(r, s, before, after){ if(r.status==='final'){ r.log = r.log 
 A.mark = el => { const r = curReg(); if(regLocked(r)) return; const s = scout(el.dataset.sid); const k = el.dataset.k; const e = r.entries[s.id] = r.entries[s.id] || {}; const before = e.s;
   e.s = e.s===k && r.status!=='final' ? undefined : k; if(e.s==='L' && !e.time){ const n = new Date(); e.time = `${pad(n.getHours())}:${pad(n.getMinutes())}`; }
   if(!e.s) delete r.entries[s.id]; if(before!==e.s) regChanged(r, s, before, e.s);
-  $('#rr_'+s.id).outerHTML = regRow(r, s, false); $('#reg-counter').innerHTML = counterHTML(regCounts(r)); save(); };
+  $('#rr_'+s.id).outerHTML = regRow(r, s, false); $('#reg-counter').innerHTML = counterHTML(regCounts(r)); const ma = $('#mark-all'); if(ma) ma.innerHTML = markAllHTML(r); save(); };
 C.regExtra = el => { const r = curReg(); const e = r.entries[el.dataset.sid]; if(!e) return; const before = e[el.dataset.k]; e[el.dataset.k] = el.value; if(r.status==='final' && before!==el.value){ r.log = r.log||[]; r.log.push({ ts:Date.now(), user:ME.id, text:`${sname(scout(el.dataset.sid))}: ${el.dataset.k} changed` }); audit(`Edited finalized register ${fmtD(r.date)}: ${el.dataset.k} for ${sname(scout(el.dataset.sid))}`); } save(); };
+/* One button: "Mark all present" while anyone is unmarked, "Untick all" once everyone is marked (drafts only). */
+function markAllHTML(r){ const all = regScouts(r); const done = all.length && all.every(s => r.entries[s.id]?.s);
+  return done && r.status!=='final' ? `<button class="btn" data-a="untickAll">${ic('x','sm')} Untick all</button><span class="small muted">Clears every mark on this register.</span>`
+    : `<button class="btn" data-a="markAll">${ic('check','sm')} Mark all present</button><span class="small muted">Then change the exceptions.</span>`; }
 A.markAll = () => { const r = curReg(); regScouts(r).forEach(s => { if(!r.entries[s.id]?.s){ r.entries[s.id] = { s:'P' }; regChanged(r, s, undefined, 'P'); } }); refresh(); toast('Everyone unmarked is now Present'); };
+A.untickAll = () => { const r = curReg(); if(regLocked(r) || r.status==='final') return;
+  confirmBox('Untick every scout on this register? Late times and reasons are cleared too.', () => { regScouts(r).forEach(s => delete r.entries[s.id]); refresh(); toast('All marks cleared'); }, 'Untick all'); };
 A.regDraft = () => { save(); toast('Draft saved'); };
 A.regFinalize = () => { const r = curReg(); const c = regCounts(r);
   const go2 = () => { r.status = 'final'; r.finalizedAt = Date.now(); r.finalizedBy = ME.id; audit(`Finalized register ${fmtD(r.date)} (${c.pct}% attendance)`);
