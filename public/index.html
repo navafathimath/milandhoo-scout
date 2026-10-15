@@ -421,6 +421,11 @@ svg.chart .grid{stroke:var(--line-2)}
 .srow.sh{cursor:default;font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);font-weight:600;padding-block:8px}
 .srow:not(.sh):hover,.rrow:hover{background:var(--surface-2)}
 .srow:last-child,.rrow:last-child{border-bottom:0}
+.sgroup{display:flex;align-items:center;gap:8px;padding:14px 12px 6px;font-family:var(--f-head);font-weight:600;font-size:1rem;color:var(--ink)}
+.sgroup .chip{font-family:var(--f-ui)}
+.sgroup:first-child{padding-top:8px}
+.srow .gset{display:flex;gap:6px;justify-content:flex-end}
+.srow.qs{grid-template-columns:40px minmax(0,1.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 136px}
 .c-show{display:none!important}
 .rrow{grid-template-columns:48px minmax(0,1fr) auto auto}
 .swatch{display:block;width:32px;height:32px;border-radius:9px;border:3px solid transparent;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
@@ -439,7 +444,7 @@ summary::-webkit-details-marker{display:none}
   .reg-actions{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
   .mob-only{display:inline-grid!important}
   .g21{grid-template-columns:minmax(0,1fr)}
-  .srow{grid-template-columns:40px minmax(0,1fr) auto}
+  .srow,.srow.qs{grid-template-columns:40px minmax(0,1fr) auto}
   .srow .c-hide,.srow.sh{display:none!important}
   .c-show{display:block!important}
   .rrow{grid-template-columns:44px minmax(0,1fr) auto;gap:10px}
@@ -1250,9 +1255,8 @@ VIEWS.dashboard = () => {
 function patrolAtt(pid){ const ids = S.scouts.filter(s => s.patrol===pid).map(s => s.id); let pp = 0, t = 0; S.registers.forEach(r => ids.forEach(id => { const e = r.entries[id]; if(e && e.s){ t++; if(e.s==='P'||e.s==='L') pp++; } })); return pct(pp, t); }
 /* ================= Scouts list, profiles, leaders ================= */
 VIEWS.scouts = () => {
-  const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'' };
-  let list = S.scouts.filter(s => (!f.s || (sname(s)+' '+s.sid).toLowerCase().includes(f.s.toLowerCase())) && (!f.p || s.patrol===f.p) && (!f.st || s.status===f.st) && (!f.rk || s.rank===f.rk));
-  list.sort((a,b) => sname(a).localeCompare(sname(b)));
+  const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
+  const list = filterScouts(f); const nG = S.scouts.filter(s => s.gender==='Girl').length, nB = S.scouts.filter(s => s.gender==='Boy').length;
   const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
   return `${pageH('Members', 'Scouts', acts)}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
@@ -1260,18 +1264,31 @@ VIEWS.scouts = () => {
     ${field('Patrol', `<select class="inp" data-c="scoutFilter" data-k="p">${opts([['','All patrols'], ...S.patrols.map(p=>[p.id,p.name])], f.p)}</select>`, '" style="flex:1;min-width:130px')}
     ${field('Status', `<select class="inp" data-c="scoutFilter" data-k="st">${opts([['','Any status'], ...MEMBER_ST], f.st)}</select>`, '" style="flex:1;min-width:130px')}
     ${field('Rank', `<select class="inp" data-c="scoutFilter" data-k="rk">${opts([['','Any rank'], ...STAGES], f.rk)}</select>`, '" style="flex:1;min-width:130px')}
+    ${field('Girls / boys', `<select class="inp" data-c="scoutFilter" data-k="g">${opts([['','Girls and boys'], ['Girl',`Girls (${nG})`], ['Boy',`Boys (${nB})`], ['none','Not set']], f.g)}</select>`, '" style="flex:1;min-width:130px')}
   </div></div>
-  <div class="card" style="padding:6px 6px" id="scout-list">${scoutRows(list)}</div>`;
+  <div class="card" style="padding:6px 6px" id="scout-list">${scoutGroups(list)}</div>`;
 };
-function scoutRows(list){
+const GENDERS = [['Girl','Girls'], ['Boy','Boys']];
+function filterScouts(f){ return S.scouts.filter(s => (!f.s || (sname(s)+' '+s.sid).toLowerCase().includes(f.s.toLowerCase())) && (!f.p || s.patrol===f.p) && (!f.st || s.status===f.st) && (!f.rk || s.rank===f.rk)
+  && (!f.g || (f.g==='none' ? !s.gender : s.gender===f.g))).sort((a,b) => sname(a).localeCompare(sname(b))); }
+function genderOf(v){ v = String(v||'').trim().toLowerCase(); return ['girl','g','f','female','woman'].includes(v) ? 'Girl' : ['boy','b','m','male','man'].includes(v) ? 'Boy' : ''; }
+/* Scouts list split into Girls, Boys and (if any) scouts whose gender is not set yet. */
+function scoutGroups(list){
+  if(!list.length) return scoutRows(list);
+  const groups = [...GENDERS.map(([g,l]) => [l, list.filter(s => s.gender===g)]), ['Girl or boy not set', list.filter(s => !s.gender)]].filter(([,l]) => l.length);
+  return groups.map(([label, l]) => `<div class="sgroup">${esc(label)} ${chip(l.length)}</div>${scoutRows(l, label!=='Girl or boy not set' ? null : can('scout.edit'))}`).join('');
+}
+function scoutRows(list, quickSet){
   if(!list.length) return empty('users','No scouts match these filters','Clear a filter or add a new scout.');
   return `<div class="srow sh"><span></span><span>Scout</span><span>Patrol</span><span>Rank</span><span>Membership</span><span style="text-align:right">Attendance</span></div>` + list.map(s => { const a = attOf(s.id); const p = patrol(s.patrol);
-    return `<button class="srow" data-a="go" data-r="scout" data-id="${s.id}">${av(s,40)}<span style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sname(s))}</b><span class="small muted num">${s.sid} · ${esc(s.grade)}${s.section}</span></span>
+    return `<button class="srow${quickSet?' qs':''}" data-a="go" data-r="scout" data-id="${s.id}">${av(s,40)}<span style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sname(s))}</b><span class="small muted num">${s.sid} · ${esc(s.grade)}${s.section}</span></span>
     <span class="row nw c-hide" style="gap:6px">${pDot(p)}${esc(p?.name||'—')}</span><span class="c-hide">${esc(s.rank)}</span><span class="c-hide">${statusChip(s.status)}</span>
-    <span style="text-align:right"><b class="num" style="color:${a.pct < S.settings.lowAttendance && a.total ? 'var(--bad)' : 'inherit'}">${a.total ? a.pct+'%' : '—'}</b><span class="small muted c-show" style="display:block">${esc(p?.name||'')}</span></span></button>`; }).join('');
+    ${quickSet ? `<span class="gset"><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Girl">Girl</span><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Boy">Boy</span></span>` : `<span style="text-align:right"><b class="num" style="color:${a.pct < S.settings.lowAttendance && a.total ? 'var(--bad)' : 'inherit'}">${a.total ? a.pct+'%' : '—'}</b><span class="small muted c-show" style="display:block">${esc(p?.name||'')}</span></span>`}</button>`; }).join('');
+}
+A.setGender = (el, e) => { e?.stopPropagation?.(); const s = scout(el.dataset.id); if(!s) return; s.gender = el.dataset.g; audit(`Set ${sname(s)} as ${s.gender.toLowerCase()}`); refresh();
 }
 function scoutFilterSet(el){ R.q[el.dataset.k] = el.value; const keep = document.activeElement?.id; const cur = el.selectionStart;
-  if(el.dataset.k==='s'){ const f = R.q; const list = S.scouts.filter(s => (!f.s || (sname(s)+' '+s.sid).toLowerCase().includes(f.s.toLowerCase())) && (!f.p || s.patrol===f.p) && (!f.st || s.status===f.st) && (!f.rk || s.rank===f.rk)).sort((a,b)=>sname(a).localeCompare(sname(b))); $('#scout-list').innerHTML = scoutRows(list); }
+  if(el.dataset.k==='s'){ $('#scout-list').innerHTML = scoutGroups(filterScouts(R.q)); }
   else renderMain(); }
 I.scoutFilter = scoutFilterSet; C.scoutFilter = scoutFilterSet;
 
@@ -1282,7 +1299,7 @@ function scoutForm(s){
   return `<div class="form-grid">
     <div class="full eyebrow">Scout details</div>
     ${field('First name', inp('first', s.first, 'required'))}${field('Last name', inp('last', s.last, 'required'))}
-    ${field('Date of birth', inp('dob', s.dob, 'type="date" required'))}${field('Class / grade', sel('grade', ['Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10'], s.grade))}
+    ${field('Girl or boy', sel('gender', [['','Choose…'], ...GENDERS.map(([g])=>g)], s.gender, 'required'))}${field('Date of birth', inp('dob', s.dob, 'type="date" required'))}${field('Class / grade', sel('grade', ['Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10'], s.grade))}
     ${field('Section', sel('section', ['A','B','C','D'], s.section))}${field('Patrol', sel('patrol', S.patrols.map(p=>[p.id,p.name]), s.patrol))}
     ${field('Rank / stage', sel('rank', STAGES, s.rank))}${field('Join date', inp('joined', s.joined, 'type="date"'))}
     <div class="full eyebrow" style="margin-top:6px">Membership</div>
@@ -1300,10 +1317,10 @@ function scoutForm(s){
 A.addScout = () => modal({ title:'Add scout', wide:true, form:'scout', body:scoutForm(), foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Add scout</button>` });
 A.editScout = el => { const s = scout(el.dataset.id); modal({ title:'Edit ' + esc(sname(s)), wide:true, form:'scout', body:`<input type="hidden" name="id" value="${s.id}">` + scoutForm(s), foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save changes</button>` }); };
 F.scout = d => {
-  if(!d.first?.trim() || !d.last?.trim() || !d.dob){ $('#sf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>First name, last name and date of birth are required.</span></div>`; return; }
+  if(!d.first?.trim() || !d.last?.trim() || !d.dob || !genderOf(d.gender)){ $('#sf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>First name, last name, girl or boy, and date of birth are required.</span></div>`; return; }
   let s = d.id && scout(d.id); const isNew = !s;
   if(isNew){ const y = academicYear().y; const n = S.scouts.length + 1; s = { id:uid('s'), sid:`TM-${y}-${String(n).padStart(3,'0')}`, photo:null, activities:[], syllabus:{}, badgeProgress:{}, badges:[], guardian:{}, emergency:{}, medical:'' }; S.scouts.push(s); }
-  Object.assign(s, { first:d.first.trim(), last:d.last.trim(), dob:d.dob, grade:d.grade, section:d.section, patrol:d.patrol, rank:d.rank, joined:d.joined, status:d.status, renewal:d.renewal, fee:d.fee, photoConsent:!!d.photoConsent });
+  Object.assign(s, { first:d.first.trim(), last:d.last.trim(), gender:genderOf(d.gender), dob:d.dob, grade:d.grade, section:d.section, patrol:d.patrol, rank:d.rank, joined:d.joined, status:d.status, renewal:d.renewal, fee:d.fee, photoConsent:!!d.photoConsent });
   if(can('contacts.view')){ s.guardian = { name:d.g_name, relation:d.g_relation, phone:d.g_phone, email:d.g_email }; s.emergency = { ...(s.emergency||{}), name:d.e_name, phone:d.e_phone }; }
   if(can('medical.view') && d.medical !== undefined) s.medical = d.medical;
   audit(`${isNew?'Added':'Edited'} scout ${sname(s)}`); closeModal(); toast(isNew ? `${sname(s)} added` : 'Changes saved');
@@ -1317,12 +1334,12 @@ function parseCSV(t){ const rows = []; let row = [], cur = '', q = false; for(le
   if(q){ if(c==='"' && t[i+1]==='"'){ cur+='"'; i++; } else if(c==='"') q = false; else cur += c; }
   else if(c==='"') q = true; else if(c===','){ row.push(cur); cur=''; } else if(c==='\n' || c==='\r'){ if(c==='\r' && t[i+1]==='\n') i++; row.push(cur); rows.push(row); row=[]; cur=''; } else cur += c; }
   if(cur || row.length){ row.push(cur); rows.push(row); } return rows.filter(r => r.some(x => x.trim())); }
-const SCOUT_COLS = ['first','last','dob','grade','section','patrol','rank','status','renewal','fee','guardian_name','guardian_phone','guardian_email','emergency_name','emergency_phone','medical'];
+const SCOUT_COLS = ['first','last','gender','dob','grade','section','patrol','rank','status','renewal','fee','guardian_name','guardian_phone','guardian_email','emergency_name','emergency_phone','medical'];
 A.importScouts = () => modal({ title:'Import scouts', body:`<div class="stack"><p class="muted">Upload a CSV or Excel file with a header row. Recognised columns:</p><p class="small num" style="background:var(--surface-2);padding:10px;border-radius:8px;word-break:break-word">${SCOUT_COLS.join(', ')}</p>
-  <p class="small muted">Patrol matches by name. Dates use YYYY-MM-DD. Missing values get sensible defaults.</p>
+  <p class="small muted">Gender: Girl or Boy (F or M also work). Patrol matches by name. Dates use YYYY-MM-DD. Missing values get sensible defaults.</p>
   <div class="row"><button class="btn sm" data-a="importTemplate">${ic('download','sm')} Download template</button></div>
   <label class="drop" for="imp-file" style="cursor:pointer">${ic('upload','lg')}<div style="font-weight:600;margin-top:6px">Choose a .csv or .xlsx file</div><input id="imp-file" type="file" accept=".csv,.xlsx,.xls" class="sr" data-c="importFile"></label><div id="imp-prev"></div></div>` });
-A.importTemplate = () => saveFile('milandhoo-scout-scouts-template.csv', csvOf([SCOUT_COLS, ['Hamid','Naseer','2014-05-12','Grade 7','B','Pine','Membership','Pending','2027-08-01','Due','Naseer Ali','+960 777 0000','naseer@mail.mv','Aisha Ali','+960 999 0000','']]));
+A.importTemplate = () => saveFile('milandhoo-scout-scouts-template.csv', csvOf([SCOUT_COLS, ['Hamid','Naseer','Boy','2014-05-12','Grade 7','B','Pine','Membership','Pending','2027-08-01','Due','Naseer Ali','+960 777 0000','naseer@mail.mv','Aisha Ali','+960 999 0000','']]));
 let IMPORT_ROWS = [];
 C.importFile = async el => { const file = el.files[0]; if(!file) return; let rows;
   try { if(/\.xlsx?$/i.test(file.name)){ const X = await getXLSX(); const wb = X.read(await file.arrayBuffer()); rows = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, dateNF:'yyyy-mm-dd' }).map(r => r.map(v => String(v ?? ''))); } else rows = parseCSV(await file.text()); }
@@ -1335,13 +1352,13 @@ A.importDo = () => { const y = academicYear().y; const made = [];
     if(!name && S.patrols.length) return S.patrols[0];
     const p = { id:uid('p'), name:name||'New scouts', icon:'flag', color:COLORS[S.patrols.length % COLORS.length], motto:'', pl:null, apl:null, leaders:[], points:0 }; S.patrols.push(p); made.push(p.name); return p; };
   IMPORT_ROWS.forEach(r => { const p = patrolFor(r.patrol);
-  S.scouts.push({ id:uid('s'), sid:`TM-${y}-${String(S.scouts.length+1).padStart(3,'0')}`, first:r.first, last:r.last, dob:r.dob||`${y-12}-01-01`, grade:r.grade||'Grade 6', section:r.section||'A', patrol:p.id, rank:STAGES.includes(r.rank)?r.rank:'Membership', joined:TODAY(), status:MEMBER_ST.includes(r.status)?r.status:'Pending', renewal:r.renewal||iso(addDays(new Date(),365)), fee:['Paid','Due','Overdue'].includes(r.fee)?r.fee:'Due', photo:null, photoConsent:false,
+  S.scouts.push({ id:uid('s'), sid:`TM-${y}-${String(S.scouts.length+1).padStart(3,'0')}`, first:r.first, last:r.last, gender:genderOf(r.gender), dob:r.dob||`${y-12}-01-01`, grade:r.grade||'Grade 6', section:r.section||'A', patrol:p.id, rank:STAGES.includes(r.rank)?r.rank:'Membership', joined:TODAY(), status:MEMBER_ST.includes(r.status)?r.status:'Pending', renewal:r.renewal||iso(addDays(new Date(),365)), fee:['Paid','Due','Overdue'].includes(r.fee)?r.fee:'Due', photo:null, photoConsent:false,
     guardian:{ name:r.guardian_name, phone:r.guardian_phone, email:r.guardian_email, relation:'Guardian' }, emergency:{ name:r.emergency_name, phone:r.emergency_phone }, medical:r.medical||'', activities:[], syllabus:{}, badgeProgress:{}, badges:[] }); });
   audit(`Imported ${IMPORT_ROWS.length} scouts${made.length?` and created patrols ${made.join(', ')}`:''}`); toast(`Imported ${IMPORT_ROWS.length} scouts${made.length?` · new patrols: ${made.join(', ')}`:''}`); IMPORT_ROWS = []; closeModal(); refresh(); };
 A.exportScouts = () => modal({ title:'Export scouts', body:`<p class="muted" style="margin-bottom:14px">Exports all ${S.scouts.length} scouts with membership, patrol, rank and attendance. Contact and medical columns are included only for roles allowed to see them.</p><div class="row"><button class="btn primary" data-a="exportScoutsDo" data-fmt="xlsx">${ic('download','sm')} Excel (.xlsx)</button><button class="btn" data-a="exportScoutsDo" data-fmt="csv">${ic('download','sm')} CSV</button></div>` });
-A.exportScoutsDo = el => { const head = ['scout_id','first','last','dob','grade','section','patrol','rank','status','renewal','fee','photo_consent','attendance_pct','badges'];
+A.exportScoutsDo = el => { const head = ['scout_id','first','last','gender','dob','grade','section','patrol','rank','status','renewal','fee','photo_consent','attendance_pct','badges'];
   if(can('contacts.view')) head.push('guardian_name','guardian_phone','guardian_email','emergency_name','emergency_phone'); if(can('medical.view')) head.push('medical');
-  const rows = [head, ...S.scouts.map(s => { const r = [s.sid, s.first, s.last, s.dob, s.grade, s.section, pName(s.patrol), s.rank, s.status, s.renewal, s.fee, s.photoConsent?'yes':'no', attOf(s.id).pct, s.badges.map(b=>badge(b.badgeId)?.name).join('; ')];
+  const rows = [head, ...S.scouts.map(s => { const r = [s.sid, s.first, s.last, s.gender||'', s.dob, s.grade, s.section, pName(s.patrol), s.rank, s.status, s.renewal, s.fee, s.photoConsent?'yes':'no', attOf(s.id).pct, s.badges.map(b=>badge(b.badgeId)?.name).join('; ')];
     if(can('contacts.view')) r.push(s.guardian?.name, s.guardian?.phone, s.guardian?.email, s.emergency?.name, s.emergency?.phone); if(can('medical.view')) r.push(s.medical); return r; })];
   if(el.dataset.fmt==='csv') saveFile(`milandhoo-scout-scouts-${TODAY()}.csv`, csvOf(rows)); else exportXLSX(`milandhoo-scout-scouts-${TODAY()}.xlsx`, [['Scouts', rows]]); };
 
