@@ -856,6 +856,10 @@ function notify(type, title, body, link){ S.notifications.unshift({ id:uid('n'),
 function attOf(sid, regs = S.registers){ const c = {P:0,L:0,A:0,E:0}; regs.forEach(r => { const e = r.entries[sid]; if(e && e.s) c[e.s]++; });
   const total = c.P+c.L+c.A+c.E; return { ...c, total, pct: pct(c.P+c.L, total) }; }
 function regCounts(r){ const c = {P:0,L:0,A:0,E:0,U:0}; regScouts(r).forEach(s => { const e = r.entries[s.id]; if(e && e.s) c[e.s]++; else c.U++; }); const t = c.P+c.L+c.A+c.E; return { ...c, marked:t, pct: pct(c.P+c.L, t) }; }
+/* Patrol filter on a register: per viewer, so several leaders can each take their own patrol. */
+const REG_PF = {};
+function regVisible(r){ const pf = REG_PF[r.id]; return regScouts(r).filter(s => !pf || s.patrol===pf); }
+function regCountsOf(r, list){ const c = {P:0,L:0,A:0,E:0,U:0}; list.forEach(s => { const e = r.entries[s.id]; if(e && e.s) c[e.s]++; else c.U++; }); return c; }
 function regScouts(r){ return S.scouts.filter(s => (r.patrol==='all' || s.patrol===r.patrol) && (s.status!=='Inactive' || r.entries[s.id])).sort((a,b) => (a.patrol+a.first).localeCompare(b.patrol+b.first)); }
 const regsSorted = () => [...S.registers].sort((a,b) => a.date < b.date ? 1 : -1);
 function badgePct(s, b){ const p = s.badgeProgress[b.id] || {}; return pct(Object.keys(p).length, b.reqs.length); }
@@ -1583,14 +1587,14 @@ function createRegister(d){
 const regLocked = r => r.status==='final' && !(ME.role==='admin' && R.q.unlock);
 VIEWS.register = () => {
   const r = S.registers.find(x => x.id===R.id); if(!r) return empty('clipboard','Register not found');
-  const list = regScouts(r); const locked = regLocked(r) || !can('attendance.take'); const c = regCounts(r);
+  const list = regVisible(r); const locked = regLocked(r) || !can('attendance.take'); const c = regCountsOf(r, list);
   const ses = r.sessionId && S.sessions.find(s => s.id===r.sessionId);
   return `<button class="btn ghost sm" data-a="go" data-r="attendance" style="margin-bottom:10px">${ic('left','sm')} All registers</button>
   ${pageH(`${esc(r.type)} · ${pName(r.patrol)}`, fmtD(r.date,'long'), `<button class="btn" data-a="regExport" data-id="${r.id}">${ic('download','sm')} Export</button>${r.status==='draft' && can('attendance.delete') ? `<button class="icon-btn" data-a="regDelete" data-id="${r.id}" aria-label="Delete register">${ic('trash')}</button>` : ''}`)}
   ${ses ? `<p class="small muted" style="margin:-12px 0 14px">Linked session: <a href="#" data-a="go" data-r="session" data-id="${ses.id}">${esc(ses.title)}</a></p>` : ''}
   ${r.status==='final' ? `<div class="alert ${ME.role==='admin'?'':'info'}" style="margin-bottom:12px;align-items:center">${ic('lock','sm')}<span style="flex:1">${R.q.unlock ? 'Admin edit mode. Every change is written to the audit log.' : `Finalized ${r.finalizedAt?ago(r.finalizedAt):''}. ${ME.role==='admin' ? 'Only you, as Group Scout Leader, can edit it.' : 'Only the Group Scout Leader can edit it.'}`}</span>${ME.role==='admin' ? `<button class="btn sm" data-a="regUnlock">${R.q.unlock?'Lock again':'Edit register'}</button>` : ''}</div>` : ''}
   <div class="counter" id="reg-counter">${counterHTML(c)}</div>
-  ${!locked ? `<div class="row" style="margin:6px 0 12px" id="mark-all">${markAllHTML(r)}</div>` : '<div style="height:8px"></div>'}
+  <div class="row" style="margin:6px 0 12px">${regPatrolPick(r)}${!locked ? `<span class="row" id="mark-all">${markAllHTML(r)}</span>` : ''}</div>
   <div class="card" style="padding:0;overflow:hidden" id="reg-list">${list.map(s => regRow(r, s, locked)).join('') || empty('users','No scouts in this patrol')}</div>
   ${!locked && r.status==='draft' ? `<div class="row reg-actions" style="justify-content:flex-end;margin-top:14px"><button class="btn lg" data-a="regDraft">${ic('check','sm')} Save draft</button><button class="btn primary lg" data-a="regFinalize" data-id="${r.id}">${ic('lock','sm')} Finalize</button></div>` : ''}
   ${(r.log||[]).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h3>Change log</h3></div><div class="list">${r.log.slice().reverse().map(l => `<div class="li small"><span class="muted num" style="width:120px">${new Date(l.ts).toLocaleString()}</span><span class="grow">${esc(user(l.user)?.name||'')}: ${esc(l.text)}</span></div>`).join('')}</div></div>` : ''}`;
@@ -1601,20 +1605,25 @@ function regRow(r, s, locked){ const e = r.entries[s.id] || {}; const p = patrol
   <div class="toggles" role="radiogroup" aria-label="Attendance for ${esc(sname(s))}">${['P','L','A','E'].map(k => `<button class="tg ${e.s===k?'on':''}" data-s="${k}" role="radio" aria-checked="${e.s===k}" ${locked?'disabled':''} data-a="mark" data-sid="${s.id}" data-k="${k}">${e.s===k?ic('check','sm'):''}${ST_LABEL[k]}</button>`).join('')}</div>
   ${e.s==='L' ? `<div class="reg-extra"><input class="inp" type="time" style="width:130px" value="${esc(e.time||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="time" aria-label="Arrival time"></div>`
     : e.s==='E' ? `<div class="reg-extra"><input class="inp" style="flex:1;min-width:160px" placeholder="Reason for excuse" value="${esc(e.remark||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="remark" aria-label="Reason for excuse"></div>` : ''}</div>`; }
+/* Remember each attendance change so cloud saves can merge it into what other leaders saved at the same time. */
+function regOp(r, sid){ if(Cloud.on) Cloud.regOps.push({ rid:r.id, sid, e: r.entries[sid] ? JSON.parse(JSON.stringify(r.entries[sid])) : null }); }
 function curReg(){ return S.registers.find(x => x.id===R.id); }
 function regChanged(r, s, before, after){ if(r.status==='final'){ r.log = r.log || []; const t = `${sname(s)}: ${before ? ST_LABEL[before] : 'unmarked'} → ${after ? ST_LABEL[after] : 'unmarked'}`; r.log.push({ ts:Date.now(), user:ME.id, text:t }); audit(`Edited finalized register ${fmtD(r.date)}: ${t}`); } }
 A.mark = el => { const r = curReg(); if(regLocked(r)) return; const s = scout(el.dataset.sid); const k = el.dataset.k; const e = r.entries[s.id] = r.entries[s.id] || {}; const before = e.s;
   e.s = e.s===k && r.status!=='final' ? undefined : k; if(e.s==='L' && !e.time){ const n = new Date(); e.time = `${pad(n.getHours())}:${pad(n.getMinutes())}`; }
   if(!e.s) delete r.entries[s.id]; if(before!==e.s) regChanged(r, s, before, e.s);
-  $('#rr_'+s.id).outerHTML = regRow(r, s, false); $('#reg-counter').innerHTML = counterHTML(regCounts(r)); const ma = $('#mark-all'); if(ma) ma.innerHTML = markAllHTML(r); save(); };
-C.regExtra = el => { const r = curReg(); const e = r.entries[el.dataset.sid]; if(!e) return; const before = e[el.dataset.k]; e[el.dataset.k] = el.value; if(r.status==='final' && before!==el.value){ r.log = r.log||[]; r.log.push({ ts:Date.now(), user:ME.id, text:`${sname(scout(el.dataset.sid))}: ${el.dataset.k} changed` }); audit(`Edited finalized register ${fmtD(r.date)}: ${el.dataset.k} for ${sname(scout(el.dataset.sid))}`); } save(); };
+  $('#rr_'+s.id).outerHTML = regRow(r, s, false); regOp(r, s.id); $('#reg-counter').innerHTML = counterHTML(regCountsOf(r, regVisible(r))); const ma = $('#mark-all'); if(ma) ma.innerHTML = markAllHTML(r); save(); };
+C.regExtra = el => { const r = curReg(); const e = r.entries[el.dataset.sid]; if(!e) return; const before = e[el.dataset.k]; e[el.dataset.k] = el.value; regOp(r, el.dataset.sid); if(r.status==='final' && before!==el.value){ r.log = r.log||[]; r.log.push({ ts:Date.now(), user:ME.id, text:`${sname(scout(el.dataset.sid))}: ${el.dataset.k} changed` }); audit(`Edited finalized register ${fmtD(r.date)}: ${el.dataset.k} for ${sname(scout(el.dataset.sid))}`); } save(); };
 /* One button: "Mark all present" while anyone is unmarked, "Untick all" once everyone is marked (drafts only). */
-function markAllHTML(r){ const all = regScouts(r); const done = all.length && all.every(s => r.entries[s.id]?.s);
-  return done && r.status!=='final' ? `<button class="btn" data-a="untickAll">${ic('x','sm')} Untick all</button><span class="small muted">Clears every mark on this register.</span>`
-    : `<button class="btn" data-a="markAll">${ic('check','sm')} Mark all present</button><span class="small muted">Then change the exceptions.</span>`; }
-A.markAll = () => { const r = curReg(); regScouts(r).forEach(s => { if(!r.entries[s.id]?.s){ r.entries[s.id] = { s:'P' }; regChanged(r, s, undefined, 'P'); } }); refresh(); toast('Everyone unmarked is now Present'); };
+function regPatrolPick(r){ const ids = [...new Set(regScouts(r).map(s => s.patrol))]; if(r.patrol!=='all' || ids.length < 2) return '';
+  const pf = REG_PF[r.id] || ''; return `<select class="inp" style="width:auto;min-width:170px" data-c="regPatrol" aria-label="Show patrol">${opts([['','All patrols'], ...S.patrols.filter(p => ids.includes(p.id)).map(p => [p.id, `${p.name} (${regScouts(r).filter(s => s.patrol===p.id).length})`])], pf)}</select>`; }
+C.regPatrol = el => { REG_PF[R.id] = el.value; renderMain(); };
+function markAllHTML(r){ const all = regVisible(r); const done = all.length && all.every(s => r.entries[s.id]?.s); const pf = REG_PF[r.id]; const who = pf ? pName(pf) : 'all';
+  return done && r.status!=='final' ? `<button class="btn" data-a="untickAll">${ic('x','sm')} Untick ${pf ? esc(who) : 'all'}</button><span class="small muted">Clears the marks ${pf ? 'for this patrol' : 'on this register'}.</span>`
+    : `<button class="btn" data-a="markAll">${ic('check','sm')} Mark ${pf ? esc(who) : 'all'} present</button><span class="small muted">Then change the exceptions.</span>`; }
+A.markAll = () => { const r = curReg(); regVisible(r).forEach(s => { if(!r.entries[s.id]?.s){ r.entries[s.id] = { s:'P' }; regChanged(r, s, undefined, 'P'); regOp(r, s.id); } }); refresh(); toast('Everyone unmarked is now Present'); };
 A.untickAll = () => { const r = curReg(); if(regLocked(r) || r.status==='final') return;
-  confirmBox('Untick every scout on this register? Late times and reasons are cleared too.', () => { regScouts(r).forEach(s => delete r.entries[s.id]); refresh(); toast('All marks cleared'); }, 'Untick all'); };
+  const pf = REG_PF[r.id]; confirmBox(`Untick every scout ${pf ? 'in '+esc(pName(pf)) : 'on this register'}? Late times and reasons are cleared too.`, () => { regVisible(r).forEach(s => { delete r.entries[s.id]; regOp(r, s.id); }); refresh(); toast('Marks cleared'); }, 'Untick'); };
 A.regDraft = () => { save(); toast('Draft saved'); };
 A.regFinalize = () => { const r = curReg(); const c = regCounts(r);
   const go2 = () => { r.status = 'final'; r.finalizedAt = Date.now(); r.finalizedBy = ME.id; audit(`Finalized register ${fmtD(r.date)} (${c.pct}% attendance)`);
@@ -2064,7 +2073,7 @@ let LOGIN_ERR = '';
 function takeLoginErr(){ const e = LOGIN_ERR; LOGIN_ERR = ''; return e; }
 const Cloud = {
   on: (() => { try { const c = window.TRAILMARK_FIREBASE; return !!(c && c.apiKey && c.projectId && !/PASTE|YOUR/i.test(c.apiKey + c.projectId)); } catch(e){ return false; } })(),
-  auth:null, db:null, role:null, members:{}, sent:{}, priv:{}, unsubs:[], timer:null, loading:new Set(), renderT:null,
+  auth:null, db:null, role:null, members:{}, sent:{}, priv:{}, unsubs:[], timer:null, loading:new Set(), renderT:null, regOps:[], regBusy:false, regAgain:false, regReplace:false,
   keys(){ return this.role==='scout' ? CLOUD_KEYS : [...CLOUD_KEYS, 'private']; },
 
   async start(){
@@ -2129,18 +2138,43 @@ const Cloud = {
   flush(){
     clearTimeout(this.timer); if(!ME || !this.db || this.role==='scout') return;
     this.keys().forEach(k => { const j = this.ser(k); if(j === this.sent[k]) return;
+      if(k==='registers' && !this.regReplace && this.sent[k] !== undefined) return this.saveRegs();
+      if(k==='registers'){ this.regReplace = false; this.regOps = []; }
       if(j.length > 1000000){ toast(`The ${k} data is too large to save (1 MB limit per area). Delete old records or photos.`); return; }
       this.sent[k] = j;
       this.db.doc('portal/' + k).set({ json:j, by:ME.email, ts:Date.now() }).catch(e => { delete this.sent[k]; toast('Could not save changes: ' + (e.code==='permission-denied' ? 'your role cannot change this.' : e.message)); }); });
     if(this.role==='admin') this.syncAccess();
   },
+  /* Registers are saved in a transaction: other leaders' marks already on the server are kept and this
+     leader's own changes (regOps) are applied on top, so several leaders can mark one register at once. */
+  saveRegs(){
+    if(this.regBusy){ this.regAgain = true; return; } this.regBusy = true;
+    const ops = this.regOps.slice(), known = new Set(JSON.parse(this.sent.registers || '[]').map(r => r.id)), ref = this.db.doc('portal/registers');
+    this.db.runTransaction(async t => { const d = await t.get(ref); const remote = d.exists ? JSON.parse(d.data().json) : [];
+      const merged = this.mergeRegs(remote, known, ops); const j = JSON.stringify(merged);
+      if(j.length > 1000000) throw new Error('The attendance data is too large to save (1 MB limit).');
+      t.set(ref, { json:j, by:ME.email, ts:Date.now() }); return { merged, j }; })
+    .then(({ merged, j }) => { this.regOps.splice(0, ops.length); this.sent.registers = j; S.registers = merged; this.applyOps(S.registers, this.regOps); this.rerender(false); })
+    .catch(e => { toast('Attendance not saved yet, retrying… ' + (e.code==='permission-denied' ? '(your role cannot change this)' : '')); setTimeout(() => this.schedule(), 4000); })
+    .finally(() => { this.regBusy = false; if(this.regAgain){ this.regAgain = false; this.schedule(); } });
+  },
+  mergeRegs(remote, known, ops){
+    const rmap = new Map(remote.map(r => [r.id, r])); const local = JSON.parse(JSON.stringify(S.registers));
+    const out = local.map(l => { const r = rmap.get(l.id); if(!r) return l;
+      const m = { ...l, entries:{ ...(r.entries||{}) } };
+      if(r.status==='final' && l.status!=='final'){ m.status = r.status; m.finalizedAt = r.finalizedAt; m.finalizedBy = r.finalizedBy; }
+      if((r.log||[]).length > (l.log||[]).length) m.log = r.log; return m; });
+    remote.forEach(r => { if(!known.has(r.id) && !out.some(x => x.id===r.id)) out.push(r); });   // created by another leader meanwhile
+    this.applyOps(out, ops); return out;
+  },
+  applyOps(regs, ops){ ops.forEach(o => { const r = regs.find(x => x.id===o.rid); if(!r) return; r.entries = r.entries || {}; if(o.e) r.entries[o.sid] = JSON.parse(JSON.stringify(o.e)); else delete r.entries[o.sid]; }); },
   syncAccess(){
     const m = {}; S.users.filter(u => !u.disabled && !u.sample && u.email).forEach(u => m[u.email.trim().toLowerCase()] = u.role);
     m[this.auth.currentUser.email.toLowerCase()] = 'admin';
     if(JSON.stringify(Object.entries(m).sort()) === JSON.stringify(Object.entries(this.members).sort())) return;
     this.members = m; this.db.doc('portal/access').set({ members:m }).catch(e => toast('Could not update sign-in access: ' + e.message));
   },
-  afterReplace(){ const me = this.findMe(); if(me) ME = me; else { ME.id = ME.id || uid('u'); S.users.push(ME); } ME.role = this.role; this.priv = {}; save(); },
+  afterReplace(){ this.regReplace = true; const me = this.findMe(); if(me) ME = me; else { ME.id = ME.id || uid('u'); S.users.push(ME); } ME.role = this.role; this.priv = {}; save(); },
 
   /* ---- live updates from other leaders ---- */
   subscribe(){
