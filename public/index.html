@@ -1257,7 +1257,7 @@ function patrolAtt(pid){ const ids = S.scouts.filter(s => s.patrol===pid).map(s 
 VIEWS.scouts = () => {
   const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
   const list = filterScouts(f); const nG = S.scouts.filter(s => s.gender==='Girl').length, nB = S.scouts.filter(s => s.gender==='Boy').length;
-  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
+  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
   return `${pageH('Members', 'Scouts', acts)}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
     <div class="field" style="flex:2;min-width:180px"><label for="f_ss">Search</label><input class="inp" id="f_ss" type="search" placeholder="Name or scout ID" value="${esc(f.s)}" data-i="scoutFilter" data-k="s"></div>
@@ -1453,6 +1453,34 @@ function drawCrop(cv = $('#crop-cv'), size = 640){ const { im, z, x, y } = CROP;
   ctx.fillStyle = '#111'; ctx.fillRect(0,0,size,size); ctx.drawImage(im, (size-w)/2 + x*k, (size-h)/2 + y*k, w, h); }
 A.cropSave = el => { const out = document.createElement('canvas'); out.width = out.height = 400; drawCrop(out, 400); const url = out.toDataURL('image/jpeg', .85);
   const o = el.dataset.k==='scout' ? scout(el.dataset.id) : user(el.dataset.id); dropImg(o.photo); o.photo = putImg(url); audit(`Updated photo for ${o.name || sname(o)}`); closeModal(); CROP = null; renderApp(); toast('Photo saved'); };
+/* ---- bulk profile photos: pick many images, match each to a scout by file name, save all at once ---- */
+let BULK = [];
+const normName = t => String(t||'').toLowerCase().replace(/\.[a-z0-9]+$/,'').replace(/[^a-z0-9]+/g,' ').trim();
+function guessScout(file, taken){ const n = normName(file); if(!n) return '';
+  const free = S.scouts.filter(s => !taken.has(s.id));
+  const hit = free.find(s => normName(s.sid)===n) || free.find(s => normName(sname(s))===n) || free.find(s => normName(s.last+' '+s.first)===n)
+    || free.find(s => n.includes(normName(sname(s)))) || free.find(s => normName(sname(s)).startsWith(n) && n.length > 3);
+  return hit ? hit.id : ''; }
+async function squarePhoto(file){ const im = await loadImg(await readFile(file)); const side = Math.min(im.width, im.height);
+  const sx = (im.width-side)/2, sy = im.height > im.width ? (im.height-side)*.2 : 0;   // portraits: keep the top, where the face usually is
+  const c = document.createElement('canvas'); c.width = c.height = 400; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,400,400); x.drawImage(im, sx, sy, side, side, 0, 0, 400, 400); return c.toDataURL('image/jpeg', .85); }
+A.bulkPhotos = () => { BULK = []; modal({ title:'Bulk scout photos', wide:true, body:`<div class="stack"><p class="muted">Choose several photos at once. Name each file after the scout (for example <b>Aishath Hanaan.jpg</b> or their scout ID) and it is matched automatically; otherwise pick the scout from the list. Photos are cropped to a square from the centre, and you can recrop any of them later from the scout's profile.</p>
+  <label class="drop" for="bulk-file" style="cursor:pointer">${ic('camera','lg')}<div style="font-weight:600;margin-top:6px">Choose photos</div><div class="small">JPG or PNG, as many as you like</div><input id="bulk-file" type="file" accept="image/*" multiple class="sr" data-c="bulkFiles"></label><div id="bulk-list"></div></div>`,
+  foot:`<button class="btn" data-a="closeModal">Cancel</button><button class="btn primary" data-a="bulkSave" id="bulk-save" disabled>Save photos</button>` }); };
+C.bulkFiles = async el => { const files = [...el.files]; if(!files.length) return; $('#bulk-list').innerHTML = `<p class="small muted">Preparing ${files.length} photos…</p>`;
+  const taken = new Set(BULK.map(b => b.sid).filter(Boolean));
+  for(const f of files){ try { const url = await squarePhoto(f); const sid = guessScout(f.name, taken); if(sid) taken.add(sid); BULK.push({ name:f.name, url, sid }); } catch(e){ BULK.push({ name:f.name, bad:true }); } }
+  el.value = ''; bulkRender(); };
+function bulkRender(){ const list = [...S.scouts].sort((a,b) => sname(a).localeCompare(sname(b))); const n = BULK.filter(b => b.sid && !b.bad).length;
+  const dup = new Set(BULK.map(b => b.sid).filter((v,i,a) => v && a.indexOf(v)!==i));
+  $('#bulk-list').innerHTML = `<div class="small muted" style="margin:4px 0 8px">${n} of ${BULK.length} photos matched to a scout${dup.size?` · <span style="color:var(--bad)">the same scout is picked more than once</span>`:''}</div>
+  <div class="stack" style="gap:8px">${BULK.map((b,i) => `<div class="row nw" style="gap:12px;align-items:center">${b.bad ? `<span class="av" style="width:52px;height:52px">!</span>` : `<img src="${b.url}" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none">`}
+    <div style="flex:1;min-width:0"><div class="small muted" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(b.name)}</div>${b.bad ? `<div class="small" style="color:var(--bad)">This file could not be read</div>` :
+    `<select class="inp" data-c="bulkPick" data-n="${i}" style="${dup.has(b.sid)?'border-color:var(--bad)':''}">${opts([['','— Skip this photo —'], ...list.map(s => [s.id, sname(s) + (s.photo?' (replaces photo)':'')])], b.sid)}</select>`}</div></div>`).join('')}</div>`;
+  $('#bulk-save').disabled = !n || dup.size > 0; $('#bulk-save').textContent = n ? `Save ${n} photo${n>1?'s':''}` : 'Save photos'; }
+C.bulkPick = el => { BULK[+el.dataset.n].sid = el.value; bulkRender(); };
+A.bulkSave = () => { let n = 0; BULK.forEach(b => { const s = !b.bad && b.sid && scout(b.sid); if(!s) return; dropImg(s.photo); s.photo = putImg(b.url); n++; });
+  audit(`Uploaded ${n} scout photos in bulk`); BULK = []; closeModal(); save(); renderApp(); toast(`Saved ${n} photo${n>1?'s':''}`); };
 A.photoRemove = el => { const o = el.dataset.k==='scout' ? scout(el.dataset.id) : user(el.dataset.id); dropImg(o.photo); o.photo = null; save(); closeModal(); renderApp(); toast('Photo removed'); };
 
 /* ---- profile PDF ---- */
