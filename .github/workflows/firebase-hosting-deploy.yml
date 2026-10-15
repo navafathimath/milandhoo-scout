@@ -1,6 +1,7 @@
 # Publishes the portal (the public/ folder) to Firebase Hosting on every push to main.
-# Needs the repository secret FIREBASE_SERVICE_ACCOUNT: the JSON key of a Google Cloud
-# service account with the "Firebase Hosting Admin" and "API Keys Viewer" roles.
+# Needs a service account key stored as a repository secret: either
+# FIREBASE_SERVICE_ACCOUNT_MILANDHOO_SCOUT (created by `firebase init hosting:github`)
+# or FIREBASE_SERVICE_ACCOUNT (added by hand).
 name: Deploy to Firebase Hosting
 
 on:
@@ -20,6 +21,6 @@ jobs:
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_MILANDHOO_SCOUT || secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
           projectId: milandhoo-scout
