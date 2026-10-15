@@ -14,6 +14,17 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="firebase-config.js"></script>
+<script>
+/* Firebase connection for milandhoo-scout (built in, so the portal works even if firebase-config.js fails to load) */
+window.TRAILMARK_FIREBASE = (window.TRAILMARK_FIREBASE && window.TRAILMARK_FIREBASE.apiKey && !/PASTE/.test(window.TRAILMARK_FIREBASE.apiKey)) ? window.TRAILMARK_FIREBASE : {
+  apiKey: "AIzaSyDgYcmYDWYgJ5iZCCQRHHjMJCTh-mgwEwg",
+  authDomain: "milandhoo-scout.firebaseapp.com",
+  projectId: "milandhoo-scout",
+  storageBucket: "milandhoo-scout.firebasestorage.app",
+  messagingSenderId: "589756709999",
+  appId: "1:589756709999:web:3bb6cce8482bed9169219a"
+};
+</script>
 </head>
 <body>
 <title>TrailMark</title>
