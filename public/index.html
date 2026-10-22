@@ -1306,12 +1306,10 @@ function scoutForm(s){
     <div class="full eyebrow">Scout details</div>
     ${field('First name', inp('first', s.first, 'required'))}${field('Last name', inp('last', s.last, 'required'))}
     ${field('Girl or boy', sel('gender', [['','Choose…'], ...GENDERS.map(([g])=>g)], genderOf(s.gender), 'required'))}${field('Date of birth', inp('dob', s.dob, 'type="date" required'))}${field('Class / grade', sel('grade', ['Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10'], s.grade))}
-    ${field('Section', sel('section', ['A','B','C','D'], s.section))}${field('Patrol', sel('patrol', S.patrols.map(p=>[p.id,p.name]), s.patrol))}
+    ${field('Patrol', sel('patrol', S.patrols.map(p=>[p.id,p.name]), s.patrol))}
     ${field('Rank / stage', sel('rank', STAGES, s.rank))}${field('Join date', inp('joined', s.joined, 'type="date"'))}
     <div class="full eyebrow" style="margin-top:6px">Membership</div>
-    ${field('Status', sel('status', MEMBER_ST, s.status))}${field('Renewal date', inp('renewal', s.renewal, 'type="date"'))}
-    ${field('Fee status', sel('fee', ['Paid','Due','Overdue'], s.fee))}
-    <label class="check" style="align-self:end"><input type="checkbox" name="photoConsent" ${s.photoConsent?'checked':''}> Parent consents to photo use</label>
+    ${field('Status', sel('status', MEMBER_ST, s.status))}
     ${can('contacts.view') ? `<div class="full eyebrow" style="margin-top:6px">Parent / guardian</div>
     ${field('Name', inp('g_name', g.name))}${field('Relation', sel('g_relation', ['Mother','Father','Guardian','Grandparent','Other'], g.relation))}
     ${field('Phone', inp('g_phone', g.phone, 'type="tel"'))}${field('Email', inp('g_email', g.email, 'type="email"'))}
@@ -1326,7 +1324,7 @@ F.scout = d => {
   if(!d.first?.trim() || !d.last?.trim() || !d.dob || !genderOf(d.gender)){ $('#sf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>First name, last name, girl or boy, and date of birth are required.</span></div>`; return; }
   let s = d.id && scout(d.id); const isNew = !s;
   if(isNew){ const y = academicYear().y; const n = S.scouts.length + 1; s = { id:uid('s'), sid:`TM-${y}-${String(n).padStart(3,'0')}`, photo:null, activities:[], syllabus:{}, badgeProgress:{}, badges:[], guardian:{}, emergency:{}, medical:'' }; S.scouts.push(s); }
-  Object.assign(s, { first:d.first.trim(), last:d.last.trim(), gender:genderOf(d.gender), dob:d.dob, grade:d.grade, section:d.section, patrol:d.patrol, rank:d.rank, joined:d.joined, status:d.status, renewal:d.renewal, fee:d.fee, photoConsent:!!d.photoConsent });
+  Object.assign(s, { first:d.first.trim(), last:d.last.trim(), gender:genderOf(d.gender), dob:d.dob, grade:d.grade, patrol:d.patrol, rank:d.rank, joined:d.joined, status:d.status });
   if(can('contacts.view')){ s.guardian = { name:d.g_name, relation:d.g_relation, phone:d.g_phone, email:d.g_email }; s.emergency = { ...(s.emergency||{}), name:d.e_name, phone:d.e_phone }; }
   if(can('medical.view') && d.medical !== undefined) s.medical = d.medical;
   audit(`${isNew?'Added':'Edited'} scout ${sname(s)}`); closeModal(); toast(isNew ? `${sname(s)} added` : 'Changes saved');
@@ -1340,15 +1338,21 @@ function parseCSV(t){ const rows = []; let row = [], cur = '', q = false; for(le
   if(q){ if(c==='"' && t[i+1]==='"'){ cur+='"'; i++; } else if(c==='"') q = false; else cur += c; }
   else if(c==='"') q = true; else if(c===','){ row.push(cur); cur=''; } else if(c==='\n' || c==='\r'){ if(c==='\r' && t[i+1]==='\n') i++; row.push(cur); rows.push(row); row=[]; cur=''; } else cur += c; }
   if(cur || row.length){ row.push(cur); rows.push(row); } return rows.filter(r => r.some(x => x.trim())); }
-const SCOUT_COLS = ['first','last','gender','dob','grade','section','patrol','rank','status','renewal','fee','guardian_name','guardian_phone','guardian_email','emergency_name','emergency_phone','medical'];
+const SCOUT_COLS = ['first','last','gender','dob','grade','patrol','rank','joined','status','guardian_name','guardian_phone','guardian_email','emergency_name','emergency_phone','medical'];
 A.importScouts = () => modal({ title:'Import scouts', body:`<div class="stack"><p class="muted">Upload a CSV or Excel file with a header row. Recognised columns:</p><p class="small num" style="background:var(--surface-2);padding:10px;border-radius:8px;word-break:break-word">${SCOUT_COLS.join(', ')}</p>
-  <p class="small muted">Gender: Girl or Boy (F or M also work). Patrol matches by name. Dates use YYYY-MM-DD. Missing values get sensible defaults.</p>
+  <p class="small muted">Gender: Girl or Boy (F or M also work). Patrol matches by name. Dates as YYYY-MM-DD or DD/MM/YYYY. Missing values get sensible defaults.</p>
   <div class="row"><button class="btn sm" data-a="importTemplate">${ic('download','sm')} Download template</button></div>
   <label class="drop" for="imp-file" style="cursor:pointer">${ic('upload','lg')}<div style="font-weight:600;margin-top:6px">Choose a .csv or .xlsx file</div><input id="imp-file" type="file" accept=".csv,.xlsx,.xls" class="sr" data-c="importFile"></label><div id="imp-prev"></div></div>` });
-A.importTemplate = () => saveFile('milandhoo-scout-scouts-template.csv', csvOf([SCOUT_COLS, ['Hamid','Naseer','Boy','2014-05-12','Grade 7','B','Pine','Membership','Pending','2027-08-01','Due','Naseer Ali','+960 777 0000','naseer@mail.mv','Aisha Ali','+960 999 0000','']]));
+A.importTemplate = () => saveFile('milandhoo-scout-scouts-template.csv', csvOf([SCOUT_COLS, ['Hamid','Naseer','Boy','2014-05-12','Grade 7','Pine','Membership','2026-10-16','Active','Naseer Ali','+960 777 0000','naseer@mail.mv','Aisha Ali','+960 999 0000','']]));
 let IMPORT_ROWS = [];
+/* Dates from spreadsheets: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YY or an Excel day number. */
+function normDate(v){ v = String(v||'').trim(); if(!v) return ''; let m;
+  if((m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`;
+  if((m = v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/))){ let y = +m[3]; if(y < 100) y += y > 50 ? 1900 : 2000; return `${y}-${pad(+m[2])}-${pad(+m[1])}`; }
+  if(/^\d{5}$/.test(v)) return iso(new Date(Date.UTC(1899, 11, 30) + (+v)*864e5));
+  return ''; }
 C.importFile = async el => { const file = el.files[0]; if(!file) return; let rows;
-  try { if(/\.xlsx?$/i.test(file.name)){ const X = await getXLSX(); const wb = X.read(await file.arrayBuffer()); rows = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, dateNF:'yyyy-mm-dd' }).map(r => r.map(v => String(v ?? ''))); } else rows = parseCSV(await file.text()); }
+  try { if(/\.xlsx?$/i.test(file.name)){ const X = await getXLSX(); const wb = X.read(await file.arrayBuffer()); rows = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:true, defval:'' }).map(r => r.map(v => String(v ?? ''))); } else rows = parseCSV(await file.text()); }
   catch(e){ $('#imp-prev').innerHTML = `<div class="alert">${ic('alert','sm')}<span>That file could not be read. Save it as CSV (UTF-8) and try again.</span></div>`; return; }
   const head = rows.shift().map(h => h.trim().toLowerCase().replace(/[\s/]+/g,'_'));
   IMPORT_ROWS = rows.map(r => Object.fromEntries(head.map((h,i) => [h, (r[i]||'').trim()]))).filter(r => r.first && r.last);
@@ -1358,7 +1362,7 @@ A.importDo = () => { const y = academicYear().y; const made = [];
     if(!name && S.patrols.length) return S.patrols[0];
     const p = { id:uid('p'), name:name||'New scouts', icon:'flag', color:COLORS[S.patrols.length % COLORS.length], motto:'', pl:null, apl:null, leaders:[], points:0 }; S.patrols.push(p); made.push(p.name); return p; };
   IMPORT_ROWS.forEach(r => { const p = patrolFor(r.patrol);
-  S.scouts.push({ id:uid('s'), sid:`TM-${y}-${String(S.scouts.length+1).padStart(3,'0')}`, first:r.first, last:r.last, gender:genderOf(r.gender), dob:r.dob||`${y-12}-01-01`, grade:r.grade||'Grade 6', section:r.section||'A', patrol:p.id, rank:STAGES.includes(r.rank)?r.rank:'Membership', joined:TODAY(), status:MEMBER_ST.includes(r.status)?r.status:'Pending', renewal:r.renewal||iso(addDays(new Date(),365)), fee:['Paid','Due','Overdue'].includes(r.fee)?r.fee:'Due', photo:null, photoConsent:false,
+  S.scouts.push({ id:uid('s'), sid:`TM-${y}-${String(S.scouts.length+1).padStart(3,'0')}`, first:r.first, last:r.last, gender:genderOf(r.gender), dob:normDate(r.dob)||`${y-12}-01-01`, grade:r.grade||'Grade 6', section:r.section||'A', patrol:p.id, rank:STAGES.includes(r.rank)?r.rank:'Membership', joined:normDate(r.joined)||TODAY(), status:MEMBER_ST.includes(r.status)?r.status:'Pending', renewal:iso(addDays(new Date(),365)), fee:'Due', photo:null, photoConsent:false,
     guardian:{ name:r.guardian_name, phone:r.guardian_phone, email:r.guardian_email, relation:'Guardian' }, emergency:{ name:r.emergency_name, phone:r.emergency_phone }, medical:r.medical||'', activities:[], syllabus:{}, badgeProgress:{}, badges:[] }); });
   audit(`Imported ${IMPORT_ROWS.length} scouts${made.length?` and created patrols ${made.join(', ')}`:''}`); toast(`Imported ${IMPORT_ROWS.length} scouts${made.length?` · new patrols: ${made.join(', ')}`:''}`); IMPORT_ROWS = []; closeModal(); refresh(); };
 A.exportScouts = () => modal({ title:'Export scouts', body:`<p class="muted" style="margin-bottom:14px">Exports all ${S.scouts.length} scouts with membership, patrol, rank and attendance. The PDF is a printable list split into girls and boys. In Excel and CSV, contact and medical columns are included only for roles allowed to see them.</p><div class="row"><button class="btn primary" data-a="exportScoutsDo" data-fmt="xlsx">${ic('download','sm')} Excel (.xlsx)</button><button class="btn" data-a="exportScoutsDo" data-fmt="csv">${ic('download','sm')} CSV</button><button class="btn" data-a="exportScoutsPDF">${ic('file','sm')} PDF</button></div>` });
@@ -1370,9 +1374,9 @@ A.exportScoutsPDF = () => withPDF(async () => { closeModal(); const all = [...S.
   groups.forEach(([label, l]) => { pdfH(ctx, `${label} (${l.length})`);
     pdfTable(ctx, ['#','Scout','Scout ID','Class','Patrol','Rank','Status','Att.'], l.map((s,i) => { const a = attOf(s.id); return [i+1, sname(s), s.sid, `${s.grade.replace('Grade ','Gr ')}${s.section}`, pName(s.patrol), s.rank, s.status, a.total ? a.pct+'%' : '—']; }), [22,140,82,48,72,79,50,38]); });
   await pdfSave(ctx, `milandhoo-scout-scouts-${TODAY()}.pdf`); });
-A.exportScoutsDo = el => { const head = ['scout_id','first','last','gender','dob','grade','section','patrol','rank','status','renewal','fee','photo_consent','attendance_pct','badges'];
+A.exportScoutsDo = el => { const head = ['scout_id','first','last','gender','dob','grade','patrol','rank','joined','status','attendance_pct','badges'];
   if(can('contacts.view')) head.push('guardian_name','guardian_phone','guardian_email','emergency_name','emergency_phone'); if(can('medical.view')) head.push('medical');
-  const rows = [head, ...S.scouts.map(s => { const r = [s.sid, s.first, s.last, genderOf(s.gender), s.dob, s.grade, s.section, pName(s.patrol), s.rank, s.status, s.renewal, s.fee, s.photoConsent?'yes':'no', attOf(s.id).pct, s.badges.map(b=>badge(b.badgeId)?.name).join('; ')];
+  const rows = [head, ...S.scouts.map(s => { const r = [s.sid, s.first, s.last, genderOf(s.gender), s.dob, s.grade, pName(s.patrol), s.rank, s.joined, s.status, attOf(s.id).pct, s.badges.map(b=>badge(b.badgeId)?.name).join('; ')];
     if(can('contacts.view')) r.push(s.guardian?.name, s.guardian?.phone, s.guardian?.email, s.emergency?.name, s.emergency?.phone); if(can('medical.view')) r.push(s.medical); return r; })];
   if(el.dataset.fmt==='csv') saveFile(`milandhoo-scout-scouts-${TODAY()}.csv`, csvOf(rows)); else exportXLSX(`milandhoo-scout-scouts-${TODAY()}.xlsx`, [['Scouts', rows]]); };
 
