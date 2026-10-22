@@ -16,6 +16,7 @@
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
+<script src="notes/notes.js"></script>
 <script>
 /* Firebase connection for milandhoo-scout (built in, so the portal works even if firebase-config.js fails to load) */
 window.TRAILMARK_FIREBASE = (window.TRAILMARK_FIREBASE && window.TRAILMARK_FIREBASE.apiKey && !/PASTE/.test(window.TRAILMARK_FIREBASE.apiKey)) ? window.TRAILMARK_FIREBASE : {
@@ -438,6 +439,26 @@ svg.chart .grid{stroke:var(--line-2)}
 .bpick-list{max-height:300px;overflow:auto;margin-top:6px}.bpick-opt{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:6px 8px;border-radius:8px;cursor:pointer;text-align:left}
 .bpick-opt:hover,.bpick-opt.on{background:var(--wash)}
 .bcheck-list{max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px 12px}.bcheck-list .check{gap:8px}
+.note-card{display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;border-top:4px solid var(--nc);min-height:190px}
+.note-ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--nc) 14%,transparent);color:var(--nc);flex:none}
+.note-head{display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-left:5px solid var(--nc);margin-bottom:12px}
+.note-toc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;position:sticky;top:64px;z-index:5;background:var(--bg);padding:8px 0}
+.note-toc a{display:inline-flex;gap:6px;align-items:center;padding:6px 12px;border-radius:99px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink);font-weight:600;font-size:.85rem}
+.note-toc .num,.note-sec h2 .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--wash);color:var(--primary);font-size:.75rem;font-weight:700}
+.note-sec{margin-bottom:14px;scroll-margin-top:120px;line-height:1.65;display:flow-root}.note-sec h2{display:flex;gap:10px;align-items:center;margin-bottom:10px}.note-sec p{margin:0 0 10px}
+.nb{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:10px 0}.nb.tip{background:var(--wash)}.nb.warn{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--ink)}.nb.warn svg{color:var(--warn);flex:none;margin-top:3px}
+.nb.key{display:block;background:var(--surface-2);border:1px solid var(--line)}.nb.key ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}.nb.key li{display:flex;gap:8px}.nb.key li svg{color:var(--ok);flex:none;margin-top:4px}
+.nimg{margin:10px 0;text-align:center}.nimg img{max-width:100%;background:#fff;border-radius:10px;border:1px solid var(--line);padding:6px}.nimg figcaption{font-size:.8rem;color:var(--ink-2);margin-top:4px}
+.nimg.side{float:right;width:220px;margin:0 0 10px 16px}
+.nsteps{list-style:none;margin:10px 0;padding:0;display:grid;gap:10px}.nsteps li{display:flex;gap:12px;align-items:flex-start}
+.nsteps .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.nsteps.pics{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.nsteps.pics li{flex-direction:column;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;position:relative}
+.nsteps.pics .n{position:absolute;top:8px;left:8px}.nsteps.pics img{width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px}
+.ngloss{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px}.ngloss dt{font-weight:700}
+.note-rel{margin-top:14px;padding:12px;border-radius:12px;background:var(--wash);display:grid;gap:8px}
+.note-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;color:var(--nc,var(--ink))}
+@media (max-width:640px){ .nimg.side{float:none;width:auto;margin:10px 0} .note-toc{top:56px} }
+@media print{ .side,.top,.bnav,.note-toc,.btn{display:none!important} .note-sec{break-inside:avoid-page;box-shadow:none} }
 .pick-h{position:sticky;top:0;z-index:1;background:var(--surface);font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);padding:10px 0 6px;border-bottom:1px solid var(--line)}
 .srow .gset{display:flex;gap:6px;justify-content:flex-end}
 .srow.qs{grid-template-columns:40px minmax(0,1.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 136px}
@@ -1037,6 +1058,7 @@ const NAV = [
   { id:'patrols', label:'Patrols', icon:'flag' },
   { id:'badges', label:'Badge work', icon:'medal' },
   { id:'syllabus', label:'Syllabus', icon:'map' },
+  { id:'notes', label:'Scout Notes', icon:'book' },
   { id:'sessions', label:'Session planning', icon:'fire' },
   { id:'calendar', label:'Calendar', icon:'calendar' },
   { id:'gallery', label:'Highlights', icon:'image' },
@@ -1047,9 +1069,9 @@ const NAV = [
 ];
 const SCOUT_NAV = [
   { id:'me', label:'My profile', icon:'users' }, { id:'calendar', label:'Calendar', icon:'calendar' },
-  { id:'gallery', label:'Highlights', icon:'image' } ];
+  { id:'notes', label:'Scout Notes', icon:'book' }, { id:'gallery', label:'Highlights', icon:'image' } ];
 const navList = () => isScout() ? SCOUT_NAV : NAV.filter(n => !n.admin || ME.role==='admin');
-const ROUTE_PARENT = { scout:'scouts', register:'attendance', session:'sessions', album:'gallery', leader:'leaders', badge:'badges', me:'me' };
+const ROUTE_PARENT = { scout:'scouts', register:'attendance', session:'sessions', album:'gallery', leader:'leaders', badge:'badges', me:'me', note:'notes' };
 
 let collapsed = false;
 try { collapsed = localStorage.getItem('tm_collapsed')==='1'; } catch(e){}
@@ -1106,7 +1128,7 @@ function updateChrome(){
   const u = unread(); $$('[data-unread]').forEach(el => { el.textContent = u > 9 ? '9+' : u; el.classList.toggle('hide', !u); });
 }
 function renderMain(){ twoTerms();
-  if(isScout() && !['me','calendar','gallery','album','notifications','highlights'].includes(R.route)) R.route = 'me';
+  if(isScout() && !['me','calendar','gallery','album','notifications','highlights','notes','note'].includes(R.route)) R.route = 'me';
   if(!isScout() && R.route==='me') R.route = 'dashboard';
   const v = VIEWS[R.route] || VIEWS.dashboard;
   let html; try { html = v(); } catch(e){ console.error(e); html = empty('alert','Something went wrong showing this page', esc(e.message)); }
@@ -1789,7 +1811,7 @@ VIEWS.badge = () => { const b = badge(R.id); if(!b) return empty('medal','Badge 
   return `<button class="btn ghost sm" data-a="go" data-r="badges" style="margin-bottom:10px">${ic('left','sm')} Badge catalogue</button>
   <div class="card" style="margin-bottom:16px"><div class="row" style="gap:16px">${bArt(b, 'lg', 'width:120px;height:120px')}<div style="flex:1;min-width:200px"><div class="eyebrow">${catLabel(b.category)}</div><h1>${esc(b.name)}</h1></div>
   ${can('badge.award')?`<button class="btn" data-a="awardBadge" data-bid="${b.id}">${ic('medal','sm')} Award</button>`:''}${can('badge.catalog')?`<button class="btn" data-a="badgeForm" data-id="${b.id}">${ic('edit','sm')} Edit</button>`:''}</div>
-  <h3 style="margin:18px 0 8px">Syllabus</h3>${sylHTML(b)}</div>
+  <h3 style="margin:18px 0 8px">Syllabus</h3>${sylHTML(b)}${noteFor(b.name).length ? `<div class="note-rel"><b>${ic('book','sm')} Study notes</b><div class="row" style="gap:8px">${noteFor(b.name).map(n => noteChip(n)).join('')}</div></div>` : ''}</div>
   <div><div class="card"><div class="card-h"><h2>Holders</h2>${chip(holders.length)}</div><div class="list">${holders.map(({s,a}) => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="go" data-r="scout" data-id="${s.id}" data-tab="badges">${av(s,34)}<span class="grow"><b class="ttl" style="display:block">${esc(sname(s))}</b><span class="small muted">${fmtD(a.date)} · ${esc(user(a.by)?.name||'')}</span></span></button>`).join('') || empty('medal','Nobody holds this badge yet')}</div></div></div>`; };
 function signReq(s, b, i, on){ s.badgeProgress[b.id] = s.badgeProgress[b.id] || {}; const before = badgePct(s,b);
   if(on) s.badgeProgress[b.id][i] = { date:TODAY(), by:ME.id }; else delete s.badgeProgress[b.id][i];
@@ -1856,6 +1878,7 @@ A.sylStage = el => { R.q.stage = el.dataset.k; renderMain(); };
 A.sylItem = el => { const it = S.syllabus.find(i => i.id===el.dataset.id); const ss = activeScouts().filter(s => s.rank===it.stage).sort((a,b)=>sname(a).localeCompare(sname(b))); const ok = can('syllabus.signoff');
   const linked = S.sessions.filter(x => !x.template && x.syllabus.includes(it.id));
   modal({ title:esc(it.topic), wide:true, form:'sylBulk', body:`<input type="hidden" name="iid" value="${it.id}"><p class="muted">${esc(it.stage)} · ${esc(it.objective)} · due ${fmtD(it.due)}</p>
+    ${noteFor(it.topic+' '+it.objective).length ? `<div class="note-rel"><b>${ic('book','sm')} Study notes</b><div class="row" style="gap:8px">${noteFor(it.topic+' '+it.objective).map(n => noteChip(n)).join('')}</div></div>` : ''}
     ${linked.length ? `<p class="small" style="margin-top:8px">Covered in: ${linked.map(x => `<a href="#" data-a="go" data-r="session" data-id="${x.id}">${esc(x.title)} (${fmtD(x.date,'short')})</a>`).join(', ')}</p>` : ''}
     <div class="row" style="margin:14px 0 6px"><b style="flex:1">Scouts at ${esc(it.stage)}</b>${ok?`<button type="button" class="btn sm ghost" data-a="sylAll">Select all</button>`:''}</div>
     <input class="inp" type="search" placeholder="Search scout name" data-i="pickFind" aria-label="Search scout name" style="margin-bottom:6px"><div style="border:1px solid var(--line);border-radius:10px;padding:4px 10px;max-height:360px;overflow:auto">${pickGroups(ss, s => { const d = s.syllabus[it.id]; return `<label class="check" style="padding:6px 0;border-bottom:1px solid var(--line-2)"><input type="checkbox" name="sids" value="${s.id}" ${d?'checked':''} ${ok?'':'disabled'}>${av(s,26)}<span style="flex:1">${esc(sname(s))} <span class="small muted">${pName(s.patrol)}</span></span>${d?`<span class="small" style="color:var(--ok)">${fmtD(d.date,'short')} · ${esc(user(d.by)?.name.split(' ')[0]||'')}</span>`:''}</label>`; }) || empty('users','No scouts at this stage')}</div>`,
@@ -2357,6 +2380,37 @@ C.auditU = el => { R.q.u = el.value; renderMain(); };
 C.auditS = el => { R.q.s = el.value; renderMain(); };
 A.auditExport = () => saveFile(`milandhoo-scout-audit-${TODAY()}.csv`, csvOf([['time','user','action'], ...S.audit.map(a => [new Date(a.ts).toISOString(), user(a.user)?.name||'', a.action])]));
 
+/* ---- Scout Notes: Scout Standard study notes, rewritten for easy reading ---- */
+const NOTES = () => window.SCOUT_NOTES || [];
+const noteOf = id => NOTES().find(n => n.id===id);
+const noteFor = text => { const t = String(text||'').toLowerCase(); return NOTES().filter(n => n.keys.some(k => t.includes(k))); };
+const noteMins = n => Math.max(1, Math.round(JSON.stringify(n.sections).length / 1100));
+function noteChip(n, sec){ return `<button type="button" class="note-chip" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}"${sec?` data-sec="${sec}"`:''}>${ic(n.icon,'sm')} ${esc(n.title)}</button>`; }
+VIEWS.notes = () => `${pageH('Scout Standard', 'Scout Notes', '')}
+  <p class="muted" style="margin:-8px 0 16px;max-width:70ch">Study notes for the Scout Standard from the 9th Raa Scout Group. Open a topic to read it, or jump straight to a section.</p>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">${NOTES().map(n => `<button class="card note-card" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}">
+    <span class="note-ic">${ic(n.icon,'lg')}</span><h2>${esc(n.title)}</h2><p class="muted small">${esc(n.summary)}</p>
+    <div class="row small" style="gap:12px;margin-top:auto"><span><b>${n.sections.length}</b> section${n.sections.length===1?'':'s'}</span>${n.preview?'<span class="chip">Preview</span>':`<span>${noteMins(n)} min read</span>`}</div></button>`).join('')}</div>`;
+function noteBlock(b){
+  if(b.t==='p') return `<p>${esc(b.x)}</p>`;
+  if(b.t==='tip') return `<div class="nb tip">${ic('star','sm')}<span>${esc(b.x)}</span></div>`;
+  if(b.t==='warn') return `<div class="nb warn">${ic('alert','sm')}<span>${esc(b.x)}</span></div>`;
+  if(b.t==='key') return `<div class="nb key">${b.title?`<b>${esc(b.title)}</b>`:''}<ul>${b.items.map(i => `<li>${ic('check','sm')}<span>${esc(i)}</span></li>`).join('')}</ul></div>`;
+  if(b.t==='img') return `<figure class="nimg${b.side?' side':''}"><img src="${b.src}" alt="${esc(b.cap||'')}" loading="lazy"><figcaption>${esc(b.cap||'')}</figcaption></figure>`;
+  if(b.t==='steps') return `<ol class="nsteps${b.items.some(i=>i.img)?' pics':''}">${b.items.map((i,k) => `<li><span class="n">${k+1}</span>${i.img?`<img src="${i.img}" alt="Step ${k+1}" loading="lazy">`:''}<span>${esc(i.x)}</span></li>`).join('')}</ol>`;
+  if(b.t==='gloss') return `<dl class="ngloss">${b.items.map(([w,m]) => `<dt>${esc(w)}</dt><dd>${esc(m)}</dd>`).join('')}</dl>`;
+  return ''; }
+VIEWS.note = () => { const n = noteOf(R.id); if(!n) return empty('book','Notes not found');
+  const badges = S.badges.filter(b => noteFor(b.name).includes(n)), items = S.syllabus.filter(i => noteFor(i.topic+' '+i.objective).includes(n));
+  setTimeout(() => { const t = R.q.sec && document.getElementById('ns-'+R.q.sec); if(t) t.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50);
+  return `<button class="btn ghost sm" data-a="go" data-r="notes" style="margin-bottom:10px">${ic('left','sm')} All notes</button>
+  <div class="card note-head" style="--nc:${n.color}"><span class="note-ic">${ic(n.icon,'lg')}</span><div style="flex:1;min-width:200px"><div class="eyebrow">Scout Standard notes</div><h1>${esc(n.title)}</h1><p class="muted">${esc(n.summary)}</p></div>
+    <button class="btn" data-a="notePrint">${ic('download','sm')} Print / PDF</button></div>
+  <nav class="note-toc" aria-label="Contents">${n.sections.map((x,i) => `<a href="#ns-${x.id}" data-a="noteJump" data-sec="${x.id}"><span class="num">${i+1}</span>${esc(x.title)}</a>`).join('')}</nav>
+  ${n.sections.map((x,i) => `<section class="card note-sec" id="ns-${x.id}"><h2><span class="num">${i+1}</span>${esc(x.title)}</h2>${(x.blocks||[{t:'tip', x:'Preview only: the full notes for this section are added after you choose an option.'}]).map(noteBlock).join('')}</section>`).join('')}
+  ${badges.length || items.length ? `<div class="card"><div class="card-h"><h2>Used for</h2></div><div class="row" style="gap:8px">${badges.map(b => `<button class="note-chip" data-a="go" data-r="badge" data-id="${b.id}">${bArt(b,'','width:22px;height:22px','sm')} ${esc(b.name)}</button>`).join('')}${items.map(i => chip(ic('map','sm')+' '+esc(i.topic))).join('')}</div></div>` : ''}`; };
+A.noteJump = (el, e) => { e?.preventDefault(); document.getElementById('ns-'+el.dataset.sec)?.scrollIntoView({ behavior:'smooth', block:'start' }); };
+A.notePrint = () => window.print();
 VIEWS.guide = () => { const sec = (icon, t, items) => `<div class="card"><div class="card-h"><span class="kpi"><span class="ic">${ic(icon)}</span></span><h2>${t}</h2></div><ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px">${items.map(i => `<li>${i}</li>`).join('')}</ol></div>`;
   return `${pageH('Help', 'Leader guide')}
   <div class="alert info" style="margin-bottom:16px">${ic('compass','sm')}<span>A ten-minute tour of the portal. Each section matches an item in the menu. On a phone, use the bar at the bottom of the screen and tap <b>More</b> for everything else.</span></div>
