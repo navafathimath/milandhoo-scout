@@ -1282,7 +1282,6 @@ VIEWS.dashboard = () => {
     can('session.edit') && ['fire','Plan session','newSession'],
     can('badge.award') && ['medal','Award badge','awardBadge'],
     can('scout.add') && ['plus','Add scout','addScout'],
-    can('photo.upload') && ['camera','Upload photos','uploadPhotos'],
   ].filter(Boolean);
   return `
   <section class="welcome">
@@ -1919,7 +1918,7 @@ VIEWS.session = () => { const s = S.sessions.find(x => x.id===R.id); if(!s) retu
       <div class="stack">
       <div class="row" style="justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:10px"><span class="row nw" style="gap:8px">${ic('clipboard')} <b>Attendance</b></span>${reg ? `<button class="btn sm" data-a="go" data-r="register" data-id="${reg.id}">${regCounts(reg).pct}% · open register</button>` : can('attendance.take') ? `<button class="btn sm" data-a="sessionRegister" data-id="${s.id}">Create linked register</button>` : '<span class="small muted">No register</span>'}</div>
       <form data-f="reflection" class="stack"><input type="hidden" name="id" value="${s.id}">${field('Reflection & notes', `<textarea class="inp" id="f_reflection" name="reflection" placeholder="What worked, what to change, who needs follow-up" ${ed||can('attendance.take')?'':'disabled'}>${esc(s.reflection)}</textarea>`)}${ed||can('attendance.take')?`<div class="row" style="justify-content:flex-end"><button class="btn sm primary">Save reflection</button></div>`:''}</form>
-      <div><div class="row" style="margin-bottom:8px"><b style="flex:1">Photos</b>${can('photo.upload')?`<button class="btn sm" data-a="uploadPhotos" data-session="${s.id}">${ic('camera','sm')} Attach photos</button>`:''}</div>${photos.length ? `<div class="photos" style="grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${photos.map(p => `<img class="thumb" src="${src(p.ref)}" alt="${esc(p.caption)}" data-a="lightbox" data-id="${p.id}" data-set="session:${s.id}">`).join('')}</div>` : '<p class="small muted">No photos attached.</p>'}</div></div></div>` : ''}
+      <div>${photos.length ? `<b style="display:block;margin-bottom:8px">Photos</b><div class="photos" style="grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${photos.map(p => `<img class="thumb" src="${src(p.ref)}" alt="${esc(p.caption)}" data-a="lightbox" data-id="${p.id}" data-set="session:${s.id}">`).join('')}</div>` : ''}</div></div></div>` : ''}
   </div>
   <div class="stack">
     <div class="card"><div class="card-h"><h2>Materials</h2><span class="small muted num">${s.materials.filter(m=>m.done).length}/${s.materials.length}</span></div>${s.materials.map((m,i) => `<label class="check" style="padding:4px 0"><input type="checkbox" ${m.done?'checked':''} ${ed||can('attendance.take')?'':'disabled'} data-c="matTick" data-id="${s.id}" data-i="${i}"><span style="${m.done?'text-decoration:line-through;color:var(--ink-2)':''}">${esc(m.t)}</span></label>`).join('') || '<p class="muted small">No materials listed.</p>'}</div>
