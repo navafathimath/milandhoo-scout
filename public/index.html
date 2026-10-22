@@ -1022,7 +1022,6 @@ const NAV = [
   { id:'sessions', label:'Session planning', icon:'fire' },
   { id:'calendar', label:'Calendar', icon:'calendar' },
   { id:'gallery', label:'Highlights', icon:'image' },
-  { id:'notifications', label:'Notifications', icon:'bell', count:true },
   { sec:'Group' },
   { id:'leaders', label:'Leaders', icon:'shield' },
   { id:'settings', label:'Settings', icon:'settings', admin:true },
@@ -1031,7 +1030,7 @@ const NAV = [
 ];
 const SCOUT_NAV = [
   { id:'me', label:'My profile', icon:'users' }, { id:'calendar', label:'Calendar', icon:'calendar' },
-  { id:'gallery', label:'Highlights', icon:'image' }, { id:'notifications', label:'Notifications', icon:'bell', count:true } ];
+  { id:'gallery', label:'Highlights', icon:'image' } ];
 const navList = () => isScout() ? SCOUT_NAV : NAV.filter(n => !n.admin || ME.role==='admin');
 const ROUTE_PARENT = { scout:'scouts', register:'attendance', session:'sessions', album:'gallery', leader:'leaders', badge:'badges', me:'me' };
 
