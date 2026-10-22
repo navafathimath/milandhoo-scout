@@ -948,6 +948,14 @@ function expandEvents(from, to){
   return out.sort((a,b) => (a.occ + (a.start||'')).localeCompare(b.occ + (b.start||'')));
 }
 function upcoming(n=5, days=60){ return expandEvents(TODAY(), iso(addDays(new Date(), days))).slice(0, n); }
+/* What's next for the dashboard: the earliest upcoming calendar event or session plan (a plan wins a tie on the same day). */
+function nextUp(){ const t = TODAY(), n = new Date(), hm = `${pad(n.getHours())}:${pad(n.getMinutes())}`;
+  const done = (date, end) => date===t && end && end <= hm;
+  const ev = expandEvents(t, iso(addDays(n, 120))).filter(e => e.type!=='holiday' && !done(e.occ, e.end || e.start))[0];
+  const ss = S.sessions.filter(x => !x.template && x.date >= t && !done(x.date, x.end || x.time)).sort(by('date'))[0];
+  if(ss && (!ev || ss.date <= ev.occ)) return { kind:'session', title:ss.title, date:ss.date, time:ss.time, where:ss.location, id:ss.id };
+  if(ev) return { kind:'event', title:ev.title, date:ev.occ, time:ev.start, where:ev.location, id:ev.id, type:ev.type, slip:ev.permission };
+  return null; }
 function nextSession(){ const t = TODAY(); return S.sessions.filter(s => !s.template && s.date >= t).sort(by('date'))[0]; }
 function visibleNotifs(){ if(!isScout()) return S.notifications; const sc = myScout(); return S.notifications.filter(n => (n.type==='announce' && (!n.to || n.to==='all' || n.to===sc?.patrol)) || (n.type==='session' && n.link?.route==='calendar') || (n.link && n.link.id===sc?.id && ['badge','birthday'].includes(n.type))); }
 function readMap(){ S.readBy = S.readBy || {}; S.readBy[ME.id] = S.readBy[ME.id] || {}; return S.readBy[ME.id]; }
@@ -1277,7 +1285,7 @@ document.addEventListener('keydown', e => {
 /* ================= Dashboard ================= */
 VIEWS.dashboard = () => {
   const h = new Date().getHours(); const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  const ns = nextSession(); const act = activeScouts().filter(s => s.status==='Active');
+  const ns = nextSession(), nx = nextUp(); const act = activeScouts().filter(s => s.status==='Active');
   const regs = regsSorted(); const todayReg0 = regs.find(r => r.date===TODAY()); const last = todayReg0 || regs.find(r => r.status==='final') || regs[0]; const lc = last ? regCounts(last) : null;
   const todayReg = regs.find(r => r.date===TODAY());
   const term = currentTerm();
@@ -1311,7 +1319,7 @@ VIEWS.dashboard = () => {
   <section class="welcome">
     <svg class="bgsvg" viewBox="0 0 300 160" aria-hidden="true"><path d="M0 160l60-70 40 30 60-80 70 90 30-30 40 60z" fill="#5E9FC8"/><path d="M160 160l-26-40h52z" fill="#9FE0B8"/></svg>
     <div style="flex:1;min-width:230px;position:relative;z-index:1"><div class="eyebrow" style="color:var(--gold-pale)">${fmtD(TODAY(),'long')}</div><h1 style="margin-top:4px">${greet}, ${esc(ME.name.split(' ')[0])}</h1><p style="color:var(--side-ink-2);margin-top:6px">${act.length} active scouts across ${S.patrols.length} patrols · ${esc(term.name)}, ${esc(S.settings.year)}</p></div>
-    <div class="next">${ns ? `<div class="eyebrow">Next session</div><div style="font-family:var(--f-head);font-size:1.1rem;color:#fff;margin:4px 0">${esc(ns.title)}</div><div class="small" style="color:var(--side-ink-2)">${fmtD(ns.date,'dow')} · ${fmtT(ns.time)} · ${esc(ns.location)}</div><button class="btn sm gold" style="margin-top:10px" data-a="go" data-r="session" data-id="${ns.id}">Open plan ${ic('right','sm')}</button>` : `<div class="eyebrow">Next session</div><div style="color:#fff;margin-top:4px">Nothing planned yet</div>${can('session.edit')?`<button class="btn sm gold" style="margin-top:10px" data-a="newSession">Plan a session</button>`:''}`}</div>
+    <div class="next">${nx ? `<div class="eyebrow">${nx.kind==='session' ? 'Next session' : 'Next · '+esc(EVENT_TYPES[nx.type]?.label||'Event')}</div><div style="font-family:var(--f-head);font-size:1.1rem;color:#fff;margin:4px 0">${esc(nx.title)}</div><div class="small" style="color:var(--side-ink-2)">${nx.date===TODAY()?'Today':fmtD(nx.date,'dow')}${nx.time?' · '+fmtT(nx.time):''}${nx.where?' · '+esc(nx.where):''}${nx.slip?' · Permission slip':''}</div>${nx.kind==='session' ? `<button class="btn sm gold" style="margin-top:10px" data-a="go" data-r="session" data-id="${nx.id}">Open plan ${ic('right','sm')}</button>` : `<button class="btn sm gold" style="margin-top:10px" data-a="openEvent" data-id="${nx.id}" data-occ="${nx.date}">View details ${ic('right','sm')}</button>`}` : `<div class="eyebrow">Next session</div><div style="color:#fff;margin-top:4px">Nothing planned yet</div>${can('session.edit')?`<button class="btn sm gold" style="margin-top:10px" data-a="newSession">Plan a session</button>`:''}`}</div>
   </section>
   ${qa.length ? `<div class="quick" style="margin:16px 0 18px">${qa.map(([i,l,a]) => `<button class="btn" data-a="${a}">${ic(i,'sm')} ${l}</button>`).join('')}</div>` : '<div style="height:16px"></div>'}
   <div class="grid kpis" style="margin-bottom:16px">
