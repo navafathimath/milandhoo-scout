@@ -323,6 +323,7 @@ svg.chart .grid{stroke:var(--line-2)}
 .mcal-d:last-child{border-right:0}.mcal-d:hover{background:var(--surface-2)}
 .mcal-d.out{background:var(--surface-2)}.mcal-d.out .mcal-n{color:var(--ink-2);opacity:.55}
 .mcal-n{font-size:.82rem;font-weight:700}
+.mcal-h .hol{color:var(--bad)}.mcal-d.fri{background:color-mix(in srgb,var(--bad) 4%,var(--surface))}.mcal-d.fri .mcal-n{color:var(--bad)}
 .mcal-d.today{box-shadow:inset 0 3px 0 var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--surface))}.mcal-d.today .mcal-n{color:var(--ok)}
 .mcal-d.sel{box-shadow:inset 0 0 0 2px var(--primary)}
 .mcal-add{position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:6px;border:0;display:grid;place-items:center;background:var(--wash);color:var(--primary);cursor:pointer}
@@ -1992,18 +1993,18 @@ VIEWS.calendar = () => { if(!CAL.view) CAL.view = window.innerWidth < 700 ? 'age
   ${v==='month' ? `<div class="cal-wrap">${calMonth(cur)}${calSide()}</div>` : v==='week' ? calWeek(cur) : v==='day' ? calDay(CAL.cur) : calAgenda(CAL.cur)}`; };
 const calEvents = (a, b) => expandEvents(a, b).filter(e => !CAL.hidden.has(e.type) && (!isScout() || e.patrols.includes('all') || e.patrols.includes(myScout()?.patrol)));
 const evBtn = e => `<button class="ev" style="background:${EVENT_TYPES[e.type].color}" data-a="openEvent" data-id="${e.id}" data-occ="${e.occ}" title="${esc(e.title)}">${e.start?fmtT(e.start).replace(':00','').replace(' ','').toLowerCase()+' ':''}${esc(e.title)}</button>`;
-/* Month view: Monday-first weeks with a week-of-term column, tinted event tags, today line, selectable days. */
-function termWeek(monday){ const terms = S.settings.terms || []; for(let i=0;i<terms.length;i++){ const t = terms[i]; const sun = iso(addDays(monday, 6));
-    if(sun >= t.start && iso(monday) <= t.end){ const s = pd(t.start); const sMon = addDays(s, -((s.getDay()+6)%7)); return { w:Math.floor((monday - sMon)/(7*86400000))+1, t:i+1 }; } } return null; }
+/* Month view: Sunday-first weeks (Friday, the public holiday, in red) with a week-of-term column, tinted event tags, today line, selectable days. */
+function termWeek(first){ const terms = S.settings.terms || []; for(let i=0;i<terms.length;i++){ const t = terms[i]; const last = iso(addDays(first, 6));
+    if(last >= t.start && iso(first) <= t.end){ const s = pd(t.start); const sFirst = addDays(s, -s.getDay()); return { w:Math.round((first - sFirst)/(7*86400000))+1, t:i+1 }; } } return null; }
 const needsAction = e => e.permission || !(e.leaders||[]).length;
 const evTag = e => { const c = EVENT_TYPES[e.type].color; return `<button class="mev" style="--ec:${c}" data-a="openEvent" data-id="${e.id}" data-occ="${e.occ}" title="${esc(e.title)}">${needsAction(e)?`<span class="mev-flag" title="${e.permission?'Permission slip required':'No leader assigned'}"></span>`:''}${e.start?`<span class="mev-t">${fmtT(e.start).replace(':00','').replace(' ','').toLowerCase()}</span>`:''}<span class="mev-n">${esc(e.title)}</span></button>`; };
-function calMonth(cur){ const first = new Date(cur.getFullYear(), cur.getMonth(), 1); const start = addDays(first, -((first.getDay()+6)%7));
-  const last = new Date(cur.getFullYear(), cur.getMonth()+1, 0); const weeks = Math.ceil((((first.getDay()+6)%7) + last.getDate())/7);
+function calMonth(cur){ const first = new Date(cur.getFullYear(), cur.getMonth(), 1); const start = addDays(first, -first.getDay());   // weeks start on Sunday
+  const last = new Date(cur.getFullYear(), cur.getMonth()+1, 0); const weeks = Math.ceil((first.getDay() + last.getDate())/7);
   const days = [...Array(weeks*7)].map((_,i) => addDays(start, i)); const evs = calEvents(iso(days[0]), iso(days[days.length-1])); const t = TODAY(); const add = can('event.edit');
-  return `<div class="mcal"><div class="mcal-h"><span>WK</span>${['MON','TUE','WED','THU','FRI','SAT','SUN'].map(d => `<span>${d}</span>`).join('')}</div>
+  return `<div class="mcal"><div class="mcal-h"><span>WK</span>${['SUN','MON','TUE','WED','THU','FRI','SAT'].map(d => `<span class="${d==='FRI'?'hol':''}">${d}</span>`).join('')}</div>
   ${[...Array(weeks)].map((_,w) => { const wk = days.slice(w*7, w*7+7); const tw = termWeek(wk[0]);
     return `<div class="mcal-w"><div class="mcal-wn">${tw ? `W${tw.w}<em>T${tw.t}</em>` : ''}</div>${wk.map(d => { const ds = iso(d); const de = evs.filter(e => ds >= e.occ && ds <= e.occEnd);
-      return `<div class="mcal-d ${d.getMonth()!==cur.getMonth()?'out':''} ${ds===t?'today':''} ${ds===CAL.sel?'sel':''}" data-a="calPick" data-d="${ds}" role="button" tabindex="0" aria-label="${fmtD(ds,'long')}, ${de.length} event${de.length===1?'':'s'}">
+      return `<div class="mcal-d ${d.getMonth()!==cur.getMonth()?'out':''} ${d.getDay()===5?'fri':''} ${ds===t?'today':''} ${ds===CAL.sel?'sel':''}" data-a="calPick" data-d="${ds}" role="button" tabindex="0" aria-label="${fmtD(ds,'long')}, ${de.length} event${de.length===1?'':'s'}">
         <span class="mcal-n">${d.getDate()}${ds===t?'<span class="mcal-tl"> · Today</span>':''}</span>${ds===CAL.sel && add ? `<button class="mcal-add" data-a="eventForm" data-date="${ds}" aria-label="Add an event on ${fmtD(ds,'long')}">${ic('plus','sm')}</button>` : ''}
         ${de.slice(0,3).map(evTag).join('')}${de.length>3?`<span class="small muted" style="padding-left:4px">+${de.length-3} more</span>`:''}</div>`; }).join('')}</div>`; }).join('')}</div>`; }
 /* Right-hand panel: today (or the picked day) and the next events. */
