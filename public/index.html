@@ -1065,7 +1065,6 @@ const NAV = [
   { sec:'Group' },
   { id:'leaders', label:'Leaders', icon:'shield' },
   { id:'settings', label:'Settings', icon:'settings', admin:true },
-  { id:'guide', label:'Leader guide', icon:'book' },
 ];
 const SCOUT_NAV = [
   { id:'me', label:'My profile', icon:'users' }, { id:'calendar', label:'Calendar', icon:'calendar' },
@@ -1099,7 +1098,7 @@ function renderApp(){ twoTerms();
   <aside class="side" aria-label="Main navigation">
     <div class="side-brand">${logoHTML(40)}<div class="txt"><div class="name">${esc(S.settings.groupName.replace(/ School Scout Troop$/,''))}</div><div class="sub">${esc(S.settings.year)} · Scout portal</div></div></div>
     <nav>${nav.map(n => n.sec ? `<div class="nav-sec">${n.sec}</div>` : `<button class="nav-item" data-a="go" data-r="${n.id}" data-nav="${n.id}" title="${n.label}">${ic(n.icon)}<span class="nav-label">${n.label}</span>${n.count?`<span class="cnt" data-unread></span>`:''}</button>`).join('')}</nav>
-    <div class="side-foot"><button class="nav-item collapse-btn" data-a="collapse" title="Collapse sidebar">${ic('collapse')}<span class="nav-label">Collapse</span></button></div>
+    <div class="side-foot"><button class="nav-item collapse-btn" data-a="collapse" title="Collapse or expand the sidebar" aria-label="Collapse or expand the sidebar">${ic('collapse')}</button></div>
   </aside>
   <div class="drawer-mask" data-a="closeDrawer"></div>
   <div class="main-wrap">
