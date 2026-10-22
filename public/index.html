@@ -312,6 +312,30 @@ svg.chart .grid{stroke:var(--line-2)}
 .emblem{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;color:#fff;flex:none}
 
 /* ===== Calendar ===== */
+.cal-wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.mcal{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
+.mcal-h,.mcal-w{display:grid;grid-template-columns:48px repeat(7,minmax(0,1fr))}
+.mcal-h{background:var(--surface-2);border-bottom:1px solid var(--line)}.mcal-h span{padding:9px 8px;font-size:.7rem;font-weight:600;letter-spacing:.08em;color:var(--ink-2)}
+.mcal-w{border-bottom:1px solid var(--line-2)}.mcal-w:last-child{border-bottom:0}
+.mcal-wn{border-right:1px solid var(--line-2);font-size:.68rem;font-weight:700;color:var(--ink-2);text-align:center;padding:10px 2px;line-height:1.3;background:var(--surface-2)}
+.mcal-wn em{display:block;font-style:normal;color:var(--primary);font-size:.62rem}
+.mcal-d{min-height:108px;border-right:1px solid var(--line-2);padding:7px 6px 6px;position:relative;min-width:0;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.mcal-d:last-child{border-right:0}.mcal-d:hover{background:var(--surface-2)}
+.mcal-d.out{background:var(--surface-2)}.mcal-d.out .mcal-n{color:var(--ink-2);opacity:.55}
+.mcal-n{font-size:.82rem;font-weight:700}
+.mcal-d.today{box-shadow:inset 0 3px 0 var(--ok);background:color-mix(in srgb,var(--ok) 7%,var(--surface))}.mcal-d.today .mcal-n{color:var(--ok)}
+.mcal-d.sel{box-shadow:inset 0 0 0 2px var(--primary)}
+.mcal-add{position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:6px;border:0;display:grid;place-items:center;background:var(--wash);color:var(--primary);cursor:pointer}
+.mev{position:relative;display:block;width:100%;text-align:left;border:1px solid color-mix(in srgb,var(--ec) 28%,transparent);border-left:3px solid var(--ec);background:color-mix(in srgb,var(--ec) 9%,var(--surface));border-radius:6px;padding:4px 6px;cursor:pointer;color:var(--ink);font-size:.76rem;line-height:1.25}
+.mev:hover{background:color-mix(in srgb,var(--ec) 16%,var(--surface))}
+.mev-t{display:block;font-weight:700;font-size:.7rem;color:var(--ec)}
+.mev-n{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-weight:600;padding-right:8px}
+.mev-flag{position:absolute;right:5px;top:5px;width:8px;height:8px;border-radius:50%;background:#E0A030}
+.cal-side{padding:16px;position:sticky;top:80px}.cal-big{font-family:var(--f-head);font-size:2.8rem;line-height:1;color:var(--ok)}
+.side-ev{display:grid;gap:2px;width:100%;text-align:left;border:0;border-left:4px solid var(--ec);background:var(--surface-2);border-radius:10px;padding:10px 12px;margin-top:8px;cursor:pointer;color:var(--ink)}
+.side-ev span{font-size:.8rem;color:var(--ink-2);display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+@media (max-width:1100px){ .cal-wrap{grid-template-columns:minmax(0,1fr)} .cal-side{position:static} }
+@media (max-width:700px){ .mcal-h,.mcal-w{grid-template-columns:30px repeat(7,minmax(0,1fr))} .mcal-d{min-height:62px;padding:4px 3px} .mcal-n{font-size:.75rem} .mev{padding:0;height:6px;border:0;border-radius:3px;background:var(--ec);font-size:0} .mev-t,.mev-n,.mev-flag,.mcal-tl{display:none} .mcal-add{width:18px;height:18px} .mcal-wn{font-size:.58rem;padding:6px 0} .mcal-h span{padding:8px 2px;font-size:.6rem} }
 .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
 .cal-dow{padding:8px;font-size:.72rem;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em;background:var(--surface-2);border-bottom:1px solid var(--line)}
 .cal-cell{min-height:104px;border-right:1px solid var(--line-2);border-bottom:1px solid var(--line-2);padding:6px;display:flex;flex-direction:column;gap:3px;min-width:0;cursor:pointer}
@@ -1958,20 +1982,39 @@ F.session = d => { if(!d.title?.trim()) return toast('Give the session a title')
 A.delSession = el => confirmBox('Delete this session plan?', () => { S.sessions = S.sessions.filter(x => x.id!==el.dataset.id); audit('Deleted a session plan'); save(); go('sessions'); });
 
 /* ================= Activity calendar ================= */
-const CAL = { view:null, cur:TODAY(), hidden:new Set() };
+const CAL = { view:null, cur:TODAY(), hidden:new Set(), sel:null };
 VIEWS.calendar = () => { if(!CAL.view) CAL.view = window.innerWidth < 700 ? 'agenda' : 'month'; const v = CAL.view; const cur = pd(CAL.cur);
   const title = v==='month' ? `${MONL[cur.getMonth()]} ${cur.getFullYear()}` : v==='week' ? (() => { const s = addDays(cur, -cur.getDay()); const e = addDays(s,6); return `${s.getDate()} ${MON[s.getMonth()]} – ${e.getDate()} ${MON[e.getMonth()]} ${e.getFullYear()}`; })() : v==='day' ? fmtD(CAL.cur,'long') : `From ${fmtD(CAL.cur)}`;
   return `${pageH('Activity calendar', 'Calendar', `${can('event.edit')?`<button class="btn primary" data-a="eventForm">${ic('plus','sm')} New event</button>`:''}<button class="btn" data-a="ical">${ic('download','sm')} iCal</button>`)}
   <div class="row" style="margin-bottom:12px"><div class="row nw" style="gap:4px"><button class="icon-btn" data-a="calNav" data-d="-1" aria-label="Previous">${ic('left')}</button><button class="btn sm" data-a="calToday">Today</button><button class="icon-btn" data-a="calNav" data-d="1" aria-label="Next">${ic('right')}</button></div><h2 style="flex:1;min-width:180px">${title}</h2>
   <div class="seg">${['month','week','day','agenda'].map(k => `<button class="${v===k?'on':''}" data-a="calView" data-v="${k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}</div></div>
   <div class="row" style="gap:6px;margin-bottom:14px">${Object.entries(EVENT_TYPES).map(([k,t]) => `<button class="chip" style="cursor:pointer;border:1px solid ${CAL.hidden.has(k)?'var(--line)':'transparent'};opacity:${CAL.hidden.has(k)?.45:1}" data-a="calType" data-k="${k}" aria-pressed="${!CAL.hidden.has(k)}"><span class="ev-dot" style="background:${t.color}"></span>${t.label}</button>`).join('')}</div>
-  ${v==='month' ? calMonth(cur) : v==='week' ? calWeek(cur) : v==='day' ? calDay(CAL.cur) : calAgenda(CAL.cur)}`; };
+  ${v==='month' ? `<div class="cal-wrap">${calMonth(cur)}${calSide()}</div>` : v==='week' ? calWeek(cur) : v==='day' ? calDay(CAL.cur) : calAgenda(CAL.cur)}`; };
 const calEvents = (a, b) => expandEvents(a, b).filter(e => !CAL.hidden.has(e.type) && (!isScout() || e.patrols.includes('all') || e.patrols.includes(myScout()?.patrol)));
 const evBtn = e => `<button class="ev" style="background:${EVENT_TYPES[e.type].color}" data-a="openEvent" data-id="${e.id}" data-occ="${e.occ}" title="${esc(e.title)}">${e.start?fmtT(e.start).replace(':00','').replace(' ','').toLowerCase()+' ':''}${esc(e.title)}</button>`;
-function calMonth(cur){ const first = new Date(cur.getFullYear(), cur.getMonth(), 1); const start = addDays(first, -first.getDay()); const days = [...Array(42)].map((_,i) => addDays(start, i));
-  const evs = calEvents(iso(days[0]), iso(days[41])); const t = TODAY();
-  return `<div class="cal-grid">${DOW.map(d => `<div class="cal-dow">${d}</div>`).join('')}${days.map(d => { const ds = iso(d); const de = evs.filter(e => ds >= e.occ && ds <= e.occEnd);
-    return `<div class="cal-cell ${d.getMonth()!==cur.getMonth()?'out':''} ${ds===t?'today':''}" data-a="calDayOpen" data-d="${ds}" role="button" tabindex="0" aria-label="${fmtD(ds,'long')}, ${de.length} events"><span class="d num">${d.getDate()}</span>${de.slice(0,3).map(evBtn).join('')}${de.length>3?`<span class="small muted">+${de.length-3} more</span>`:''}</div>`; }).join('')}</div>`; }
+/* Month view: Monday-first weeks with a week-of-term column, tinted event tags, today line, selectable days. */
+function termWeek(monday){ const terms = S.settings.terms || []; for(let i=0;i<terms.length;i++){ const t = terms[i]; const sun = iso(addDays(monday, 6));
+    if(sun >= t.start && iso(monday) <= t.end){ const s = pd(t.start); const sMon = addDays(s, -((s.getDay()+6)%7)); return { w:Math.floor((monday - sMon)/(7*86400000))+1, t:i+1 }; } } return null; }
+const needsAction = e => e.permission || !(e.leaders||[]).length;
+const evTag = e => { const c = EVENT_TYPES[e.type].color; return `<button class="mev" style="--ec:${c}" data-a="openEvent" data-id="${e.id}" data-occ="${e.occ}" title="${esc(e.title)}">${needsAction(e)?`<span class="mev-flag" title="${e.permission?'Permission slip required':'No leader assigned'}"></span>`:''}${e.start?`<span class="mev-t">${fmtT(e.start).replace(':00','').replace(' ','').toLowerCase()}</span>`:''}<span class="mev-n">${esc(e.title)}</span></button>`; };
+function calMonth(cur){ const first = new Date(cur.getFullYear(), cur.getMonth(), 1); const start = addDays(first, -((first.getDay()+6)%7));
+  const last = new Date(cur.getFullYear(), cur.getMonth()+1, 0); const weeks = Math.ceil((((first.getDay()+6)%7) + last.getDate())/7);
+  const days = [...Array(weeks*7)].map((_,i) => addDays(start, i)); const evs = calEvents(iso(days[0]), iso(days[days.length-1])); const t = TODAY(); const add = can('event.edit');
+  return `<div class="mcal"><div class="mcal-h"><span>WK</span>${['MON','TUE','WED','THU','FRI','SAT','SUN'].map(d => `<span>${d}</span>`).join('')}</div>
+  ${[...Array(weeks)].map((_,w) => { const wk = days.slice(w*7, w*7+7); const tw = termWeek(wk[0]);
+    return `<div class="mcal-w"><div class="mcal-wn">${tw ? `W${tw.w}<em>T${tw.t}</em>` : ''}</div>${wk.map(d => { const ds = iso(d); const de = evs.filter(e => ds >= e.occ && ds <= e.occEnd);
+      return `<div class="mcal-d ${d.getMonth()!==cur.getMonth()?'out':''} ${ds===t?'today':''} ${ds===CAL.sel?'sel':''}" data-a="calPick" data-d="${ds}" role="button" tabindex="0" aria-label="${fmtD(ds,'long')}, ${de.length} event${de.length===1?'':'s'}">
+        <span class="mcal-n">${d.getDate()}${ds===t?'<span class="mcal-tl"> · Today</span>':''}</span>${ds===CAL.sel && add ? `<button class="mcal-add" data-a="eventForm" data-date="${ds}" aria-label="Add an event on ${fmtD(ds,'long')}">${ic('plus','sm')}</button>` : ''}
+        ${de.slice(0,3).map(evTag).join('')}${de.length>3?`<span class="small muted" style="padding-left:4px">+${de.length-3} more</span>`:''}</div>`; }).join('')}</div>`; }).join('')}</div>`; }
+/* Right-hand panel: today (or the picked day) and the next events. */
+function calSide(){ const t = TODAY(), day = CAL.sel || t, d = pd(day); const de = calEvents(day, day); const next = calEvents(iso(addDays(pd(t),1)), iso(addDays(pd(t),90))).slice(0,3);
+  const card = e => `<button class="side-ev" style="--ec:${EVENT_TYPES[e.type].color}" data-a="openEvent" data-id="${e.id}" data-occ="${e.occ}"><b>${esc(e.title)}</b><span>${fmtD(e.occ,'dow')}${e.start?' · '+fmtT(e.start)+(e.end?' – '+fmtT(e.end):''):' · All day'}</span>${e.location||e.permission?`<span>${e.location?ic('pin','sm')+' '+esc(e.location):''}${e.location&&e.permission?' · ':''}${e.permission?ic('file','sm')+' Permission slip':''}</span>`:''}${!(e.leaders||[]).length?`<span style="color:var(--warn)">${ic('alert','sm')} No leader assigned</span>`:''}</button>`;
+  return `<aside class="card cal-side"><div class="eyebrow">${day===t?'Today':'Selected day'}</div>
+    <div class="row nw" style="gap:12px;align-items:flex-end;margin:6px 0 4px"><span class="cal-big">${d.getDate()}</span><div><b>${DOWL[d.getDay()]}</b><div class="small muted">${MONL[d.getMonth()]} ${d.getFullYear()}</div></div></div>
+    ${de.length ? de.map(card).join('') : `<p class="small muted" style="margin:6px 0 12px">No events ${day===t?'today':'on this day'}.</p>`}
+    ${day!==t ? `<button class="btn sm ghost" data-a="calPick" data-d="${t}" style="margin-bottom:8px">${ic('left','sm')} Back to today</button>` : ''}
+    <div class="eyebrow" style="margin-top:6px">Next up</div>${next.map(card).join('') || '<p class="small muted">Nothing in the next 90 days.</p>'}</aside>`; }
+A.calPick = (el, e) => { if(e?.target?.closest('.mev,.mcal-add')) return; const d = el.dataset.d; CAL.sel = d===TODAY() ? null : (CAL.sel===d ? null : d); renderMain(); };
 function calWeek(cur){ const s = addDays(cur, -cur.getDay()); const days = [...Array(7)].map((_,i) => addDays(s,i)); const evs = calEvents(iso(days[0]), iso(days[6]));
   return `<div class="wk">${days.map(d => { const ds = iso(d); const de = evs.filter(e => ds >= e.occ && ds <= e.occEnd); return `<div class="wk-day" style="${ds===TODAY()?'border-color:var(--gold)':''}"><button class="row nw" style="border:0;background:none;cursor:pointer;padding:0;margin-bottom:8px;gap:6px" data-a="calDayOpen" data-d="${ds}"><b class="num" style="font-family:var(--f-head);font-size:1.2rem">${d.getDate()}</b><span class="small muted">${DOW[d.getDay()]}</span></button><div class="stack" style="gap:4px">${de.map(evBtn).join('') || '<span class="small muted">—</span>'}</div></div>`; }).join('')}</div>`; }
 function calDay(ds){ const evs = calEvents(ds, ds); return `<div class="card">${evs.map(agEv).join('') || empty('calendar','Nothing scheduled', can('event.edit')?'Add an event for this day.':'')}</div>`; }
@@ -1990,7 +2033,7 @@ function openEvent(id, occ){ const e = S.events.find(x => x.id===id); if(!e) ret
     ${e.notes ? `<h4 style="margin:16px 0 6px">Notes</h4><p>${esc(e.notes)}</p>` : ''}`,
     foot: ed ? `${can('event.delete')?`<button class="btn danger" data-a="eventDel" data-id="${e.id}" data-occ="${occ}">Delete</button>`:''}<span class="spacer"></span><button class="btn" data-a="closeModal">Close</button><button class="btn primary" data-a="eventForm" data-id="${e.id}">${ic('edit','sm')} Edit</button>` : `<button class="btn" data-a="closeModal">Close</button>` }); }
 A.openEvent = el => openEvent(el.dataset.id, el.dataset.occ);
-A.eventForm = el => { closeModal(); const e = el?.dataset?.id ? S.events.find(x => x.id===el.dataset.id) : { title:'', type:'meeting', date:CAL.view==='day'?CAL.cur:TODAY(), endDate:'', start:'15:30', end:'17:00', location:'', leaders:[ME.id], patrols:['all'], permission:false, equipment:'', recur:'none', until:'', remind:true, notes:'' };
+A.eventForm = el => { closeModal(); const e = el?.dataset?.id ? S.events.find(x => x.id===el.dataset.id) : { title:'', type:'meeting', date:el?.dataset?.date || (CAL.view==='day'?CAL.cur:TODAY()), endDate:'', start:'15:30', end:'17:00', location:'', leaders:[ME.id], patrols:['all'], permission:false, equipment:'', recur:'none', until:'', remind:true, notes:'' };
   modal({ title: e.id ? 'Edit event' : 'New event', wide:true, form:'event', body:`${e.id?`<input type="hidden" name="id" value="${e.id}">`:''}<div class="form-grid">
     ${field('Title', inp('title', e.title, 'required'), 'full')}${field('Type', sel('type', Object.entries(EVENT_TYPES).map(([k,t])=>[k,t.label]), e.type))}${field('Location', inp('location', e.location))}
     ${field('Start date', inp('date', e.date, 'type="date" required'))}${field('End date (multi-day)', inp('endDate', e.endDate||'', 'type="date"'))}
