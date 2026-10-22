@@ -433,6 +433,11 @@ svg.chart .grid{stroke:var(--line-2)}
 .sgroup{display:flex;align-items:center;gap:8px;padding:14px 12px 6px;font-family:var(--f-head);font-weight:600;font-size:1rem;color:var(--ink)}
 .sgroup .chip{font-family:var(--f-ui)}
 .sgroup:first-child{padding-top:8px}
+.bpick{position:relative}.bpick-btn{display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;height:auto;min-height:44px;padding-block:6px}
+.bpick-pop{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:8px}
+.bpick-list{max-height:300px;overflow:auto;margin-top:6px}.bpick-opt{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:6px 8px;border-radius:8px;cursor:pointer;text-align:left}
+.bpick-opt:hover,.bpick-opt.on{background:var(--wash)}
+.bcheck-list{max-height:220px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:2px 12px}.bcheck-list .check{gap:8px}
 .pick-h{position:sticky;top:0;z-index:1;background:var(--surface);font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);padding:10px 0 6px;border-bottom:1px solid var(--line)}
 .srow .gset{display:flex;gap:6px;justify-content:flex-end}
 .srow.qs{grid-template-columns:40px minmax(0,1.7fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 136px}
@@ -1207,10 +1212,14 @@ A.searchGo = el => { const v = $('#gsearch'); if(v) v.value = ''; if(el.dataset.
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-a]');
   if(!e.target.closest('.pop,#bell-btn,.prof-btn,.search')) closePops();
+  if(!e.target.closest('.bpick')) $$('.bpick-pop').forEach(x => x.classList.add('hide'));
   if(!el) return; const fn = A[el.dataset.a]; if(!fn) return;
   if(el.tagName==='A' || el.type==='submit' && !el.closest('form[data-f]')) e.preventDefault();
   fn(el, e);
 });
+document.addEventListener('keydown', e => { if(e.key!=='Enter') return; const t = e.target;
+  if(t.matches?.('.bpick-pop input')){ e.preventDefault(); t.closest('.bpick').querySelector('.bpick-opt')?.click(); }
+  else if(t.matches?.('[data-i=bcheckFind]')) e.preventDefault(); });
 document.addEventListener('change', e => { const el = e.target.closest('[data-c]'); if(el && C[el.dataset.c]) C[el.dataset.c](el, e); });
 document.addEventListener('input', e => { const el = e.target.closest('[data-i]'); if(el && I[el.dataset.i]) I[el.dataset.i](el, e); });
 document.addEventListener('submit', e => { const f = e.target.closest('form[data-f]'); if(!f) return; e.preventDefault(); const d = {}; new FormData(f).forEach((v,k) => { if(k in d){ d[k] = [].concat(d[k], v); } else d[k] = v; }); F[f.dataset.f] && F[f.dataset.f](d, f); });
@@ -1788,11 +1797,20 @@ A.bulkAward = el => { const ids = $$('.bulk-award:checked').map(x => x.value); i
 function awardTo(ids, bid, date){ const b = badge(bid); let n = 0; ids.forEach(id => { const s = scout(id); if(!s || hasBadge(s,bid)) return; s.badges.push({ badgeId:bid, date, by:ME.id }); s.badgeProgress[bid] = Object.fromEntries(b.reqs.map((_,i) => [i, (s.badgeProgress[bid]||{})[i] || { date, by:ME.id }])); const p = patrol(s.patrol); if(p) p.points += 5; n++; });
   if(n){ notify('badge', `${b.name} awarded to ${n} scout${n>1?'s':''}`, ids.slice(0,6).map(id => sname(scout(id))).join(', '), { route:'badge', id:bid }); audit(`Awarded ${b.name} to ${n} scout${n>1?'s':''}`); toast(`${b.name} awarded to ${n} scout${n>1?'s':''}`); } else toast('Those scouts already hold this badge'); }
 A.awardBadge = el => { const bid = el?.dataset?.bid || S.badges[0].id; const pre = el?.dataset?.sid;
-  modal({ title:'Award badges', wide:true, form:'award', body:`<div class="form-grid">${field('Badge', sel('bid', S.badges.map(b=>[b.id, b.name]), bid, 'data-c="awardBadgeSel"'))}${field('Date awarded', inp('date', TODAY(), 'type="date"'))}</div>
+  modal({ title:'Award badges', wide:true, form:'award', body:`<div class="form-grid"><div class="field"><label>Badge</label>${badgePick(bid)}</div>${field('Date awarded', inp('date', TODAY(), 'type="date"'))}</div>
     <div class="row" style="margin:14px 0 6px"><b style="flex:1">Scouts</b><span class="small muted">Tick the scouts who completed the badge</span></div><div id="award-list" style="max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px">${awardList(bid, pre)}</div>`,
     foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">${ic('medal','sm')} Award</button>` }); };
 function awardList(bid, pre){ return pickGroups(activeScouts(), s => { const h = hasBadge(s,bid); return `<label class="check" style="padding:6px 0;border-bottom:1px solid var(--line-2)"><input type="checkbox" name="sids" value="${s.id}" ${h?'disabled':''} ${pre===s.id?'checked':''}>${av(s,26)}<span style="flex:1">${esc(sname(s))} <span class="small muted">${pName(s.patrol)}</span></span>${h?chip('Holds','gold'):''}</label>`; }); }
-C.awardBadgeSel = el => { $('#award-list').innerHTML = awardList(el.value); };
+/* Badge picker with logos and search (native selects cannot show pictures). */
+const badgesAZ = () => [...S.badges].sort((a,b) => a.name.localeCompare(b.name));
+function badgePick(sel){ const b = badge(sel); return `<div class="bpick"><input type="hidden" name="bid" value="${sel}"><button type="button" class="inp bpick-btn" data-a="bpickToggle" aria-haspopup="listbox">${bArt(b,'','width:30px;height:30px','sm')}<span style="flex:1;min-width:0">${esc(b?.name||'')}</span><span class="muted">▾</span></button>
+  <div class="bpick-pop hide"><input class="inp" type="search" placeholder="Search badges" data-i="bpickFind" aria-label="Search badges"><div class="bpick-list" role="listbox">${bpickOpts(sel, '')}</div></div></div>`; }
+function bpickOpts(sel, q){ const l = badgesAZ().filter(b => !q || b.name.toLowerCase().includes(q.toLowerCase()));
+  return l.map(b => `<button type="button" class="bpick-opt ${b.id===sel?'on':''}" data-a="bpickSet" data-id="${b.id}" role="option">${bArt(b,'','width:34px;height:34px','sm')}<span class="grow"><b>${esc(b.name)}</b><span class="small muted" style="display:block">${catLabel(b.category)}</span></span></button>`).join('') || `<div class="small muted" style="padding:10px">No badge matches</div>`; }
+I.bcheckFind = el => { const q = el.value.toLowerCase(); el.nextElementSibling.querySelectorAll('label').forEach(l => l.classList.toggle('hide', !!q && !l.dataset.name.includes(q))); };
+A.bpickToggle = el => { const pop = el.parentElement.querySelector('.bpick-pop'); pop.classList.toggle('hide'); if(!pop.classList.contains('hide')){ const f = pop.querySelector('input'); f.value = ''; I.bpickFind(f); f.focus(); } };
+I.bpickFind = el => { const w = el.closest('.bpick'); w.querySelector('.bpick-list').innerHTML = bpickOpts(w.querySelector('input[name=bid]').value, el.value); };
+A.bpickSet = el => { const w = el.closest('.bpick'); w.outerHTML = badgePick(el.dataset.id); $('#award-list').innerHTML = awardList(el.dataset.id); };
 F.award = d => { const ids = [].concat(d.sids||[]); if(!ids.length) return toast('Choose at least one scout'); awardTo(ids, d.bid, d.date || TODAY()); closeModal(); refresh(); };
 A.badgeTrack = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); const pr = s.badgeProgress[b.id] || {}; const has = hasBadge(s,b.id); const ok = can('badge.signoff') && !has;
   modal({ title:`${esc(b.name)} · ${esc(sname(s))}`, body:`<div class="row nw" style="gap:12px;margin-bottom:14px">${bArt(b, (has?'':'prog')+' lg')}<div style="flex:1"><b>${badgePct(s,b)}% complete</b>${bar(badgePct(s,b), has)}</div></div>
@@ -1889,7 +1907,7 @@ function sessionForm(s){ s = s || { title:'', date:TODAY(), time:'15:30', end:'1
   ${s.template ? '' : field('Date', inp('date', s.date, 'type="date" required'))}${field('Location', inp('location', s.location))}${field('Start', inp('time', s.time, 'type="time"'))}${field('End', inp('end', s.end, 'type="time"'))}
   ${field('Objectives', ta('objectives', s.objectives), 'full')}
   <div class="field full"><label>Linked syllabus items</label><div style="max-height:150px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px">${STAGES.map(st => `<div class="small muted" style="margin-top:4px">${st}</div>${S.syllabus.filter(i=>i.stage===st).map(i => `<label class="check" style="min-height:28px"><input type="checkbox" name="syllabus" value="${i.id}" ${s.syllabus.includes(i.id)?'checked':''}> ${esc(i.topic)}</label>`).join('')}`).join('')}</div></div>
-  <div class="field full"><label>Linked badges</label><div class="row">${S.badges.map(b => `<label class="check"><input type="checkbox" name="badges" value="${b.id}" ${s.badges.includes(b.id)?'checked':''}> ${esc(b.name)}</label>`).join('')}</div></div>
+  <div class="field full"><label>Linked badges</label><input class="inp" type="search" placeholder="Search badges" data-i="bcheckFind" aria-label="Search badges" style="margin-bottom:6px"><div class="bcheck-list">${badgesAZ().map(b => `<label class="check" data-name="${esc(b.name.toLowerCase())}"><input type="checkbox" name="badges" value="${b.id}" ${s.badges.includes(b.id)?'checked':''}>${bArt(b,'','width:28px;height:28px','sm')} ${esc(b.name)}</label>`).join('')}</div></div>
   <div class="field full"><label>Activity timeline</label><div id="tl-rows" class="stack" style="gap:8px">${s.timeline.map(tlRow).join('')}</div><button type="button" class="btn sm" style="margin-top:6px;align-self:flex-start" data-a="tlAdd">${ic('plus','sm')} Add block</button></div>
   ${field('Materials checklist (one per line)', ta('materials', s.materials.map(m=>m.t).join('\n')), 'full')}
   <div class="field full"><label>Leaders responsible</label><div class="row">${S.users.filter(u=>u.role!=='scout').map(u => `<label class="check"><input type="checkbox" name="leaders" value="${u.id}" ${s.leaders.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div>
