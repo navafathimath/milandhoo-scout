@@ -15,6 +15,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <script src="firebase-config.js"></script>
+<script src="badges/syllabus.js"></script>
 <script>
 /* Firebase connection for milandhoo-scout (built in, so the portal works even if firebase-config.js fails to load) */
 window.TRAILMARK_FIREBASE = (window.TRAILMARK_FIREBASE && window.TRAILMARK_FIREBASE.apiKey && !/PASTE/.test(window.TRAILMARK_FIREBASE.apiKey)) ? window.TRAILMARK_FIREBASE : {
@@ -212,6 +213,14 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
 .badge-ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--gold-soft);color:var(--gold-ink);border:2px solid var(--gold)}
 .badge-ic.prog{background:var(--wash);color:var(--green);border-color:var(--line)}
 .badge-ic.lg{width:64px;height:64px}
+.badge-ic.img{background:none;border:0;border-radius:0}
+.badge-ic.xl{width:84px;height:84px}
+.bcard{text-align:left;cursor:pointer;display:flex;gap:14px;align-items:center}
+.bgroup{margin-bottom:22px}.bgroup h2{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.syl{display:flex;flex-direction:column;gap:6px;line-height:1.55}.syl .h{font-family:var(--f-head);font-weight:600;font-size:1rem;margin-top:10px}.syl .alt{font-weight:700;color:var(--primary);margin-top:10px}
+.syl .req{display:flex;gap:8px}.syl .req b{min-width:22px;color:var(--primary)}.syl .sub{padding-left:30px;color:var(--ink-2)}.syl .note{background:var(--wash);border-radius:10px;padding:10px 12px;font-size:.92rem}
+.badge-ic.img img{width:100%;height:100%;object-fit:contain}
+.badge-ic.img.prog img{filter:grayscale(1);opacity:.6}
 .alert{display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:var(--gold-soft);color:var(--gold-ink);font-size:.88rem;align-items:flex-start}
 .alert.info{background:var(--wash);color:var(--ink)}
 
@@ -613,7 +622,10 @@ const EVENT_TYPES = {
   meeting:{label:'Meeting', color:'#0977B6'}, camp:{label:'Camp', color:'#128944'}, hike:{label:'Hike', color:'#4A9A6E'},
   service:{label:'Service project', color:'#3E7FAE'}, competition:{label:'Competition', color:'#A65446'},
   ceremony:{label:'Ceremony', color:'#0A5C8F'}, holiday:{label:'Holiday', color:'#7D8F9C'} };
-const BADGE_CATS = { proficiency:'Proficiency', activity:'Activity', challenge:'Challenge', rank:'Rank' };
+const BADGE_CATS = { collective:'Collective Achievement', pursuit:'Pursuit', service:'Service', interest:'Interest' };
+const catLabel = c => BADGE_CATS[c] || 'Other';
+/* Badge picture (from the syllabus) or, for custom badges, the chosen icon. */
+function bArt(b, cls='', style='', size='lg'){ return b?.img ? `<span class="badge-ic img ${cls}" style="${style}"><img src="${b.img}" alt="" loading="lazy"></span>` : `<span class="badge-ic ${cls}" style="${style}">${ic(b?.icon||'medal', size)}</span>`; }
 const NOTIF_TYPES = {
   session:{label:'Sessions & events', icon:'calendar'}, badge:{label:'Badge completions', icon:'medal'},
   attendance:{label:'Low attendance', icon:'alert'}, renewal:{label:'Renewals', icon:'refresh'},
@@ -673,7 +685,7 @@ async function buildSeed(){
   // patrol leaders
   patrols.forEach(p => { const m = scouts.filter(s => s.patrol===p.id).sort((a,b)=>a.dob<b.dob?-1:1); p.pl = m[0].id; p.apl = m[1].id; });
 
-  const badges = [
+  const badges = SYLLABUS_BADGES() || [
     { id:'b_knot', name:'Knotting', icon:'knot', category:'proficiency', reqs:['Tie reef, sheet bend, clove hitch and bowline','Explain a use for each knot','Whip and seal a rope end','Teach two knots to a younger scout'] },
     { id:'b_camp', name:'Camper', icon:'tent', category:'activity', reqs:['Pack a personal kit for a weekend camp','Pitch and strike a patrol tent','Plan a camp menu for your patrol','Spend 3 nights under canvas','Leave a campsite as you found it'] },
     { id:'b_fire', name:'Fire Lighter', icon:'fire', category:'proficiency', reqs:['Explain fire safety and the fire triangle','Collect tinder, kindling and fuel','Light a fire with no more than two matches','Cook a simple meal over the fire','Put out a fire and clear the site'] },
@@ -746,11 +758,11 @@ async function buildSeed(){
   // sessions
   const sessions = [];
   const plans = [
-    ['Knots that hold','Basic knots, whipping and a relay race','y_6','b_knot'],
-    ['Compass points & bearings','16 compass points, then a schoolyard bearing trail','y_7','b_nav'],
-    ['First aid scenarios','Cuts, burns and DRSABC in rotating stations','y_9','b_aid'],
-    ['Patrol camp prep','Kit lists, menu planning and tent pitching','y_8','b_camp'],
-    ['Map symbols treasure hunt','Grid references with a campus map','y_11','b_nav'],
+    ['Knots that hold','Basic knots, whipping and a relay race','y_6','bp_pioneer'],
+    ['Compass points & bearings','16 compass points, then a schoolyard bearing trail','y_7','bp_navigator'],
+    ['First aid scenarios','Cuts, burns and DRSABC in rotating stations','y_9','bp_ambulance'],
+    ['Patrol camp prep','Kit lists, menu planning and tent pitching','y_8','bp_camper'],
+    ['Map symbols treasure hunt','Grid references with a campus map','y_11','bp_map_maker'],
     ['Kim\'s game & observation','Memory games and tracking signs','y_10',null],
     ['Promise & Law workshop','Discussion circles for new members','y_1',null],
     ['Lashing challenge','Square lashings to build a flagpole','y_13',null],
@@ -803,7 +815,7 @@ async function buildSeed(){
 
   // notifications
   const now = Date.now(), H = 3600000;
-  const near = scouts.find(s => s.badgeProgress.b_knot && !s.badges.find(b=>b.badgeId==='b_knot'));
+  const near = scouts.find(s => s.badgeProgress.bp_pioneer && !s.badges.find(b=>b.badgeId==='bp_pioneer'));
   const bday = scouts.filter(s => pd(s.dob).getMonth()===today.getMonth());
   const notifications = [
     { id:uid('n'), type:'announce', title:'Uniform inspection next meeting', body:'Full uniform with neckerchief please. Patrol points for best turnout.', ts:now-2*H, read:false, to:'all' },
@@ -827,7 +839,7 @@ async function buildSeed(){
     v:3, seededAt:now,
     settings:{ groupName:'Milandhoo School Scout Troop', school:'Sunrise International School', logo:null, year:AY.label,
       terms:[{name:'Term 1', start:`${y}-08-01`, end:`${y}-12-31`},{name:'Term 2', start:`${y+1}-01-01`, end:`${y+1}-06-30`}],
-      sessionTypes:['Regular meeting','Camp','Event','Special session','Hike'], lowAttendance:75 },
+      sessionTypes:['Regular meeting','Camp','Event','Special session','Hike'], lowAttendance:75, badgeSet:'2006' },
     users, patrols, scouts, badges, syllabus, registers, sessions, events, albums, photos, notifications, audit, resets:{},
   };
 }
@@ -1039,7 +1051,17 @@ function applyTheme(){ let t = 'system'; try { t = localStorage.getItem('tm_them
 function isDark(){ const t = document.documentElement.getAttribute('data-theme'); return t ? t==='dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
 
 /* The troop uses two terms. Older portals were set up with three default terms: fold Term 3 into Term 2 once. */
-function twoTerms(){ const t = S?.settings?.terms; if(!t || S.settings.termsSet || t.length!==3 || ME?.role!=='admin' || t.map(x => x.name).join()!=='Term 1,Term 2,Term 3') return;
+function SYLLABUS_BADGES(){ const L = window.BADGE_SYLLABUS; return L && L.length ? JSON.parse(JSON.stringify(L)).map(b => ({ icon:'medal', ...b })) : null; }
+/* Existing portals switch once to the 43 syllabus badges. Old badges that someone has earned or started are kept (shown under Other);
+   an earned old badge with the same name as a syllabus badge (e.g. Camper) moves to it if nobody was part-way through it. */
+function syllabusBadges(){ const L = SYLLABUS_BADGES(); if(!L || !S?.settings || S.settings.badgeSet==='2006' || ME?.role!=='admin') return;
+  const used = b => S.scouts.some(s => hasBadge(s,b.id) || (s.badgeProgress[b.id] && Object.keys(s.badgeProgress[b.id]).length));
+  const keep = []; S.badges.filter(used).forEach(b => { const n = L.find(x => x.name.toLowerCase()===b.name.toLowerCase());
+    const started = S.scouts.some(s => s.badgeProgress[b.id] && Object.keys(s.badgeProgress[b.id]).length && !hasBadge(s,b.id));
+    if(n && !started){ S.scouts.forEach(s => { s.badges.forEach(a => { if(a.badgeId===b.id) a.badgeId = n.id; }); delete s.badgeProgress[b.id]; }); S.sessions.forEach(x => x.badges = (x.badges||[]).map(id => id===b.id ? n.id : id)); }
+    else keep.push({ ...b, category:BADGE_CATS[b.category] ? b.category : 'other' }); });
+  S.badges = [...L, ...keep]; S.settings.badgeSet = '2006'; audit(`Loaded the ${L.length} proficiency badges from the badge syllabus`); save(); }
+function twoTerms(){ syllabusBadges(); const t = S?.settings?.terms; if(!t || S.settings.termsSet || t.length!==3 || ME?.role!=='admin' || t.map(x => x.name).join()!=='Term 1,Term 2,Term 3') return;
   S.settings.terms = [t[0], { name:'Term 2', start:t[1].start, end:t[2].end }]; S.settings.termsSet = true; audit('Changed to two terms (Term 3 merged into Term 2)'); save(); }
 function renderApp(){ twoTerms();
   if(!ME){ $('#app').innerHTML = loginView(); return; }
@@ -1170,7 +1192,7 @@ I.search = el => {
   const groups = [
     ['Scouts', S.scouts.filter(s => m(sname(s)) || m(s.sid)).slice(0,6).map(s => [av(s,28), sname(s), `${s.sid} · ${pName(s.patrol)}`, 'scout', s.id])],
     ['Leaders', S.users.filter(u => u.role!=='scout' && (m(u.name)||m(u.email))).map(u => [av(u,28), u.name, ROLES[u.role], 'leader', u.id])],
-    ['Badges', S.badges.filter(b => m(b.name)).map(b => [`<span class="badge-ic" style="width:28px;height:28px;border-width:1px">${ic(b.icon,'sm')}</span>`, b.name, BADGE_CATS[b.category], 'badge', b.id])],
+    ['Badges', S.badges.filter(b => m(b.name)).map(b => [`${bArt(b, '', 'width:28px;height:28px;border-width:1px', 'sm')}`, b.name, catLabel(b.category), 'badge', b.id])],
     ['Sessions', S.sessions.filter(s => !s.template && (m(s.title)||m(s.objectives))).slice(0,5).map(s => [`<span class="kpi"><span class="ic" style="width:28px;height:28px">${ic('fire','sm')}</span></span>`, s.title, fmtD(s.date), 'session', s.id])],
     ['Events', S.events.filter(e => m(e.title)||m(e.location)).slice(0,5).map(e => [`<span class="ev-dot" style="background:${EVENT_TYPES[e.type].color};width:14px;height:14px;margin:0 7px"></span>`, e.title, `${EVENT_TYPES[e.type].label} · ${e.recur!=='none'?'Repeats '+e.recur:fmtD(e.date)}`, 'calendar', e.id])],
   ].filter(g => g[1].length);
@@ -1410,8 +1432,8 @@ function profOverview(s){ const p = patrol(s.patrol); const leaders = (p?.leader
 function profBadges(s){ const earned = s.badges.map(b => ({ ...b, b:badge(b.badgeId) })).filter(x => x.b).sort((a,b) => a.date < b.date ? 1 : -1);
   const prog = S.badges.filter(b => !hasBadge(s,b.id) && s.badgeProgress[b.id] && Object.keys(s.badgeProgress[b.id]).length).map(b => ({ b, p:badgePct(s,b) })).sort((a,b) => b.p - a.p);
   return `<div class="grid g2"><div class="card"><div class="card-h"><h2>Earned badges</h2>${can('badge.award')?`<button class="btn sm" data-a="awardBadge" data-sid="${s.id}">${ic('plus','sm')} Award</button>`:''}</div>
-    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">${earned.map(x => `<div style="text-align:center;padding:12px 6px;border:1px solid var(--line);border-radius:12px"><span class="badge-ic lg" style="margin:0 auto">${ic(x.b.icon,'lg')}</span><b style="display:block;margin-top:8px">${esc(x.b.name)}</b><span class="small muted">${fmtD(x.date)}<br>by ${esc(user(x.by)?.name||'—')}</span></div>`).join('') || empty('medal','No badges yet')}</div></div>
-  <div class="card"><div class="card-h"><h2>In progress</h2></div><div class="list">${prog.map(({b,p}) => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="badgeTrack" data-sid="${s.id}" data-bid="${b.id}"><span class="badge-ic prog">${ic(b.icon)}</span><span class="grow"><b class="ttl" style="display:block">${esc(b.name)}</b><span class="small muted">${Object.keys(s.badgeProgress[b.id]).length} of ${b.reqs.length} requirements</span>${bar(p)}</span><b class="num">${p}%</b></button>`).join('') || empty('medal','Nothing in progress')}</div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">${earned.map(x => `<div style="text-align:center;padding:12px 6px;border:1px solid var(--line);border-radius:12px">${bArt(x.b, 'lg', 'margin:0 auto')}<b style="display:block;margin-top:8px">${esc(x.b.name)}</b><span class="small muted">${fmtD(x.date)}<br>by ${esc(user(x.by)?.name||'—')}</span></div>`).join('') || empty('medal','No badges yet')}</div></div>
+  <div class="card"><div class="card-h"><h2>In progress</h2></div><div class="list">${prog.map(({b,p}) => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="badgeTrack" data-sid="${s.id}" data-bid="${b.id}">${bArt(b, 'prog', '', '')}<span class="grow"><b class="ttl" style="display:block">${esc(b.name)}</b><span class="small muted">${Object.keys(s.badgeProgress[b.id]).length} of ${b.reqs.length} requirements</span>${bar(p)}</span><b class="num">${p}%</b></button>`).join('') || empty('medal','Nothing in progress')}</div>
   ${!isScout() && can('badge.signoff') ? `<button class="btn sm" style="margin-top:10px" data-a="badgeTrackPick" data-sid="${s.id}">${ic('plus','sm')} Start tracking a badge</button>` : ''}</div></div>`; }
 function profAttendance(s){
   const f = R.q.af || 'all'; const terms = S.settings.terms;
@@ -1730,19 +1752,31 @@ VIEWS.badges = () => { const tab = R.tab || 'catalogue';
   return `${pageH('Badge work', 'Badges', `${can('badge.award')?`<button class="btn" data-a="awardBadge">${ic('medal','sm')} Award badges</button>`:''}${can('badge.catalog')?`<button class="btn primary" data-a="badgeForm">${ic('plus','sm')} New badge</button>`:''}`)}
   <div class="tabs">${[['catalogue','Catalogue'],['tracking','Track progress'],['reports','Reports']].map(([k,l]) => `<button class="tab ${tab===k?'on':''}" data-a="go" data-r="badges" data-tab="${k}">${l}</button>`).join('')}</div>
   ${tab==='tracking' ? badgeTracking() : tab==='reports' ? badgeReports() : badgeCatalogue()}`; };
-function badgeCatalogue(){ const cf = R.q.cat || '';
-  return `<div class="seg" style="margin-bottom:14px;flex-wrap:wrap">${[['','All'], ...Object.entries(BADGE_CATS)].map(([k,l]) => `<button class="${cf===k?'on':''}" data-a="badgeCat" data-k="${k}">${l}</button>`).join('')}</div>
-  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">${S.badges.filter(b => !cf || b.category===cf).map(b => { const holders = S.scouts.filter(s => hasBadge(s,b.id)).length; const prog = S.scouts.filter(s => !hasBadge(s,b.id) && s.badgeProgress[b.id] && Object.keys(s.badgeProgress[b.id]).length).length;
-    return `<button class="card" style="text-align:left;cursor:pointer" data-a="go" data-r="badge" data-id="${b.id}"><div class="row nw" style="gap:12px"><span class="badge-ic lg">${ic(b.icon,'lg')}</span><div style="min-width:0"><h3>${esc(b.name)}</h3>${chip(BADGE_CATS[b.category], b.category==='rank'?'gold':'')}</div></div>
-    <div class="small muted" style="margin-top:12px">${b.reqs.length} requirements</div><div class="row small" style="margin-top:6px;gap:14px"><span><b class="num">${holders}</b> earned</span><span><b class="num">${prog}</b> in progress</span></div></button>`; }).join('')}</div>`; }
+function badgeCatalogue(){ const cf = R.q.cat || ''; const q = (R.q.bq||'').toLowerCase();
+  const cats = [...Object.entries(BADGE_CATS), ...(S.badges.some(b => !BADGE_CATS[b.category]) ? [['other','Other']] : [])];
+  const inCat = (b, k) => k==='other' ? !BADGE_CATS[b.category] : b.category===k;
+  const card = b => { const holders = S.scouts.filter(s => hasBadge(s,b.id)).length; const prog = S.scouts.filter(s => !hasBadge(s,b.id) && s.badgeProgress[b.id] && Object.keys(s.badgeProgress[b.id]).length).length;
+    return `<button class="card bcard" data-a="go" data-r="badge" data-id="${b.id}">${bArt(b, 'xl')}<div style="min-width:0;flex:1"><h3>${esc(b.name)}</h3><div class="small muted">${b.nosyl ? 'Syllabus not available yet' : `${b.reqs.length} requirement${b.reqs.length===1?'':'s'}`}</div>
+    <div class="row small" style="margin-top:6px;gap:12px"><span><b class="num">${holders}</b> earned</span><span><b class="num">${prog}</b> in progress</span></div></div></button>`; };
+  const list = S.badges.filter(b => !q || b.name.toLowerCase().includes(q)).sort((a,b) => a.name.localeCompare(b.name));
+  const groups = (cf ? cats.filter(([k]) => k===cf) : cats).map(([k,l]) => [l, list.filter(b => inCat(b,k))]).filter(([,l]) => l.length);
+  return `<div class="row" style="margin-bottom:14px;gap:10px"><div class="seg" style="flex-wrap:wrap">${[['','All'], ...cats].map(([k,l]) => `<button class="${cf===k?'on':''}" data-a="badgeCat" data-k="${k}">${l} <span class="muted">${k ? S.badges.filter(b => inCat(b,k)).length : S.badges.length}</span></button>`).join('')}</div>
+    <input class="inp" type="search" placeholder="Find a badge" value="${esc(R.q.bq||'')}" data-c="badgeFind" style="max-width:220px" aria-label="Find a badge"></div>
+  ${groups.map(([l, bs]) => `<div class="bgroup"><h2>${esc(l)} ${chip(bs.length)}</h2><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">${bs.map(card).join('')}</div></div>`).join('') || empty('medal','No badges match')}`; }
+C.badgeFind = el => { R.q.bq = el.value; renderMain(); };
 A.badgeCat = el => { R.q.cat = el.dataset.k; renderMain(); };
+/* Full syllabus text from the PDF (blocks), or the plain requirement list for custom badges. */
+function sylHTML(b){ if(b.nosyl) return `<div class="syl"><div class="note">No syllabus has been published for this badge yet.</div></div>`;
+  if(!b.blocks?.length) return `<ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">${b.reqs.map(r => `<li>${esc(r)}</li>`).join('')}</ol>`;
+  return `<div class="syl">${b.blocks.map(x => x.t==='req' ? `<div class="req"><b>${esc(x.n)}.</b><span>${esc(x.x)}</span></div>` : x.t==='sub' ? `<div class="sub" style="padding-left:${12+18*(x.d||1)}px">${esc(x.x)}</div>`
+    : x.t==='h' ? `<div class="h">${esc(x.x)}</div>` : x.t==='alt' ? `<div class="alt">Option ${esc(x.x)}</div>` : x.t==='note' ? `<div class="note"><b>Note:</b> ${esc(x.x)}</div>` : `<div>${esc(x.x)}</div>`).join('')}</div>`; }
 VIEWS.badge = () => { const b = badge(R.id); if(!b) return empty('medal','Badge not found');
   const holders = S.scouts.filter(s => hasBadge(s,b.id)).map(s => ({ s, a:s.badges.find(x=>x.badgeId===b.id) })).sort((x,y) => x.a.date < y.a.date ? 1 : -1);
   const prog = S.scouts.filter(s => !hasBadge(s,b.id) && s.badgeProgress[b.id] && Object.keys(s.badgeProgress[b.id]).length).map(s => ({ s, p:badgePct(s,b) })).sort((x,y) => y.p - x.p);
   return `<button class="btn ghost sm" data-a="go" data-r="badges" style="margin-bottom:10px">${ic('left','sm')} Badge catalogue</button>
-  <div class="card" style="margin-bottom:16px"><div class="row" style="gap:16px"><span class="badge-ic lg" style="width:80px;height:80px">${ic(b.icon,'lg')}</span><div style="flex:1;min-width:200px"><div class="eyebrow">${BADGE_CATS[b.category]} badge</div><h1>${esc(b.name)}</h1></div>
+  <div class="card" style="margin-bottom:16px"><div class="row" style="gap:16px">${bArt(b, 'lg', 'width:120px;height:120px')}<div style="flex:1;min-width:200px"><div class="eyebrow">${catLabel(b.category)}</div><h1>${esc(b.name)}</h1></div>
   ${can('badge.award')?`<button class="btn" data-a="awardBadge" data-bid="${b.id}">${ic('medal','sm')} Award</button>`:''}${can('badge.signoff')?`<button class="btn" data-a="go" data-r="badges" data-tab="tracking" data-q-tb="${b.id}">${ic('check','sm')} Track progress</button>`:''}${can('badge.catalog')?`<button class="btn" data-a="badgeForm" data-id="${b.id}">${ic('edit','sm')} Edit</button>`:''}</div>
-  <h3 style="margin:18px 0 8px">Requirements</h3><ol style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">${b.reqs.map(r => `<li>${esc(r)}</li>`).join('')}</ol></div>
+  <h3 style="margin:18px 0 8px">Syllabus</h3>${sylHTML(b)}</div>
   <div class="grid g2"><div class="card"><div class="card-h"><h2>Holders</h2>${chip(holders.length)}</div><div class="list">${holders.map(({s,a}) => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="go" data-r="scout" data-id="${s.id}" data-tab="badges">${av(s,34)}<span class="grow"><b class="ttl" style="display:block">${esc(sname(s))}</b><span class="small muted">${fmtD(a.date)} · ${esc(user(a.by)?.name||'')}</span></span></button>`).join('') || empty('medal','Nobody holds this badge yet')}</div></div>
   <div class="card"><div class="card-h"><h2>In progress</h2>${chip(prog.length)}</div><div class="list">${prog.map(({s,p}) => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="badgeTrack" data-sid="${s.id}" data-bid="${b.id}">${av(s,34)}<span class="grow"><b class="ttl" style="display:block">${esc(sname(s))}</b>${bar(p)}</span><b class="num">${p}%</b></button>`).join('') || empty('medal','Nobody is working on it')}</div></div></div>`; };
 function badgeTracking(){ const bid = R.q.tb || S.badges[0]?.id; const b = badge(bid); const pf = R.q.tp || ''; const ok = can('badge.signoff');
@@ -1773,12 +1807,12 @@ function awardList(bid, pre){ const b = badge(bid); return activeScouts().map(s 
 C.awardBadgeSel = el => { $('#award-list').innerHTML = awardList(el.value); };
 F.award = d => { const ids = [].concat(d.sids||[]); if(!ids.length) return toast('Choose at least one scout'); awardTo(ids, d.bid, d.date || TODAY()); closeModal(); refresh(); };
 A.badgeTrack = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); const pr = s.badgeProgress[b.id] || {}; const has = hasBadge(s,b.id); const ok = can('badge.signoff') && !has;
-  modal({ title:`${esc(b.name)} · ${esc(sname(s))}`, body:`<div class="row nw" style="gap:12px;margin-bottom:14px"><span class="badge-ic ${has?'':'prog'} lg">${ic(b.icon,'lg')}</span><div style="flex:1"><b>${badgePct(s,b)}% complete</b>${bar(badgePct(s,b), has)}</div></div>
+  modal({ title:`${esc(b.name)} · ${esc(sname(s))}`, body:`<div class="row nw" style="gap:12px;margin-bottom:14px">${bArt(b, (has?'':'prog')+' lg')}<div style="flex:1"><b>${badgePct(s,b)}% complete</b>${bar(badgePct(s,b), has)}</div></div>
     <div class="list">${b.reqs.map((r,i) => `<label class="li" style="cursor:${ok?'pointer':'default'}"><input type="checkbox" ${pr[i]?'checked':''} ${ok?'':'disabled'} data-c="reqTickModal" data-sid="${s.id}" data-bid="${b.id}" data-i="${i}" style="width:20px;height:20px;accent-color:var(--primary)"><span class="grow"><span style="display:block">${esc(r)}</span>${pr[i]?`<span class="small" style="color:var(--ok)">Signed off ${fmtD(pr[i].date)} · ${esc(user(pr[i].by)?.name||'')}</span>`:''}</span></label>`).join('')}</div>`,
     foot: has ? `<span class="small muted" style="margin-right:auto">Awarded ${fmtD(s.badges.find(x=>x.badgeId===b.id).date)}</span><button class="btn" data-a="closeModal">Close</button>` : `<button class="btn" data-a="closeModal">Close</button>${can('badge.award')?`<button class="btn primary" data-a="awardOne" data-sid="${s.id}" data-bid="${b.id}" ${badgePct(s,b)<100?'disabled':''}>${ic('medal','sm')} Award badge</button>`:''}` }); };
 C.reqTickModal = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); signReq(s, b, +el.dataset.i, el.checked); save(); closeModal(); A.badgeTrack(el); renderMain(); };
 A.awardOne = el => { awardTo([el.dataset.sid], el.dataset.bid, TODAY()); closeModal(); refresh(); };
-A.badgeTrackPick = el => { const s = scout(el.dataset.sid); modal({ title:'Start tracking a badge', body:`<div class="list">${S.badges.filter(b => !hasBadge(s,b.id) && !(s.badgeProgress[b.id] && Object.keys(s.badgeProgress[b.id]).length)).map(b => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="badgeTrackStart" data-sid="${s.id}" data-bid="${b.id}"><span class="badge-ic prog">${ic(b.icon)}</span><span class="grow"><b>${esc(b.name)}</b><span class="small muted" style="display:block">${b.reqs.length} requirements</span></span></button>`).join('') || empty('medal','Already tracking every badge')}</div>` }); };
+A.badgeTrackPick = el => { const s = scout(el.dataset.sid); modal({ title:'Start tracking a badge', body:`<div class="list">${S.badges.filter(b => !hasBadge(s,b.id) && !(s.badgeProgress[b.id] && Object.keys(s.badgeProgress[b.id]).length)).map(b => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="badgeTrackStart" data-sid="${s.id}" data-bid="${b.id}">${bArt(b, 'prog', '', '')}<span class="grow"><b>${esc(b.name)}</b><span class="small muted" style="display:block">${b.reqs.length} requirements</span></span></button>`).join('') || empty('medal','Already tracking every badge')}</div>` }); };
 A.badgeTrackStart = el => { closeModal(); A.badgeTrack(el); };
 function badgeReports(){
   const close = []; activeScouts().forEach(s => S.badges.forEach(b => { if(hasBadge(s,b.id)) return; const p = badgePct(s,b); if(p >= 50) close.push({ s, b, p }); }));
@@ -1789,13 +1823,14 @@ function badgeReports(){
   ${activeScouts().sort((a,b)=>sname(a).localeCompare(sname(b))).map(s => `<tr><td style="white-space:nowrap">${esc(sname(s))}</td>${S.badges.map(b => { const h = hasBadge(s,b.id); const p = badgePct(s,b); return `<td style="text-align:center">${h ? `<span style="color:var(--gold-ink)" title="${esc(b.name)}: earned">${ic('medal','sm')}</span>` : p ? `<span class="small muted num" title="${esc(b.name)}: ${p}%">${p}%</span>` : '<span class="muted">·</span>'}</td>`; }).join('')}<td class="num"><b>${s.badges.length}</b></td></tr>`).join('')}</tbody></table></div>
   <div class="small muted" style="margin-top:8px">${S.badges.map(b => `${b.name}`).join(' · ')}</div></div>`; }
 A.badgeXLSX = () => exportXLSX(`badges-${TODAY()}.xlsx`, [['Holdings', [['Scout','Patrol', ...S.badges.map(b=>b.name), 'Total'], ...activeScouts().map(s => [sname(s), pName(s.patrol), ...S.badges.map(b => hasBadge(s,b.id) ? 'Earned' : badgePct(s,b) ? badgePct(s,b)+'%' : ''), s.badges.length])]], ['Awards', [['Scout','Badge','Date','Awarded by'], ...S.scouts.flatMap(s => s.badges.map(a => [sname(s), badge(a.badgeId)?.name, a.date, user(a.by)?.name]))]]]);
-A.badgeForm = el => { const b = el?.dataset?.id ? badge(el.dataset.id) : { name:'', icon:'star', category:'proficiency', reqs:[] };
+A.badgeForm = el => { const b = el?.dataset?.id ? badge(el.dataset.id) : { name:'', icon:'star', category:'interest', reqs:[] };
   modal({ title: b.id ? 'Edit badge' : 'New badge', wide:true, form:'badge', body:`${b.id?`<input type="hidden" name="id" value="${b.id}">`:''}<div class="form-grid">${field('Badge name', inp('name', b.name, 'required'))}${field('Category', sel('category', Object.entries(BADGE_CATS), b.category))}
-    <div class="field full"><label>Icon</label><div class="row">${BADGE_ICONS.map(i => `<label style="cursor:pointer"><input type="radio" name="icon" value="${i}" ${b.icon===i?'checked':''} class="sr"><span class="icon-pick">${ic(i)}</span></label>`).join('')}</div></div>
+    ${b.img ? `<div class="field full"><label>Badge picture</label>${bArt(b,'xl')}</div>` : `<div class="field full"><label>Icon</label><div class="row">${BADGE_ICONS.map(i => `<label style="cursor:pointer"><input type="radio" name="icon" value="${i}" ${b.icon===i?'checked':''} class="sr"><span class="icon-pick">${ic(i)}</span></label>`).join('')}</div></div>`}
+    ${b.blocks?.length ? `<p class="small muted full">These are the requirements leaders tick off. Changing them replaces the full syllabus text shown on the badge page.</p>` : ''}
     ${field('Requirements (one per line)', ta('reqs', b.reqs.join('\n'), 'rows="6" required'), 'full')}</div>`,
     foot:`${b.id && ME.role==='admin'?`<button type="button" class="btn danger" data-a="badgeDelete" data-id="${b.id}">Delete</button><span class="spacer"></span>`:''}<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save badge</button>` }); };
 F.badge = d => { const reqs = String(d.reqs||'').split('\n').map(x=>x.trim()).filter(Boolean); if(!d.name?.trim() || !reqs.length) return toast('Add a name and at least one requirement');
-  let b = d.id && badge(d.id); const isNew = !b; if(isNew){ b = { id:uid('b') }; S.badges.push(b); } Object.assign(b, { name:d.name.trim(), category:d.category, icon:d.icon||b.icon||'star', reqs });
+  let b = d.id && badge(d.id); const isNew = !b; if(isNew){ b = { id:uid('b') }; S.badges.push(b); } if(b.blocks && reqs.join('\n')!==(b.reqs||[]).join('\n')) delete b.blocks; delete b.nosyl; Object.assign(b, { name:d.name.trim(), category:d.category, icon:d.icon||b.icon||'star', reqs });
   audit(`${isNew?'Created':'Edited'} badge ${b.name}`); closeModal(); refresh(); toast('Badge saved'); };
 A.badgeDelete = el => { const b = badge(el.dataset.id); confirmBox(`Delete <b>${esc(b.name)}</b> from the catalogue? Awards already given stay on scout records as history.`, () => { S.badges = S.badges.filter(x => x.id!==b.id); audit(`Deleted badge ${b.name}`); closeModal(); go('badges'); }); };
 
