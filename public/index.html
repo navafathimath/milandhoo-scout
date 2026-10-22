@@ -442,10 +442,11 @@ svg.chart .grid{stroke:var(--line-2)}
 .note-card{display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;border-top:4px solid var(--nc);min-height:190px}
 .note-ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:color-mix(in srgb,var(--nc) 14%,transparent);color:var(--nc);flex:none}
 .note-head{display:flex;gap:16px;align-items:center;flex-wrap:wrap;border-left:5px solid var(--nc);margin-bottom:12px}
-.note-toc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;position:sticky;top:64px;z-index:5;background:var(--bg);padding:8px 0}
+.note-toc{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:8px;margin-bottom:14px;position:sticky;top:64px;z-index:5;background:var(--bg);padding:8px 0;scrollbar-width:thin}
+.note-toc a{flex:none}
 .note-toc a{display:inline-flex;gap:6px;align-items:center;padding:6px 12px;border-radius:99px;background:var(--surface);border:1px solid var(--line);text-decoration:none;color:var(--ink);font-weight:600;font-size:.85rem}
 .note-toc .num,.note-sec h2 .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--wash);color:var(--primary);font-size:.75rem;font-weight:700}
-.note-sec{margin-bottom:14px;scroll-margin-top:120px;line-height:1.65;display:flow-root}.note-sec h2{display:flex;gap:10px;align-items:center;margin-bottom:10px}.note-sec p{margin:0 0 10px}
+.note-sec{margin-bottom:14px;scroll-margin-top:130px;line-height:1.65;display:flow-root}.note-sec h2{display:flex;gap:10px;align-items:center;margin-bottom:10px}.note-sec p{margin:0 0 10px}
 .nb{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:10px 0}.nb.tip{background:var(--wash)}.nb.warn{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--ink)}.nb.warn svg{color:var(--warn);flex:none;margin-top:3px}
 .nb.key{display:block;background:var(--surface-2);border:1px solid var(--line)}.nb.key ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}.nb.key li{display:flex;gap:8px}.nb.key li svg{color:var(--ok);flex:none;margin-top:4px}
 .nimg{margin:10px 0;text-align:center}.nimg img{max-width:100%;background:#fff;border-radius:10px;border:1px solid var(--line);padding:6px}.nimg figcaption{font-size:.8rem;color:var(--ink-2);margin-top:4px}
@@ -453,7 +454,7 @@ svg.chart .grid{stroke:var(--line-2)}
 .nsteps{list-style:none;margin:10px 0;padding:0;display:grid;gap:10px}.nsteps li{display:flex;gap:12px;align-items:flex-start}
 .nsteps .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:700;font-size:.85rem}
 .nsteps.pics{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.nsteps.pics li{flex-direction:column;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;position:relative}
-.nsteps.pics .n{position:absolute;top:8px;left:8px}.nsteps.pics img{width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px}
+.nsteps.pics li{gap:8px}.nsteps.pics img{width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px}
 .ngloss{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px}.ngloss dt{font-weight:700}
 .note-rel{margin-top:14px;padding:12px;border-radius:12px;background:var(--wash);display:grid;gap:8px}
 .note-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;color:var(--nc,var(--ink))}
@@ -2397,7 +2398,7 @@ function noteBlock(b){
   if(b.t==='warn') return `<div class="nb warn">${ic('alert','sm')}<span>${esc(b.x)}</span></div>`;
   if(b.t==='key') return `<div class="nb key">${b.title?`<b>${esc(b.title)}</b>`:''}<ul>${b.items.map(i => `<li>${ic('check','sm')}<span>${esc(i)}</span></li>`).join('')}</ul></div>`;
   if(b.t==='img') return `<figure class="nimg${b.side?' side':''}"><img src="${b.src}" alt="${esc(b.cap||'')}" loading="lazy"><figcaption>${esc(b.cap||'')}</figcaption></figure>`;
-  if(b.t==='steps') return `<ol class="nsteps${b.items.some(i=>i.img)?' pics':''}">${b.items.map((i,k) => `<li><span class="n">${k+1}</span>${i.img?`<img src="${i.img}" alt="Step ${k+1}" loading="lazy">`:''}<span>${esc(i.x)}</span></li>`).join('')}</ol>`;
+  if(b.t==='steps') return `<ol class="nsteps${b.items.some(i=>i.img)?' pics':''}">${b.items.map((i,k) => `<li>${i.img?`<img src="${i.img}" alt="Step ${k+1}" loading="lazy">`:''}<span class="row nw" style="gap:10px;align-items:flex-start"><span class="n">${k+1}</span><span>${esc(i.x)}</span></span></li>`).join('')}</ol>`;
   if(b.t==='gloss') return `<dl class="ngloss">${b.items.map(([w,m]) => `<dt>${esc(w)}</dt><dd>${esc(m)}</dd>`).join('')}</dl>`;
   return ''; }
 VIEWS.note = () => { const n = noteOf(R.id); if(!n) return empty('book','Notes not found');
