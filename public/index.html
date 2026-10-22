@@ -1219,7 +1219,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => { if(e.key!=='Enter') return; const t = e.target;
   if(t.matches?.('.bpick-pop input')){ e.preventDefault(); t.closest('.bpick').querySelector('.bpick-opt')?.click(); }
-  else if(t.matches?.('[data-i=bcheckFind]')) e.preventDefault(); });
+  else if(t.matches?.('[data-i=bcheckFind],[data-i=pickFind]')) e.preventDefault(); });
 document.addEventListener('change', e => { const el = e.target.closest('[data-c]'); if(el && C[el.dataset.c]) C[el.dataset.c](el, e); });
 document.addEventListener('input', e => { const el = e.target.closest('[data-i]'); if(el && I[el.dataset.i]) I[el.dataset.i](el, e); });
 document.addEventListener('submit', e => { const f = e.target.closest('form[data-f]'); if(!f) return; e.preventDefault(); const d = {}; new FormData(f).forEach((v,k) => { if(k in d){ d[k] = [].concat(d[k], v); } else d[k] = v; }); F[f.dataset.f] && F[f.dataset.f](d, f); });
@@ -1312,7 +1312,10 @@ function genderOf(v){ v = String(v||'').trim().toLowerCase(); return ['girl','g'
 /* Tick lists of scouts: Girls, then Boys (then any not set), each A-Z. row(s) returns one row's HTML. */
 function pickGroups(list, row){ const by = g => list.filter(s => genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b)));
   return [['Girls', by('Girl')], ['Boys', by('Boy')], ['Girl or boy not set', by('')]].filter(([,l]) => l.length)
-    .map(([t,l]) => `<div class="pick-h">${t} <span class="muted">${l.length}</span></div>${l.map(row).join('')}`).join(''); }
+    .map(([t,l]) => `<div class="pick-g"><div class="pick-h">${t} <span class="muted">${l.length}</span></div>${l.map(row).join('')}</div>`).join(''); }
+/* Search box above a tick list: hides scouts whose name does not match, and groups left empty. Ticks are kept. */
+I.pickFind = el => { const q = el.value.trim().toLowerCase(); const box = el.nextElementSibling;
+  box.querySelectorAll('.pick-g').forEach(g => { let n = 0; g.querySelectorAll('label').forEach(l => { const hit = !q || l.textContent.toLowerCase().includes(q); l.classList.toggle('hide', !hit); n += hit; }); g.classList.toggle('hide', !n); }); };
 /* Scouts list split into Girls, Boys and (if any) scouts whose gender is not set yet. */
 function scoutGroups(list){
   if(!list.length) return scoutRows(list);
@@ -1798,7 +1801,7 @@ function awardTo(ids, bid, date){ const b = badge(bid); let n = 0; ids.forEach(i
   if(n){ notify('badge', `${b.name} awarded to ${n} scout${n>1?'s':''}`, ids.slice(0,6).map(id => sname(scout(id))).join(', '), { route:'badge', id:bid }); audit(`Awarded ${b.name} to ${n} scout${n>1?'s':''}`); toast(`${b.name} awarded to ${n} scout${n>1?'s':''}`); } else toast('Those scouts already hold this badge'); }
 A.awardBadge = el => { const bid = el?.dataset?.bid || S.badges[0].id; const pre = el?.dataset?.sid;
   modal({ title:'Award badges', wide:true, form:'award', body:`<div class="form-grid"><div class="field"><label>Badge</label>${badgePick(bid)}</div>${field('Date awarded', inp('date', TODAY(), 'type="date"'))}</div>
-    <div class="row" style="margin:14px 0 6px"><b style="flex:1">Scouts</b><span class="small muted">Tick the scouts who completed the badge</span></div><div id="award-list" style="max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px">${awardList(bid, pre)}</div>`,
+    <div class="row" style="margin:14px 0 6px"><b style="flex:1">Scouts</b><span class="small muted">Tick the scouts who completed the badge</span></div><input class="inp" type="search" placeholder="Search scout name" data-i="pickFind" aria-label="Search scout name" style="margin-bottom:6px"><div id="award-list" style="max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px">${awardList(bid, pre)}</div>`,
     foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">${ic('medal','sm')} Award</button>` }); };
 function awardList(bid, pre){ return pickGroups(activeScouts(), s => { const h = hasBadge(s,bid); return `<label class="check" style="padding:6px 0;border-bottom:1px solid var(--line-2)"><input type="checkbox" name="sids" value="${s.id}" ${h?'disabled':''} ${pre===s.id?'checked':''}>${av(s,26)}<span style="flex:1">${esc(sname(s))} <span class="small muted">${pName(s.patrol)}</span></span>${h?chip('Holds','gold'):''}</label>`; }); }
 /* Badge picker with logos and search (native selects cannot show pictures). */
@@ -1810,7 +1813,7 @@ function bpickOpts(sel, q){ const l = badgesAZ().filter(b => !q || b.name.toLowe
 I.bcheckFind = el => { const q = el.value.toLowerCase(); el.nextElementSibling.querySelectorAll('label').forEach(l => l.classList.toggle('hide', !!q && !l.dataset.name.includes(q))); };
 A.bpickToggle = el => { const pop = el.parentElement.querySelector('.bpick-pop'); pop.classList.toggle('hide'); if(!pop.classList.contains('hide')){ const f = pop.querySelector('input'); f.value = ''; I.bpickFind(f); f.focus(); } };
 I.bpickFind = el => { const w = el.closest('.bpick'); w.querySelector('.bpick-list').innerHTML = bpickOpts(w.querySelector('input[name=bid]').value, el.value); };
-A.bpickSet = el => { const w = el.closest('.bpick'); w.outerHTML = badgePick(el.dataset.id); $('#award-list').innerHTML = awardList(el.dataset.id); };
+A.bpickSet = el => { const w = el.closest('.bpick'); w.outerHTML = badgePick(el.dataset.id); $('#award-list').innerHTML = awardList(el.dataset.id); const f = $('#award-list').previousElementSibling; if(f?.dataset.i==='pickFind') I.pickFind(f); };
 F.award = d => { const ids = [].concat(d.sids||[]); if(!ids.length) return toast('Choose at least one scout'); awardTo(ids, d.bid, d.date || TODAY()); closeModal(); refresh(); };
 A.badgeTrack = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); const pr = s.badgeProgress[b.id] || {}; const has = hasBadge(s,b.id); const ok = can('badge.signoff') && !has;
   modal({ title:`${esc(b.name)} · ${esc(sname(s))}`, body:`<div class="row nw" style="gap:12px;margin-bottom:14px">${bArt(b, (has?'':'prog')+' lg')}<div style="flex:1"><b>${badgePct(s,b)}% complete</b>${bar(badgePct(s,b), has)}</div></div>
@@ -1855,7 +1858,7 @@ A.sylItem = el => { const it = S.syllabus.find(i => i.id===el.dataset.id); const
   modal({ title:esc(it.topic), wide:true, form:'sylBulk', body:`<input type="hidden" name="iid" value="${it.id}"><p class="muted">${esc(it.stage)} · ${esc(it.objective)} · due ${fmtD(it.due)}</p>
     ${linked.length ? `<p class="small" style="margin-top:8px">Covered in: ${linked.map(x => `<a href="#" data-a="go" data-r="session" data-id="${x.id}">${esc(x.title)} (${fmtD(x.date,'short')})</a>`).join(', ')}</p>` : ''}
     <div class="row" style="margin:14px 0 6px"><b style="flex:1">Scouts at ${esc(it.stage)}</b>${ok?`<button type="button" class="btn sm ghost" data-a="sylAll">Select all</button>`:''}</div>
-    <div style="border:1px solid var(--line);border-radius:10px;padding:4px 10px;max-height:360px;overflow:auto">${pickGroups(ss, s => { const d = s.syllabus[it.id]; return `<label class="check" style="padding:6px 0;border-bottom:1px solid var(--line-2)"><input type="checkbox" name="sids" value="${s.id}" ${d?'checked':''} ${ok?'':'disabled'}>${av(s,26)}<span style="flex:1">${esc(sname(s))} <span class="small muted">${pName(s.patrol)}</span></span>${d?`<span class="small" style="color:var(--ok)">${fmtD(d.date,'short')} · ${esc(user(d.by)?.name.split(' ')[0]||'')}</span>`:''}</label>`; }) || empty('users','No scouts at this stage')}</div>`,
+    <input class="inp" type="search" placeholder="Search scout name" data-i="pickFind" aria-label="Search scout name" style="margin-bottom:6px"><div style="border:1px solid var(--line);border-radius:10px;padding:4px 10px;max-height:360px;overflow:auto">${pickGroups(ss, s => { const d = s.syllabus[it.id]; return `<label class="check" style="padding:6px 0;border-bottom:1px solid var(--line-2)"><input type="checkbox" name="sids" value="${s.id}" ${d?'checked':''} ${ok?'':'disabled'}>${av(s,26)}<span style="flex:1">${esc(sname(s))} <span class="small muted">${pName(s.patrol)}</span></span>${d?`<span class="small" style="color:var(--ok)">${fmtD(d.date,'short')} · ${esc(user(d.by)?.name.split(' ')[0]||'')}</span>`:''}</label>`; }) || empty('users','No scouts at this stage')}</div>`,
     foot:`${can('syllabus.edit')?`<button type="button" class="btn" data-a="sylForm" data-id="${it.id}">${ic('edit','sm')} Edit item</button><span class="spacer"></span>`:''}<button type="button" class="btn" data-a="closeModal">Close</button>${ok?`<button class="btn primary">Save sign-offs</button>`:''}` }); };
 A.sylAll = () => $$('input[name=sids]').forEach(x => { if(!x.disabled) x.checked = true; });
 F.sylBulk = d => { const it = S.syllabus.find(i => i.id===d.iid); const sel = [].concat(d.sids||[]); let n = 0;
@@ -2033,7 +2036,7 @@ A.albumDel = el => confirmBox('Delete this album and all its photos?', () => { c
 A.photoEdit = el => { const p = S.photos.find(x => x.id===el.dataset.id); const a = S.albums.find(x => x.id===p.album);
   modal({ title:'Photo details', wide:true, form:'photo', body:`<input type="hidden" name="id" value="${p.id}"><div class="grid g2"><img src="${src(p.ref)}" alt="" style="width:100%;border-radius:12px"><div class="stack">${field('Caption', inp('caption', p.caption))}
     <label class="check"><input type="checkbox" name="private" ${p.private?'checked':''}> Private: leaders only, never shown publicly</label><label class="check"><input type="checkbox" name="cover" ${a.cover===p.id?'checked':''}> Use as album cover</label>
-    <div class="field"><label>Tag scouts</label><div style="max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px">${pickGroups(S.scouts, s => `<label class="check"><input type="checkbox" name="tags" value="${s.id}" ${p.tags.includes(s.id)?'checked':''}> ${esc(sname(s))}</label>`)}</div></div></div></div>`,
+    <div class="field"><label>Tag scouts</label><input class="inp" type="search" placeholder="Search scout name" data-i="pickFind" aria-label="Search scout name" style="margin-bottom:6px"><div style="max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:4px 10px">${pickGroups(S.scouts, s => `<label class="check"><input type="checkbox" name="tags" value="${s.id}" ${p.tags.includes(s.id)?'checked':''}> ${esc(sname(s))}</label>`)}</div></div></div></div>`,
     foot:`${can('photo.delete')?`<button type="button" class="btn danger" data-a="photoDel" data-id="${p.id}">Delete</button><span class="spacer"></span>`:''}<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save</button>` }); };
 F.photo = d => { const p = S.photos.find(x => x.id===d.id); p.caption = d.caption; p.tags = [].concat(d.tags||[]); p.private = !!d.private;
   const nc = p.tags.map(scout).filter(s => s && !s.photoConsent); if(nc.length && !p.private){ p.private = true; toast(`Marked private: no photo consent for ${nc.map(s=>s.first).join(', ')}`); } else toast('Photo saved');
