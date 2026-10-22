@@ -1286,7 +1286,7 @@ function scoutGroups(list){
 function scoutRows(list, quickSet){
   if(!list.length) return empty('users','No scouts match these filters','Clear a filter or add a new scout.');
   return `<div class="srow sh"><span></span><span>Scout</span><span>Patrol</span><span>Rank</span><span>Membership</span><span style="text-align:right">Attendance</span></div>` + list.map(s => { const a = attOf(s.id); const p = patrol(s.patrol);
-    return `<button class="srow${quickSet?' qs':''}" data-a="go" data-r="scout" data-id="${s.id}">${av(s,40)}<span style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sname(s))}</b><span class="small muted num">${s.sid} · ${esc(s.grade)}${s.section}</span></span>
+    return `<button class="srow${quickSet?' qs':''}" data-a="go" data-r="scout" data-id="${s.id}">${av(s,40)}<span style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sname(s))}</b><span class="small muted">${s.joined ? `Joined ${fmtD(s.joined)}` : 'Join date not set'}</span></span>
     <span class="row nw c-hide" style="gap:6px">${pDot(p)}${esc(p?.name||'—')}</span><span class="c-hide">${esc(s.rank)}</span><span class="c-hide">${statusChip(s.status)}</span>
     ${quickSet ? `<span class="gset"><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Girl">Girl</span><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Boy">Boy</span></span>` : `<span style="text-align:right"><b class="num" style="color:${a.pct < S.settings.lowAttendance && a.total ? 'var(--bad)' : 'inherit'}">${a.total ? a.pct+'%' : '—'}</b><span class="small muted c-show" style="display:block">${esc(p?.name||'')}</span></span>`}</button>`; }).join('');
 }
