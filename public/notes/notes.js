@@ -717,6 +717,58 @@ window.SCOUT_NOTES = [
         { t:'img', src:'notes/second/taut-line.jpg', cap:'Taut line hitch, steps 1 to 4', side:true },
         { t:'p', x:'Popular with campers for tying guy lines to tent pegs. You can tighten or loosen the line simply by sliding the knot up or down.' } ] } ] },
 
+  { id:'nature-sc', level:'Second Class', title:'Common Trees, Birds & Fish', icon:'leaf', color:'#2F7D32', summary:'Six local trees in detail, six birds and six sea creatures: where they live and how they behave.', keys:['tree','bird','fish','naturalist','nature'],
+    sections:[
+      { id:'overview', title:'At a glance', blocks:[
+        { t:'tip', x:'Learn each one’s Dhivehi name, its scientific name and its common English name.' },
+        { t:'cards', items:[
+          { img:'notes/nature2/kaani.jpg', name:'Kaani', sci:'Cordia subcordata', x:'Sea trumpet, beach cordia' },
+          { img:'notes/nature2/kandoo.jpg', name:'Kan’doo', sci:'Bruguiera cylindrica', x:'Small-leaved orange mangrove' },
+          { img:'notes/nature2/banbukeyo.jpg', name:'Ban’bukeyo', sci:'Artocarpus altilis', x:'Breadfruit' },
+          { img:'notes/nature2/nika.jpg', name:'Nika / Kirigas', sci:'Ficus benghalensis', x:'Banyan tree' },
+          { img:'notes/nature2/anbu.jpg', name:'An’bu', sci:'Mangifera indica', x:'Mango tree' },
+          { img:'notes/nature2/ruh.jpg', name:'Dhivehi ruh', sci:'Cocos nucifera', x:'Coconut palm' } ] } ] },
+      { id:'kaani', title:'Kaani — sea trumpet', blocks:[
+        { t:'img', src:'notes/nature2/kaani-flower.jpg', cap:'Kaani flowers', side:true },
+        { t:'gloss', items:[['Height','Up to 15 m'],['Wood','Soft but durable. Used for boat building, handicrafts, house building and house poles that can last over 100 years.'],['Leaves','Light green, slightly shiny, broad and egg-shaped'],['Flowers','Bright orange, large and funnel-shaped, 2–4 cm long, with 5–7 slightly wrinkled lobes'],['Fruit','Round or egg-shaped, 2–3 cm; green when young, brown, hard and woody when ripe; up to four small white seeds'],['Bark','Brown or grey, shallowly cracked and flaky']] },
+        { t:'img', src:'notes/nature2/kaani-fruit.jpg', cap:'Kaani fruit' } ] },
+      { id:'kandoo', title:'Kan’doo — small-leaved orange mangrove', blocks:[
+        { t:'img', src:'notes/nature2/kandoo-fruit.jpg', cap:'Kan’doo vah (propagules)', side:true },
+        { t:'gloss', items:[['Height','6–10 m'],['Wood','Hard and strong, used for boat building. The timber is buried in sand at the sea’s edge for about six months so it does not rot easily. Poles are used for houses.'],['Leaves','Simple, lance-shaped, 7–12 cm, shiny dark green with a pointed tip'],['Flowers','Small and white, with an 8-lobed greenish-yellow cup that stays on as a cap above the propagules'],['Fruit','Propagules (kan’doo vah): spindle-shaped, 10–15 cm long, smooth, slightly curved, green to purplish-green. They float and spread on sea currents.'],['Bark','Light to dark grey or pale pink, scaly at the bottom']] },
+        { t:'tip', x:'Kan’doo vah are eaten after peeling and boiling them three or four times — first with ash to take away the bitterness, then with salt for taste.' } ] },
+      { id:'banbukeyo', title:'Ban’bukeyo — breadfruit', blocks:[
+        { t:'img', src:'notes/nature2/banbukeyo-fruit.jpg', cap:'Breadfruit', side:true },
+        { t:'gloss', items:[['Height','About 30 m'],['Wood','Very soft and light — used for boat parts, surfboards and fishing floats'],['Bark','Brown and smooth with warty dots. Every part of the tree gives a milky juice (latex).'],['Leaves','Big, shiny, deeply lobed, dark green and a little waxy, 20–60 cm long'],['Flowers','Yellowish-green, without showy petals, in tight clusters growing straight from the trunk or big branches'],['Fruit','Large and round, 15–30 cm across, with bumpy green skin that gets smoother and softer as it ripens']] },
+        { t:'tip', x:'Breadfruit is a staple of the Maldivian diet. It can be cooked at every stage — with rice, in curries and many other dishes. Breadfruit chips are especially famous.' } ] },
+      { id:'nika', title:'Nika / Kirigas — banyan tree', blocks:[
+        { t:'img', src:'notes/nature2/nika-fruit.jpg', cap:'Banyan figs', side:true },
+        { t:'gloss', items:[['Height','About 30 m'],['Bark','Greyish-white and smooth, with milky sap'],['Wood','Famous for its aerial roots that grow down from the branches to the ground. The wood is used for buildings, boats and furniture.'],['Leaves','Big, oval and shiny with clear veins; dark green on top, lighter underneath; about 10–25 cm long'],['Flowers','Tiny and hidden inside a special part (the syconium), which later becomes the fruit'],['Fruit','Small, round to pear-shaped figs under 2.5 cm; green when young, dark red when ripe, full of tiny seeds']] } ] },
+      { id:'anbu', title:'An’bu — mango tree', blocks:[
+        { t:'img', src:'notes/nature2/anbu-fruit.jpg', cap:'Young mangoes', side:true },
+        { t:'gloss', items:[['Height','About 30 m'],['Bark','Dark grey and rough with up-and-down cracks'],['Wood','Used for dug-out boats, buildings, furniture and household items'],['Leaves','Long (15–40 cm), oblong, shiny dark green with big veins; reddish or purplish when young'],['Flowers','Tiny and sweet-smelling, five creamy, pale-yellow or pinkish petals, in triangle-shaped bunches'],['Fruit','Big and juicy, oval, round or kidney-shaped; turns from green to yellow, orange or red. Sour when raw, sweet when ripe, with one big flat seed.']] } ] },
+      { id:'ruh', title:'Dhivehi ruh — coconut palm', blocks:[
+        { t:'img', src:'notes/nature2/ruh-fruit.jpg', cap:'Coconuts', side:true },
+        { t:'gloss', items:[['Height','4–6 m (taller when old)'],['Bark','Fairly smooth but slightly rough, with overlapping fibre layers; light to dark brown'],['Wood','Used for boat building and for beams, columns and rafters in traditional buildings, homes and huts'],['Leaves','Very long, feather-shaped fronds growing from the top of the trunk, giving shade'],['Flowers','Small and cream-coloured, in clusters at the top among the leaves; they become coconuts'],['Fruit','Coconuts: big and round with a hard brown shell, white flesh you can eat and coconut water you can drink. Used for coconut milk, oil and desserts.']] } ] },
+      { id:'birds', title:'Common birds', blocks:[
+        { t:'cards', items:[
+          { img:'notes/nature2/bulhithunbi.jpg', name:'Bulhithun’bi', sci:'Whimbrel · Numenius phaeopus', x:'Breeds in the Arctic in summer (late May–June), then flies long distances to coasts like ours. Probes mud and sand with its long curved bill for insects, small animals and crabs. Seen in small groups when migrating.' },
+          { img:'notes/nature2/iruvaihudhu.jpg', name:'Iruvaihudhu', sci:'Cattle egret · Bubulcus ibis', x:'Breeds in warm seasons. Lives in fields, wetlands, farms and even towns. Hunts insects stirred up by grazing animals and often sits on the backs of cows. Hunts in groups.' },
+          { img:'notes/nature2/theyravaa.jpg', name:'Theyravaa', sci:'Crab plover · Dromas ardeola', x:'Usually breeds in winter or early spring. Lives on sandy and rocky shores. Breaks open crab shells with its strong bill, feeds in groups at the water’s edge and has loud calls.' },
+          { img:'notes/nature2/raabondhi.jpg', name:'Raabon’dhi', sci:'Black-crowned night heron · Nycticorax nycticorax', x:'Breeds in spring and summer, nesting in trees near water. Lives by lakes, ponds, marshes and swamps. Hunts fish, frogs and bugs at dusk and dawn — stands very still, then strikes quickly.' },
+          { img:'notes/nature2/kanbili.jpg', name:'Dhivehi kan’bili', sci:'Maldivian water hen · Amaurornis phoenicurus maldivus', x:'Found only in the Maldives! Often breeds in the rainy season. Lives in swamps and marshes, hides in thick plants, eats plants, bugs and small water animals, and swims well.' },
+          { img:'notes/nature2/dhondheeni.jpg', name:'Dhon’dheeni', sci:'White tern · Gygis alba', x:'Breeds when food is plentiful. Lives over the open ocean and lays its egg straight on a bare branch or rock — no nest. Catches small fish and squid by diving from the air.' } ] } ] },
+      { id:'fish', title:'Common fish and sea animals', blocks:[
+        { t:'cards', items:[
+          { img:'notes/nature2/hibaru.jpg', name:'Hibaru', sci:'Billfish', x:'Breeds in warm open ocean. A top predator that slashes at small fish and squid with its bill. Very fast, with acrobatic leaps out of the water.' },
+          { img:'notes/nature2/fehurihi.jpg', name:'Fehurihi', sci:'Whale shark', x:'Lives in warm tropical waters where plankton is plentiful. Dark skin with white spots and stripes. Swims slowly near the surface, filtering tiny fish and plankton with its huge mouth, and travels long distances.' },
+          { img:'notes/nature2/koamas.jpg', name:'Koamas', sci:'Dolphin', x:'Found in warm oceans worldwide; gives birth in sheltered areas. Lives in groups called pods and talks with clicks and whistles. Fast swimmers that jump and play in boats’ wakes.' },
+          { img:'notes/nature2/kalhubila.jpg', name:'Kalhubila mas', sci:'Skipjack tuna', x:'Lives and breeds in warm open ocean. Travels long distances in schools; a fast, streamlined swimmer that chases smaller fish.' },
+          { img:'notes/nature2/raagondi.jpg', name:'Raagon’di', sci:'Frigate tuna', x:'Lives in warm waters where cool, nutrient-rich water rises. Eats small fish and crustaceans and is food for sharks and billfish. Shiny blue-green back.' },
+          { img:'notes/nature2/kanneli.jpg', name:'Kanneli', sci:'Yellowfin tuna', x:'Lives in warm and slightly cooler oceans and lays eggs in open water. A skilled hunter of smaller fish and squid; a powerful, very fast swimmer.' } ] },
+        { t:'p', x:'Dolphins and whale sharks are not true “fish” in everyday terms: a dolphin is a mammal that breathes air, while the whale shark is the biggest fish in the sea.' } ] },
+      { id:'recall', title:'Let’s recall what we learned', blocks:[
+        { t:'key', title:'Test yourself', items:['Cover the names and identify each tree, bird and fish from its picture.','Give the Dhivehi name when you hear the English name, and the other way round.','Name one use of the wood of each tree.','Which bird is found only in the Maldives? (Dhivehi kan’bili)'] } ] } ] },
+
   { id:'logbook-sc', level:'Second Class', title:'Log Book Tasks', icon:'book', color:'#B5483F', summary:'Cooking, common trees, birds & fish, observation skills and hike — instructions in Dhivehi.', keys:['log book','logbook','hike','cook','observation'],
     sections:[
       { id:'cooking', title:'Common trees, birds & fish · Cooking', blocks:[
