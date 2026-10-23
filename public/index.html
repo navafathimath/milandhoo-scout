@@ -38,6 +38,50 @@
   .org-team:before{content:"";position:absolute;left:calc(50% - 1px);top:-26px;width:2px;height:22px;background:var(--line)}
 }
 @container (max-width:899px){ .org-lead{margin-bottom:16px} .org-lead .org-vl:last-child{display:none} }
+/* badges: KPIs, gallery and sash report */
+.bkpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.bkpi .k{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;min-width:0}
+.bkpi .k>div{min-width:0}.bkpi .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:1rem;flex:none}
+.bkpi .ic .badge-ic{width:34px;height:34px}
+.bkpi b{display:block;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bkpi span{font-size:.78rem;color:var(--ink-2)}
+.bgal{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.bgc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
+.bgc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;position:relative;overflow:hidden;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:transform .12s,box-shadow .12s}
+.bgc:hover{transform:translateY(-2px);box-shadow:0 12px 24px -16px rgba(0,0,0,.35)}
+.bgc:before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--cc)}
+.bgc-h{display:flex;gap:12px;align-items:center}.bgc-h .badge-ic{width:58px;height:58px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.2))}
+.bgc-h b{display:block;font-size:.95rem;line-height:1.25}.bgc-h small{font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--cc)}
+.bgc-bar{height:6px;border-radius:9px;background:var(--line-2);margin:12px 0 6px;overflow:hidden}.bgc-bar i{display:block;height:100%;background:var(--cc);border-radius:9px}
+.bgc-ct{display:flex;justify-content:space-between;font-size:.76rem;color:var(--ink-2);font-weight:600}
+.bgc-avs{display:flex;margin-top:10px;align-items:center;min-height:30px}.bgc-avs .av{border:2px solid var(--surface);margin-left:-8px}.bgc-avs .av:first-child{margin-left:0}
+.bgc-avs em{font-style:normal;font-size:.76rem;color:var(--ink-2);margin-left:8px;font-weight:600}
+.bgc.zero{opacity:.62}.bgc.zero .badge-ic img{filter:grayscale(1)}
+.bgal-side{display:grid;gap:12px;position:sticky;top:80px}.bgal-side .card{padding:16px}.bgal-side h3{margin:0 0 8px;font-size:1rem;display:flex;gap:6px;align-items:center}
+.bgl{display:flex;align-items:center;gap:10px;padding:8px 0;border:0;border-top:1px solid var(--line-2);font:inherit;font-size:.88rem;font-weight:600;background:none;color:inherit;width:100%;text-align:left}
+button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
+.bgl .r{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.72rem;color:var(--ink-2);flex:none}
+.bgl .r.m1{background:#F6E3A8;color:#8A6510}.bgl .r.m2{background:#E1E7EC;color:#56656F}.bgl .r.m3{background:#F1D3BC;color:#8A4E22}
+.bgl .n{flex:1;min-width:0}.bgl .t{font-weight:800;color:var(--primary)}.bgl .dot{width:10px;height:10px;border-radius:50%;flex:none}
+.ssh-strip{display:flex;gap:4px;overflow-x:auto;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:14px}
+.ssh-strip button{display:flex;flex-direction:column;align-items:center;gap:4px;width:76px;flex:none;padding:6px 2px;border-radius:12px;font:inherit;font-size:.66rem;font-weight:600;text-align:center;color:var(--ink-2);line-height:1.15;background:none;border:0;cursor:pointer}
+.ssh-strip button:hover{background:var(--surface-2)}
+.ssh-strip .badge-ic{width:40px;height:40px}.ssh-strip button.on{background:var(--wash);color:var(--primary);box-shadow:inset 0 0 0 2px var(--primary)}
+.ssh-strip u{text-decoration:none;font-weight:800;color:var(--ink)}
+.ssh-gh{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:12px 0 8px}.ssh-gh.girl{color:var(--girl)}.ssh-gh.boy{color:var(--boy)}
+.ssh-list{display:grid;gap:10px}
+.ssh{display:grid;grid-template-columns:240px minmax(0,1fr) 120px;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 14px;border-left:5px solid var(--line)}
+.ssh.girl{border-left-color:var(--girl)}.ssh.boy{border-left-color:var(--boy)}
+.ssh-who{display:flex;gap:10px;align-items:center;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;min-width:0}
+.ssh-who b{display:block;font-size:.92rem}.ssh-who small{color:var(--ink-2);font-size:.74rem}.ssh-who:hover b{text-decoration:underline}
+.ssh-sash{display:flex;gap:6px;align-items:center;padding:6px 10px;border-radius:12px;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--ok) 12%,var(--surface)) 0 12px,color-mix(in srgb,var(--ok) 17%,var(--surface)) 12px 24px);min-height:52px;flex-wrap:wrap}
+.ssh-b{display:inline-grid;border-radius:50%}.ssh-b .badge-ic{width:38px;height:38px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.ssh-b.hl{outline:3px solid var(--primary);outline-offset:1px}
+.ssh-sash em{font-style:normal;color:var(--ok);opacity:.75;font-size:.8rem;font-weight:600}
+.ssh-cnt{text-align:right}.ssh-cnt b{font-size:1.3rem;font-family:"Roboto Slab",serif}.ssh-cnt small{display:block;color:var(--ink-2);font-size:.72rem}
+.ssh-bar{height:6px;border-radius:9px;background:var(--line-2);margin-top:6px;overflow:hidden}.ssh-bar i{display:block;height:100%;background:var(--ok)}
+@media (max-width:1100px){ .bgal{grid-template-columns:minmax(0,1fr)} .bgal-side{position:static;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))} }
+@media (max-width:900px){ .bkpi{grid-template-columns:repeat(2,minmax(0,1fr))} .ssh{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px} .ssh-sash{grid-column:1/-1;grid-row:2} }
+@media (max-width:560px){ .bkpi .k{padding:10px} .bkpi .ic{width:36px;height:36px;font-size:.85rem} .bkpi b{font-size:.85rem} .bgc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px} .bgc{padding:10px} .bgc-h{flex-direction:column;align-items:flex-start;gap:6px} .bgc-h .badge-ic{width:46px;height:46px} .ssh-b .badge-ic{width:32px;height:32px} }
 </style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
@@ -1915,17 +1959,6 @@ VIEWS.badges = () => { const tab = R.tab || 'catalogue';
   return `${pageH('Badge work', 'Badges', `${can('badge.award')?`<button class="btn" data-a="awardBadge">${ic('medal','sm')} Award badges</button>`:''}${can('badge.catalog')?`<button class="btn primary" data-a="badgeForm">${ic('plus','sm')} New badge</button>`:''}`)}
   <div class="tabs">${[['catalogue','Catalogue'],['reports','Reports']].map(([k,l]) => `<button class="tab ${tab===k?'on':''}" data-a="go" data-r="badges" data-tab="${k}">${l}</button>`).join('')}</div>
   ${tab==='reports' ? badgeReports() : badgeCatalogue()}`; };
-function badgeCatalogue(){ const cf = R.q.cat || ''; const q = (R.q.bq||'').toLowerCase();
-  const cats = [...Object.entries(BADGE_CATS), ...(S.badges.some(b => !BADGE_CATS[b.category]) ? [['other','Other']] : [])];
-  const inCat = (b, k) => k==='other' ? !BADGE_CATS[b.category] : b.category===k;
-  const card = b => { const holders = S.scouts.filter(s => hasBadge(s,b.id)).length;
-    return `<button class="card bcard" data-a="go" data-r="badge" data-id="${b.id}">${bArt(b, 'xl')}<div style="min-width:0;flex:1"><h3>${esc(b.name)}</h3><div class="small muted">${b.nosyl ? 'Syllabus not available yet' : `${b.reqs.length} requirement${b.reqs.length===1?'':'s'}`}</div>
-    <div class="row small" style="margin-top:6px;gap:12px"><span><b class="num">${holders}</b> earned</span></div></div></button>`; };
-  const list = S.badges.filter(b => !q || b.name.toLowerCase().includes(q)).sort((a,b) => a.name.localeCompare(b.name));
-  const groups = (cf ? cats.filter(([k]) => k===cf) : cats).map(([k,l]) => [l, list.filter(b => inCat(b,k))]).filter(([,l]) => l.length);
-  return `<div class="row" style="margin-bottom:14px;gap:10px"><div class="seg" style="flex-wrap:wrap">${[['','All'], ...cats].map(([k,l]) => `<button class="${cf===k?'on':''}" data-a="badgeCat" data-k="${k}">${l} <span class="muted">${k ? S.badges.filter(b => inCat(b,k)).length : S.badges.length}</span></button>`).join('')}</div>
-    <input class="inp" type="search" placeholder="Find a badge" value="${esc(R.q.bq||'')}" data-c="badgeFind" style="max-width:220px" aria-label="Find a badge"></div>
-  ${groups.map(([l, bs]) => `<div class="bgroup"><h2>${esc(l)} ${chip(bs.length)}</h2><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px">${bs.map(card).join('')}</div></div>`).join('') || empty('medal','No badges match')}`; }
 C.badgeFind = el => { R.q.bq = el.value; renderMain(); };
 A.badgeCat = el => { R.q.cat = el.dataset.k; renderMain(); };
 /* Full syllabus text from the PDF (blocks), or the plain requirement list for custom badges. */
@@ -1972,12 +2005,85 @@ C.reqTickModal = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.b
 A.awardOne = el => { awardTo([el.dataset.sid], el.dataset.bid, TODAY()); closeModal(); refresh(); };
 A.badgeTrackPick = el => { const s = scout(el.dataset.sid); modal({ title:'Start tracking a badge', body:`<div class="list">${S.badges.filter(b => !hasBadge(s,b.id) && !(s.badgeProgress[b.id] && Object.keys(s.badgeProgress[b.id]).length)).map(b => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="badgeTrackStart" data-sid="${s.id}" data-bid="${b.id}">${bArt(b, 'prog', '', '')}<span class="grow"><b>${esc(b.name)}</b><span class="small muted" style="display:block">${b.reqs.length} requirements</span></span></button>`).join('') || empty('medal','Already tracking every badge')}</div>` }); };
 A.badgeTrackStart = el => { closeModal(); A.badgeTrack(el); };
-function badgeReports(){
-  return `<div class="row" style="justify-content:flex-end;margin-bottom:12px">${can('export')?`<button class="btn" data-a="badgeXLSX">${ic('download','sm')} Export to Excel</button>`:''}</div>
-  <div class="card"><div class="card-h"><h2>Who holds which badge</h2></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Scout</th>${S.badges.map(b => `<th style="text-align:center" title="${esc(b.name)}"><span style="display:inline-grid;place-items:center" aria-label="${esc(b.name)}">${ic(b.icon,'sm')}</span></th>`).join('')}<th>Total</th></tr></thead><tbody>
-  ${activeScouts().sort((a,b)=>sname(a).localeCompare(sname(b))).map(s => `<tr><td style="white-space:nowrap">${esc(sname(s))}</td>${S.badges.map(b => { const h = hasBadge(s,b.id); return `<td style="text-align:center">${h ? `<span style="color:var(--gold-ink)" title="${esc(b.name)}: earned">${ic('medal','sm')}</span>` : '<span class="muted">·</span>'}</td>`; }).join('')}<td class="num"><b>${s.badges.length}</b></td></tr>`).join('')}</tbody></table></div>
-  <div class="small muted" style="margin-top:8px">${S.badges.map(b => `${b.name}`).join(' · ')}</div></div>`; }
-A.badgeXLSX = () => exportXLSX(`badges-${TODAY()}.xlsx`, [['Holdings', [['Scout','Patrol', ...S.badges.map(b=>b.name), 'Total'], ...activeScouts().map(s => [sname(s), pName(s.patrol), ...S.badges.map(b => hasBadge(s,b.id) ? 'Earned' : ''), s.badges.length])]], ['Awards', [['Scout','Badge','Date','Awarded by'], ...S.scouts.flatMap(s => s.badges.map(a => [sname(s), badge(a.badgeId)?.name, a.date, user(a.by)?.name]))]]]);
+const BCAT_COL = { collective:'#7C3AED', pursuit:'#0D78B6', service:'#C2410C', interest:'#128944' };
+const bCol = b => BCAT_COL[b.category] || '#6B7C8A';
+const bCatName = b => BADGE_CATS[b.category] || 'Other';
+function badgeKPIs(){ const sc = activeScouts(); const hold = S.badges.map(b => [b, sc.filter(s => hasBadge(s,b.id)).length]); const top = hold.slice().sort((a,b) => b[1]-a[1])[0];
+  const awarded = sc.reduce((a,s) => a + s.badges.length, 0), withB = sc.filter(s => s.badges.length).length;
+  return `<div class="bkpi"><div class="k"><span class="ic" style="background:var(--gold-soft);color:var(--gold-ink)">${awarded}</span><div><b>Badges awarded</b><span>to current scouts</span></div></div>
+    <div class="k"><span class="ic" style="background:var(--wash);color:var(--primary)">${withB}/${sc.length}</span><div><b>Scouts with a badge</b><span>${sc.length-withB} still to earn one</span></div></div>
+    <div class="k"><span class="ic" style="background:var(--surface-2)">${top && top[1] ? bArt(top[0]) : ic('medal')}</span><div><b>${top && top[1] ? esc(top[0].name) : 'No badges yet'}</b><span>${top && top[1] ? `most earned · ${top[1]} scout${top[1]===1?'':'s'}` : 'award the first one'}</span></div></div>
+    <div class="k"><span class="ic" style="background:var(--girl-bg);color:var(--girl)">${hold.filter(h => !h[1]).length}</span><div><b>Not yet earned</b><span>badges nobody holds</span></div></div></div>`; }
+
+/* ---- Catalogue: badge gallery ---- */
+function badgeCatalogue(){ const cf = R.q.cat || ''; const q = (R.q.bq||'').toLowerCase(); const sort = R.q.bs || 'most';
+  const cats = [...Object.entries(BADGE_CATS), ...(S.badges.some(b => !BADGE_CATS[b.category]) ? [['other','Other']] : [])];
+  const inCat = (b, k) => k==='other' ? !BADGE_CATS[b.category] : b.category===k;
+  const sc = activeScouts(), N = sc.length || 1;
+  const who = b => sc.filter(s => hasBadge(s,b.id));
+  const list = S.badges.filter(b => (!q || b.name.toLowerCase().includes(q)) && (!cf || inCat(b,cf))).map(b => [b, who(b)])
+    .sort((a,b) => sort==='az' ? a[0].name.localeCompare(b[0].name) : (b[1].length - a[1].length) || a[0].name.localeCompare(b[0].name));
+  const card = ([b, ws]) => { const p = Math.round(ws.length/N*100);
+    return `<button class="bgc ${ws.length?'':'zero'}" style="--cc:${bCol(b)}" data-a="go" data-r="badge" data-id="${b.id}"><div class="bgc-h">${bArt(b,'lg')}<div><small>${esc(bCatName(b))}</small><b>${esc(b.name)}</b></div></div>
+      <div class="bgc-bar"><i style="width:${p}%"></i></div><div class="bgc-ct"><span>${ws.length} of ${sc.length} scouts</span><span>${p}%</span></div>
+      <div class="bgc-avs">${ws.slice(0,5).map(s => av(s,28)).join('')}${ws.length>5?`<em>+${ws.length-5}</em>`:''}${ws.length?'':'<em>Nobody yet</em>'}</div></button>`; };
+  const rank = sc.filter(s => s.badges.length).sort((a,b) => b.badges.length - a.badges.length || sname(a).localeCompare(sname(b))).slice(0,8);
+  return `${badgeKPIs()}<div class="bgal"><div><div class="row" style="margin-bottom:12px;gap:8px"><div class="seg" style="flex-wrap:wrap">${[['','All'], ...cats].map(([k,l]) => `<button class="${cf===k?'on':''}" data-a="badgeCat" data-k="${k}">${l} <span class="muted">${k ? S.badges.filter(b => inCat(b,k)).length : S.badges.length}</span></button>`).join('')}</div>
+    <span class="spacer"></span><input class="inp" type="search" placeholder="Find a badge" value="${esc(R.q.bq||'')}" data-c="badgeFind" style="max-width:200px" aria-label="Find a badge">
+    <select class="inp" style="width:auto" data-c="badgeSort" aria-label="Sort badges">${opts([['most','Most earned'],['az','A–Z']], sort)}</select></div>
+    <div class="bgc-grid">${list.map(card).join('') || empty('medal','No badges match')}</div></div>
+    <div class="bgal-side"><div class="card"><h3>${ic('trophy','sm')} Top badge earners</h3>${rank.map((s,i) => `<button class="bgl" data-a="go" data-r="scout" data-id="${s.id}"><span class="r ${i<3?'m'+(i+1):''}">${i+1}</span>${av(s,30)}<span class="n">${esc(sname(s))}</span><span class="t">${s.badges.length}</span></button>`).join('') || '<p class="small muted">No badges awarded yet.</p>'}</div>
+    <div class="card"><h3>By category</h3>${cats.map(([k,l]) => { const n = S.badges.filter(b => inCat(b,k)).reduce((a,b) => a + who(b).length, 0); return `<div class="bgl"><span class="dot" style="background:${BCAT_COL[k]||'#6B7C8A'}"></span><span class="n">${l}</span><span class="t" style="color:${BCAT_COL[k]||'#6B7C8A'}">${n}</span></div>`; }).join('')}</div></div></div>`; }
+C.badgeSort = el => { R.q.bs = el.value; renderMain(); };
+
+/* ---- Reports: scout sash ---- */
+function sashScouts(){ const g = R.q.rg || ''; return activeScouts().filter(s => !g || genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b))); }
+function badgeReports(){ const hb = R.q.hb || '', g = R.q.rg || ''; const sc = activeScouts(), list = sashScouts();
+  const bs = S.badges.slice().sort((a,b) => a.name.localeCompare(b.name));
+  const row = s => { const got = bs.filter(b => hasBadge(s,b.id)); const gd = genderOf(s.gender);
+    return `<div class="ssh ${gd==='Girl'?'girl':gd==='Boy'?'boy':''}"><button class="ssh-who" data-a="go" data-r="scout" data-id="${s.id}">${av(s,36)}<div><b>${esc(sname(s))}</b><small>${gd?(gd==='Girl'?'♀ Girl':'♂ Boy')+' · ':''}${esc(pName(s.patrol))}</small></div></button>
+      <div class="ssh-sash">${got.map(b => `<span class="ssh-b ${b.id===hb?'hl':''}" title="${esc(b.name)}">${bArt(b)}</span>`).join('') || '<em>No badges yet — the first one is waiting!</em>'}</div>
+      <div class="ssh-cnt"><b>${got.length}</b><small>badge${got.length===1?'':'s'} earned</small><div class="ssh-bar"><i style="width:${bs.length ? got.length/bs.length*100 : 0}%"></i></div></div></div>`; };
+  const groups = [['Girl','♀ Girls','girl'],['Boy','♂ Boys','boy'],['','No gender set','']].map(([k,l,c]) => [l, c, list.filter(s => genderOf(s.gender)===k)]).filter(x => x[2].length);
+  return `${badgeKPIs()}<div class="row" style="margin-bottom:10px;gap:8px"><b class="small muted">Tap a badge to highlight who has it</b><span class="spacer"></span>
+    <div class="seg">${[['','All scouts'],['Girl','♀ Girls'],['Boy','♂ Boys']].map(([k,l]) => `<button class="${g===k?'on':''}" data-a="sashG" data-k="${k}">${l}</button>`).join('')}</div>
+    ${can('export')?`<button class="btn" data-a="badgeXLSX">${ic('download','sm')} Excel</button><button class="btn primary" data-a="badgePDF">${ic('download','sm')} PDF</button>`:''}</div>
+  <div class="ssh-strip">${bs.map(b => `<button class="${b.id===hb?'on':''}" data-a="sashHL" data-id="${b.id}" title="${esc(b.name)}">${bArt(b)}<span>${esc(b.name)}</span><u>${sc.filter(s => hasBadge(s,b.id)).length}</u></button>`).join('')}</div>
+  ${groups.map(([l,c,ss]) => `<div class="ssh-gh ${c}">${l} <span class="muted">${ss.length}</span></div><div class="ssh-list">${ss.map(row).join('')}</div>`).join('') || empty('users','No scouts to show')}`; }
+A.sashG = el => { R.q.rg = el.dataset.k; renderMain(); };
+A.sashHL = el => { R.q.hb = R.q.hb===el.dataset.id ? '' : el.dataset.id; renderMain(); };
+A.badgeXLSX = () => exportXLSX(`badges-${TODAY()}.xlsx`, [['Holdings', [['Scout','Gender','Patrol', ...S.badges.map(b=>b.name), 'Total'], ...activeScouts().map(s => [sname(s), genderOf(s.gender), pName(s.patrol), ...S.badges.map(b => hasBadge(s,b.id) ? 'Earned' : ''), s.badges.length])]], ['Awards', [['Scout','Badge','Date','Awarded by'], ...S.scouts.flatMap(s => s.badges.map(a => [sname(s), badge(a.badgeId)?.name, a.date, user(a.by)?.name]))]]]);
+
+/* PDF in the same sash design */
+const BIMG = {};
+async function badgeImgData(b){ if(!b?.img) return null; if(b.img.startsWith('data:')) return b.img; if(BIMG[b.img] !== undefined) return BIMG[b.img];
+  try { const r = await fetch(b.img); const bl = await r.blob(); BIMG[b.img] = await new Promise(res => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(bl); }); } catch(e){ BIMG[b.img] = null; } return BIMG[b.img]; }
+const hexRGB = h => [1,3,5].map(i => parseInt(h.slice(i,i+2),16));
+A.badgePDF = () => withPDF(async () => { const list = sashScouts(), bs = S.badges.slice().sort((a,b) => a.name.localeCompare(b.name)), sc = activeScouts();
+  const imgs = {}; await Promise.all(bs.map(async b => imgs[b.id] = await badgeImgData(b)));
+  const ctx = await pdfDoc('Badge report', `${list.length} scouts · ${list.reduce((a,s) => a+s.badges.length, 0)} badges earned · ${fmtD(TODAY())}`); const { doc, W } = ctx; const H = doc.internal.pageSize.getHeight();
+  const x0 = 32, w = W - 64; const need = n => { if(ctx.y + n > H - 40){ doc.addPage(); ctx.y = 40; } };
+  const drawBadge = (b, x, y, s) => { if(imgs[b.id]) { try { doc.addImage(imgs[b.id], 'PNG', x, y, s, s); return; } catch(e){} } doc.setFillColor(...hexRGB(bCol(b))); doc.circle(x+s/2, y+s/2, s/2, 'F'); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(s*.42); doc.text(b.name[0]||'?', x+s/2, y+s/2+s*.15, { align:'center' }); };
+  const groups = [['Girl','Girls',[194,65,122]],['Boy','Boys',[13,120,182]],['','No gender set',[107,124,138]]].map(([k,l,c]) => [l, c, list.filter(s => genderOf(s.gender)===k)]).filter(x => x[2].length);
+  const BS = 22, nameW = 150, cntW = 60, sashW = w - nameW - cntW - 24, per = Math.max(1, Math.floor((sashW - 12) / (BS + 4)));
+  for(const [l, c, ss] of groups){ need(60); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...c); doc.text(`${l.toUpperCase()}  (${ss.length})`, x0, ctx.y + 4); ctx.y += 12;
+    for(const s of ss){ const got = bs.filter(b => hasBadge(s,b.id)); const lines = Math.max(1, Math.ceil(got.length / per)); const rh = Math.max(44, 16 + lines*(BS+4)); need(rh + 6);
+      const y = ctx.y; doc.setDrawColor(213,227,237); doc.setFillColor(255,255,255); doc.roundedRect(x0, y, w, rh, 8, 8, 'FD'); doc.setFillColor(...c); doc.rect(x0, y+1, 4, rh-2, 'F');
+      doc.setTextColor(19,40,58); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.text(doc.splitTextToSize(sname(s), nameW-14).slice(0,2), x0+12, y+18);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(78,101,119); doc.text(pName(s.patrol), x0+12, y+rh-10);
+      const sx = x0 + nameW, sw = sashW; doc.setFillColor(230,245,236); doc.roundedRect(sx, y+6, sw, rh-12, 6, 6, 'F');
+      if(got.length) got.forEach((b,i) => drawBadge(b, sx + 6 + (i % per)*(BS+4), y + 10 + Math.floor(i/per)*(BS+4), BS));
+      else { doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(125,165,140); doc.text('No badges yet', sx+10, y+rh/2+3); }
+      doc.setTextColor(19,40,58); doc.setFont('times','bold'); doc.setFontSize(16); doc.text(String(got.length), x0+w-12, y+22, { align:'right' });
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(78,101,119); doc.text('badges earned', x0+w-12, y+32, { align:'right' });
+      ctx.y += rh + 6; } ctx.y += 8; }
+  /* badge key */
+  doc.addPage(); ctx.y = 40; pdfH(ctx, 'Badge holders'); ctx.y += 4; const cw = w/3;
+  bs.forEach((b,i) => { const col = i % 3; if(col===0 && i) ctx.y += 34; if(ctx.y > H - 60){ doc.addPage(); ctx.y = 40; } const x = x0 + col*cw, n = sc.filter(s => hasBadge(s,b.id)).length;
+    drawBadge(b, x, ctx.y, 26); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(19,40,58); doc.text(doc.splitTextToSize(b.name, cw-80)[0], x+32, ctx.y+11);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...hexRGB(bCol(b))); doc.text(bCatName(b), x+32, ctx.y+22);
+    doc.setFont('times','bold'); doc.setFontSize(13); doc.setTextColor(10,92,143); doc.text(String(n), x+cw-14, ctx.y+16, { align:'right' }); });
+  await pdfSave(ctx, `badge-report-${TODAY()}.pdf`); });
 A.badgeForm = el => { const b = el?.dataset?.id ? badge(el.dataset.id) : { name:'', icon:'star', category:'interest', reqs:[] };
   modal({ title: b.id ? 'Edit badge' : 'New badge', wide:true, form:'badge', body:`${b.id?`<input type="hidden" name="id" value="${b.id}">`:''}<div class="form-grid">${field('Badge name', inp('name', b.name, 'required'))}${field('Category', sel('category', Object.entries(BADGE_CATS), b.category))}
     ${b.img ? `<div class="field full"><label>Badge picture</label>${bArt(b,'xl')}</div>` : `<div class="field full"><label>Icon</label><div class="row">${BADGE_ICONS.map(i => `<label style="cursor:pointer"><input type="radio" name="icon" value="${i}" ${b.icon===i?'checked':''} class="sr"><span class="icon-pick">${ic(i)}</span></label>`).join('')}</div></div>`}
