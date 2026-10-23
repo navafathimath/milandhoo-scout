@@ -125,6 +125,22 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
   .rstat{grid-template-columns:repeat(3,minmax(0,1fr));top:calc(58px + env(safe-area-inset-top,0px))} .rstat>*:nth-child(4){border-left:0} .rstat>*:nth-child(n+4){border-top:1px solid var(--line-2)} .rstat>*{padding:8px 10px} .rstat b{font-size:1.1rem} .rstat span{font-size:.6rem}
   .rl-h{display:none} .rl-r{grid-template-columns:34px minmax(0,1fr) auto;gap:6px 10px;padding:10px 12px} .rl-opt{grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr))} .rl-opt button{height:40px} .rl-x{grid-column:1/-1;flex-wrap:wrap} .rl-pt{text-align:right}
   .rfoot #reg-left{display:none} }
+
+/* scouts list: same formal template as the register */
+.sstat{position:static;margin-bottom:14px}
+.ss-T{--c:var(--primary)}.ss-G{--c:var(--girl)}.ss-B{--c:var(--boy)}
+.sl-r{display:grid;grid-template-columns:36px minmax(0,1.6fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,.8fr) 130px;gap:14px;align-items:center;padding:10px 16px;border:0;border-bottom:1px solid var(--line-2);background:var(--surface);width:100%;font:inherit;color:inherit;text-align:left}
+button.sl-r{cursor:pointer}button.sl-r:hover{background:var(--surface-2)}button.sl-r:hover .sl-nm b{text-decoration:underline}
+.slist2 .sl-r:last-child{border-bottom:0}
+.sl-h{background:var(--surface-2);border-bottom:1px solid var(--line);font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding-top:9px;padding-bottom:9px}
+.sl-nm{min-width:0}.sl-nm b{display:block;font-weight:600;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sl-nm small{display:block;color:var(--ink-2);font-size:.75rem}
+.sl-rk{font-size:.86rem}
+.sl-st{display:inline-block;font-size:.72rem;font-weight:700;border-radius:6px;padding:3px 8px;border:1px solid currentColor;line-height:1.2}
+.sl-st.P{color:var(--fm-P)}.sl-st.L{color:var(--fm-L)}.sl-st.A{color:var(--fm-A)}.sl-st.E{color:var(--fm-E)}
+.sl-att{display:flex;align-items:center;gap:8px;justify-content:flex-end}.sl-att b{font-size:.84rem;font-weight:700;min-width:38px;text-align:right}
+.sl-att i{display:block;width:64px;height:6px;border-radius:9px;background:var(--line-2);overflow:hidden}.sl-att u{display:block;height:100%;border-radius:9px}
+.sl-r .c-show{display:none}.sl-r .gset{display:flex;gap:6px;justify-content:flex-end}
+@media (max-width:900px){ .sstat{grid-template-columns:repeat(3,minmax(0,1fr))} .sl-r{grid-template-columns:34px minmax(0,1fr) auto;gap:10px;padding:10px 12px} .sl-r .c-hide{display:none} .sl-r .c-show{display:inline} .sl-att i{width:44px} }
 </style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
@@ -1485,7 +1501,7 @@ VIEWS.scouts = () => {
     ${field('Rank', `<select class="inp" data-c="scoutFilter" data-k="rk">${opts([['','Any rank'], ...STAGES], f.rk)}</select>`, '" style="flex:1;min-width:130px')}
     ${field('Girls / boys', `<select class="inp" data-c="scoutFilter" data-k="g">${opts([['','Girls and boys'], ['Girl',`Girls (${nG})`], ['Boy',`Boys (${nB})`], ['none','Not set']], f.g)}</select>`, '" style="flex:1;min-width:130px')}
   </div></div>
-  <div class="card slist" id="scout-list">${scoutGroups(list)}</div>`;
+  <div class="rlist slist2" id="scout-list">${scoutGroups(list)}</div>`;
 };
 const GENDERS = [['Girl','Girls'], ['Boy','Boys']];
 function filterScouts(f){ return S.scouts.filter(s => (!f.s || (sname(s)+' '+s.sid).toLowerCase().includes(f.s.toLowerCase())) && (!f.p || s.patrol===f.p) && (!f.st || s.status===f.st) && (!f.rk || s.rank===f.rk)
@@ -1499,27 +1515,31 @@ function pickGroups(list, row){ const by = g => list.filter(s => genderOf(s.gend
 I.pickFind = el => { const q = el.value.trim().toLowerCase(); const box = el.nextElementSibling;
   box.querySelectorAll('.pick-g').forEach(g => { let n = 0; g.querySelectorAll('label').forEach(l => { const hit = !q || l.textContent.toLowerCase().includes(q); l.classList.toggle('hide', !hit); n += hit; }); g.classList.toggle('hide', !n); }); };
 /* Scouts page: girls and boys summary, then one table split into colour-coded GIRLS / BOYS bands. */
-function scoutSummary(){ if(!S.scouts.length) return '';
-  const grp = g => S.scouts.filter(s => genderOf(s.gender)===g); const avg = l => { const a = l.map(s => attOf(s.id)).filter(x => x.total); return a.length ? Math.round(a.reduce((t,x) => t+x.pct, 0)/a.length) : null; };
-  const G = grp('Girl'), B = grp('Boy'), n = S.scouts.length, pg = Math.round(G.length/n*100), pb = Math.round(B.length/n*100);
-  const box = (l, g) => `<div class="card ssum" style="--gc:var(--${g})"><span class="ssum-ic">${g==='girl'?'♀':'♂'}</span><div><b>${l.length}</b><span>${g==='girl'?'Girls':'Boys'}${avg(l)!=null?` · ${avg(l)}% avg attendance`:''}</span></div></div>`;
-  return `<div class="ssums">${box(G,'girl')}${box(B,'boy')}<div class="card ssum-r"><div class="row nw"><b>${n} scout${n===1?'':'s'}</b><span class="spacer"></span><span class="small muted">${pg}% girls · ${pb}% boys${n-G.length-B.length?` · ${n-G.length-B.length} not set`:''}</span></div>
-    <div class="ssum-bar"><span style="width:${pg}%;background:var(--girl)"></span><span style="width:${pb}%;background:var(--boy)"></span></div>
-    <div class="row small muted" style="gap:10px">${S.patrols.map(p => `<span class="row nw" style="gap:5px">${pDot(p)}${esc(p.name)}</span>`).join('')}</div></div></div>`; }
+function scoutSummary(){ if(!S.scouts.length) return ''; const q = R.q;
+  const avg = l => { const a = l.map(s => attOf(s.id)).filter(x => x.total); return a.length ? Math.round(a.reduce((t,x) => t+x.pct, 0)/a.length) : null; };
+  const nG = S.scouts.filter(s => genderOf(s.gender)==='Girl').length, nB = S.scouts.filter(s => genderOf(s.gender)==='Boy').length, av2 = avg(S.scouts);
+  const box = (cls, k, v, n, l) => { const on = k && (q[k]||'')===v; const dim = k && q[k] && !on;
+    return `<button class="${cls} ${on?'on':''} ${dim?'dim':''}" data-a="scoutStat" data-k="${k}" data-v="${v}" aria-pressed="${on}"><b class="num">${n}</b><span>${l}</span></button>`; };
+  return `<div class="rstat sstat">${box('ss-T','','',S.scouts.length,'All scouts')}${box('ss-G','g','Girl',nG,'Girls')}${box('ss-B','g','Boy',nB,'Boys')}
+    ${box('rs-P','st','Active',S.scouts.filter(s=>s.status==='Active').length,'Active')}${box('rs-L','st','Pending',S.scouts.filter(s=>s.status==='Pending').length,'Pending')}
+    <div class="rs-T"><b class="num">${av2!=null?av2+'%':'—'}</b><span>Avg attendance</span></div></div>`; }
+A.scoutStat = el => { const k = el.dataset.k; if(!k){ delete R.q.g; delete R.q.st; } else R.q[k] = (R.q[k]||'')===el.dataset.v ? '' : el.dataset.v; renderMain(); };
 function scoutGroups(list){
   if(!list.length) return scoutRows(list);
   const groups = [['girl', 'Girls', list.filter(s => genderOf(s.gender)==='Girl')], ['boy', 'Boys', list.filter(s => genderOf(s.gender)==='Boy')], ['none', 'Girl or boy not set', list.filter(s => !genderOf(s.gender))]].filter(([,,l]) => l.length);
-  return `<div class="srow sh"><span></span><span>Scout</span><span>Patrol</span><span>Rank</span><span>Membership</span><span style="text-align:right">Attendance</span></div>`
-    + groups.map(([g, label, l]) => `<div class="sband ${g}">${g==='girl'?'♀ ':g==='boy'?'♂ ':''}${esc(label)} <span class="chip">${l.length}</span></div>${scoutRows(l, g==='none' && can('scout.edit'), g)}`).join('');
+  return `<div class="sl-r sl-h"><span></span><span>Scout</span><span class="c-hide">Patrol</span><span class="c-hide">Rank</span><span class="c-hide">Membership</span><span style="text-align:right">Attendance</span></div>`
+    + groups.map(([g, label, l]) => `<div class="rl-sh">${esc(label)} <span>(${l.length})</span></div>${scoutRows(l, g==='none' && can('scout.edit'), g)}`).join('');
 }
-function attRing(a){ if(!a.total) return '<span class="muted">—</span>'; const c = a.pct < S.settings.lowAttendance ? 'var(--bad)' : a.pct < 90 ? '#E0A030' : 'var(--ok)';
-  return `<span class="aring" title="${a.pct}% attendance"><svg viewBox="0 0 44 44" width="44" height="44" aria-hidden="true"><circle cx="22" cy="22" r="20" fill="none" stroke="var(--line)" stroke-width="1.5"/><circle cx="22" cy="22" r="20" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-dasharray="${(a.pct/100*125.7).toFixed(1)} 125.7" transform="rotate(-90 22 22)"/></svg><b>${a.pct}%</b></span>`; }
+function attBar(a){ if(!a.total) return '<span class="muted">—</span>'; const c = a.pct < S.settings.lowAttendance ? 'var(--fm-A)' : a.pct < 90 ? 'var(--fm-L)' : 'var(--fm-P)';
+  return `<span class="sl-att" title="${a.pct}% attendance (${a.total} meetings)"><b>${a.pct}%</b><i><u style="width:${a.pct}%;background:${c}"></u></i></span>`; }
+const MST_CLS = { Active:'P', Pending:'L', Expired:'A', Inactive:'E' };
 function scoutRows(list, quickSet, g=''){
   if(!list.length) return empty('users','No scouts match these filters','Clear a filter or add a new scout.');
-  return list.map(s => { const a = attOf(s.id); const p = patrol(s.patrol);
-    return `<button class="srow ${g}${quickSet?' qs':''}" data-a="go" data-r="scout" data-id="${s.id}"><span class="sav">${av(s,40)}${g==='girl'||g==='boy'?`<i class="sg">${g==='girl'?'♀':'♂'}</i>`:''}</span><span style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sname(s))}</b><span class="small muted">${s.joined ? `Joined ${fmtD(s.joined)}` : 'Join date not set'}</span></span>
-    <span class="row nw c-hide" style="gap:6px">${pDot(p)}${esc(p?.name||'—')}</span><span class="c-hide">${esc(s.rank)}</span><span class="c-hide">${statusChip(s.status)}</span>
-    ${quickSet ? `<span class="gset"><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Girl">Girl</span><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Boy">Boy</span></span>` : `<span style="text-align:right;display:flex;flex-direction:column;align-items:flex-end">${attRing(a)}<span class="small muted c-show">${esc(p?.name||'')}</span></span>`}</button>`; }).join('');
+  return list.map(s => { const a = attOf(s.id); const p = patrol(s.patrol); const img = s.photo && imgData(s.photo);
+    return `<button class="sl-r${quickSet?' qs':''}" data-a="go" data-r="scout" data-id="${s.id}"><span class="rl-ini ${g==='girl'||g==='boy'?g:''}">${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
+    <span class="sl-nm"><b>${esc(sname(s))}</b><small>${s.joined ? `Joined ${fmtD(s.joined)}` : 'Join date not set'}<span class="c-show">${p ? ' · '+esc(p.name) : ''}</span></small></span>
+    <span class="c-hide">${p ? `<span class="rl-pill">${pDot(p)}${esc(p.name)}</span>` : '<span class="muted">—</span>'}</span><span class="c-hide sl-rk">${esc(s.rank||'—')}</span><span class="c-hide"><span class="sl-st ${MST_CLS[s.status]||'E'}">${esc(s.status)}</span></span>
+    ${quickSet ? `<span class="gset"><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Girl">Girl</span><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Boy">Boy</span></span>` : attBar(a)}</button>`; }).join('');
 }
 A.setGender = (el, e) => { e?.stopPropagation?.(); const s = scout(el.dataset.id); if(!s) return; s.gender = el.dataset.g; audit(`Set ${sname(s)} as ${s.gender.toLowerCase()}`); refresh();
 }
