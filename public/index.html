@@ -2720,7 +2720,7 @@ const noteFor = text => { const t = String(text||'').toLowerCase(); return NOTES
 const noteMins = n => Math.max(1, Math.round(JSON.stringify(n.sections).length / 1100));
 function noteChip(n, sec){ return `<button type="button" class="note-chip" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}"${sec?` data-sec="${sec}"`:''}>${ic(n.icon,'sm')} ${esc(n.title)}</button>`; }
 const noteLevel = n => n.level || 'Scout Standard';
-const NOTE_LEVELS = [['Scout Standard','Study notes for the Scout Standard from the 9th Raa Scout Group.'],['Second Class','Study notes for Second Class from the 8th Shaviyani Scout Group.'],['First Class','Study notes for First Class from the 8th Shaviyani Scout Group.']];
+const NOTE_LEVELS = [['Scout Standard','Study notes for the Scout Standard from the 9th Raa Scout Group.'],['Tenderfoot','Study notes for Tenderfoot from the 8th Shaviyani Scout Group.'],['Second Class','Study notes for Second Class from the 8th Shaviyani Scout Group.'],['First Class','Study notes for First Class from the 8th Shaviyani Scout Group.']];
 VIEWS.notes = () => `${pageH('Study notes', 'Scout Notes', '')}
   <p class="muted" style="margin:-8px 0 16px;max-width:70ch">Open a topic to read it, or jump straight to a section.</p>
   ${NOTE_LEVELS.map(([lv, about]) => { const ns = NOTES().filter(n => noteLevel(n)===lv); return ns.length ? `<div class="note-lv"><h2>${esc(lv)} <span class="chip">${ns.length}</span></h2><p class="muted small">${esc(about)}</p></div>

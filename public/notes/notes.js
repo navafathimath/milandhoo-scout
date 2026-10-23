@@ -1,7 +1,7 @@
 /* Scout Standard study notes (9th Raa Scout Group / Hulhudhuffaaru School), rewritten for easy reading.
    Every point from the original notes is kept; spelling is corrected. Each topic: sections of blocks.
    Block types: p (paragraph) · key {title, items} · warn · tip · img {src, cap, side} · steps [{img, x}] · gloss [[word, meaning]]
-   · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Scout Standard' (default), 'Second Class' or 'First Class'.
+   · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Scout Standard' (default), 'Tenderfoot', 'Second Class' or 'First Class'.
    keys: words that link a topic to badges and syllabus items with matching names. */
 window.SCOUT_NOTES = [
   { id:'cooking', title:'Cooking', icon:'fire', color:'#C2410C', summary:'Maldivian meals for a group of four, served with dessert and drinks.', keys:['cook'],
@@ -603,6 +603,39 @@ window.SCOUT_NOTES = [
         { t:'img', src:'notes/swimming/breaststroke.jpg', cap:'Breaststroke', side:true },
         { t:'p', x:'Move both arms together and kick the legs like a frog.' },
         { t:'gloss', items:[['Body','Straight, face down, both arms stretched forward'],['Arms','Sweep both arms outward, pull the water towards your chest, then stretch forward again'],['Legs','Bend your knees, bring your heels towards your body, turn your feet out and kick backwards like a frog'],['Breathing','Lift your head to breathe in as your arms pull to your chest; put your face back in and breathe out']] } ] } ] },
+
+  /* ---------- Tenderfoot notes (8th Shaviyani Scout Group) ---------- */
+  { id:'tenderfoot', level:'Tenderfoot', title:'Emblems, Promise, Law, Salute & Sign', icon:'flag', color:'#6B21A8', summary:'The world, national and group scout emblems, the Scout Promise and Law, the scout salute and the scout sign.', keys:['promise','scout law','emblem','salute','tenderfoot','investiture'],
+    sections:[
+      { id:'emblems', title:'Scout emblems', blocks:[
+        { t:'cards', items:[
+          { img:'notes/tenderfoot/world.jpg', name:'World Scout Emblem', x:'The badge of the World Organization of the Scout Movement — a white fleur-de-lis on purple, circled by a rope tied with a reef knot.' },
+          { img:'notes/tenderfoot/national.jpg', name:'National Scout Emblem', x:'The emblem of the Scout Association of Maldives — a yellow fleur-de-lis with a tuna, on green.' },
+          { img:'notes/tenderfoot/group.jpg', name:'Group Scout Emblem', x:'The emblem of our own group: the 8th Shaviyani Scout Group.' } ] } ] },
+      { id:'promise', title:'The Scout Promise', blocks:[
+        { t:'img', src:'notes/tenderfoot/promise-dv.jpg', cap:'The Scout Promise in Dhivehi' },
+        { t:'tip', x:'On my honour, I promise that I will do my best, to do my duty to Allah and the country; to help other people at all times and to obey the Scout Law.' } ] },
+      { id:'law', title:'The Scout Law', blocks:[
+        { t:'steps', items:[
+          { x:'A scout’s honour is to be trusted.' },
+          { x:'A scout is loyal.' },
+          { x:'A scout’s duty is to be useful and help others.' },
+          { x:'A scout is a friend to all and a brother or sister to every other scout.' },
+          { x:'A scout is courteous.' },
+          { x:'A scout is environmentally friendly.' },
+          { x:'A scout obeys the orders of his or her parents, patrol leaders and scout leaders.' },
+          { x:'A scout smiles and whistles under all difficulties.' },
+          { x:'A scout is thrifty.' },
+          { x:'A scout is clean in thought, word and deed.' }] } ] },
+      { id:'salute', title:'The Scout salute', blocks:[
+        { t:'img', src:'notes/tenderfoot/salute.jpg', cap:'The scout salute', side:true },
+        { t:'p', x:'The scout salute shows respect, courtesy and friendliness. A scout salutes with the right hand. The three fingers remind the scout of the three parts of the Scout Promise — to do their best:' },
+        { t:'key', items:['To do their duty to Allah and the country.','To help other people at all times.','To obey the Scout Law.'] } ] },
+      { id:'sign', title:'The Scout sign', blocks:[
+        { t:'img', src:'notes/tenderfoot/sign.jpg', cap:'The scout sign, held at shoulder height', side:true },
+        { t:'p', x:'The scout sign is almost the same as the salute, but the hand is held up at shoulder height.' },
+        { t:'p', x:'It is used when someone is making or renewing their promise.' },
+        { t:'img', src:'notes/tenderfoot/sign-hand.jpg', cap:'Three fingers up, thumb over the little finger' } ] } ] },
 
   /* ---------- Second Class notes (8th Shaviyani Scout Group) ---------- */
   { id:'world-scouting', level:'Second Class', title:'Structure of World Scouting', icon:'users', color:'#1D4ED8', summary:'WOSM, the World Scout Conference, Committee and Bureau, and the six Scout Regions.', keys:['world scout','wosm','scout movement'],
