@@ -530,5 +530,77 @@ window.SCOUT_NOTES = [
           { x:'Write which materials you used to make the raft and how you made it. Include how many people the raft could carry.' },
           { x:'Describe where you travelled on the raft and roughly how far.' },
           { x:'Note the important landmarks, plants and animals, with timings, weather, tides and environmental conditions.' },
-          { x:'Paste some pictures from the rafting event (get them from the scout Facebook page).' }] } ] } ] }
+          { x:'Paste some pictures from the rafting event (get them from the scout Facebook page).' }] } ] } ] },
+
+  { id:'knots-fc', level:'First Class', title:'Knots, Lashings & Splicing', icon:'knot', color:'#1D4ED8', summary:'Shear lashing, fireman’s chair, butterfly knot, rolling hitch, parbuckling and three splices.', keys:['knot','lash','splic','pioneer','rope'],
+    sections:[
+      { id:'shear', title:'Shear lashing', blocks:[
+        { t:'p', x:'Binds two parallel poles together, to make them longer or to build a strong A-frame (shear legs) for lifting heavy loads.' },
+        { t:'img', src:'notes/knots2/shear.jpg', cap:'Shear lashing' },
+        { t:'steps', items:[{ x:'Start with a clove hitch around just one of the poles before you begin wrapping.' },{ x:'Make six wraps around both poles.' },{ x:'Make two frapping turns between the poles.' },{ x:'Finish the loose end with a clove hitch, then open the legs to tighten the lashing.' }] } ] },
+      { id:'firemans', title:'Fireman’s chair knot', blocks:[
+        { t:'p', x:'Makes a secure, adjustable double loop that will not slip under pressure. It is traditionally used in emergency rescues to lower or lift a person safely.' },
+        { t:'img', src:'notes/knots2/firemans-chair.jpg', cap:'Fireman’s chair knot, steps 1 to 4' } ] },
+      { id:'butterfly', title:'Butterfly knot', blocks:[
+        { t:'img', src:'notes/knots2/butterfly.jpg', cap:'Butterfly knot', side:true },
+        { t:'p', x:'Forms a very secure, fixed loop in the middle of a rope. It can take a load from any direction without slipping — a favourite in mountaineering and rigging.' },
+        { t:'steps', items:[{ x:'Make a loop like an “8” and fold the upper loop down.' },{ x:'Pull it around and pass it through the lower loop.' },{ x:'Pull all the way up to tighten the knot.' }] } ] },
+      { id:'rolling', title:'Rolling hitch', blocks:[
+        { t:'p', x:'A friction hitch for tying a rope to a pole or to another rope. It grips tightly under tension and holds a load pulling along the pole or rope.' },
+        { t:'img', src:'notes/knots2/rolling-hitch.jpg', cap:'Rolling hitch: rope to rope (top) and rope to pole (bottom)' } ] },
+      { id:'parbuckle', title:'Parbuckling', blocks:[
+        { t:'p', x:'A rigging method that uses a loop of rope to roll heavy round objects, such as logs or barrels, safely up or down a slope with less effort.' },
+        { t:'steps', items:[{ img:'notes/knots2/parbuckle.jpg', x:'Rolling a log up planks onto a cart' },{ img:'notes/knots2/parbuckle-2.jpg', x:'How the rope is laid around the log' }] } ] },
+      { id:'splices', title:'Splicing', blocks:[
+        { t:'cards', items:[
+          { img:'notes/knots2/back-splice.jpg', name:'Back splice', x:'Weave the loose strands at the end of a laid rope back into itself. It makes a neat stopper end that stops fraying.' },
+          { img:'notes/knots2/eye-splice.jpg', name:'Eye splice', x:'Weave the strands back into the rope to make a permanent, very strong loop at the end.' },
+          { img:'notes/knots2/long-splice.jpg', name:'Long splice', x:'Permanently joins two ropes of the same thickness. It hardly makes the rope thicker, so it can still run through pulleys and blocks.' } ] } ] } ] },
+
+  { id:'compass-fc', level:'First Class', title:'Mapping & Compass', icon:'compass', color:'#0369A1', summary:'The 32 points of the compass, true and magnetic north, charts, finding direction, and safety equipment at sea.', keys:['compass','map','navigat','orienteer','boat','sail'],
+    sections:[
+      { id:'points', title:'The 32 points of the compass', blocks:[
+        { t:'img', src:'notes/compass/32-points.jpg', cap:'The 32-point compass rose', side:true },
+        { t:'p', x:'The compass is divided into 360 degrees and into 32 points. The 32-point system lets sailors, hikers and adventurers give precise bearings and navigate well.' },
+        { t:'key', title:'Cardinal points (4)', items:['North (N), East (E), South (S), West (W)'] },
+        { t:'key', title:'Ordinal points (4)', items:['Northeast (NE), Southeast (SE), Southwest (SW), Northwest (NW)'] },
+        { t:'key', title:'Secondary intercardinal points (8)', items:['North-northeast (NNE), East-northeast (ENE)','East-southeast (ESE), South-southeast (SSE)','South-southwest (SSW), West-southwest (WSW)','West-northwest (WNW), North-northwest (NNW)'] },
+        { t:'key', title:'Quarter points (16)', items:['North by East (NbE), Northeast by North (NEbN), Northeast by East (NEbE), East by North (EbN)','East by South (EbS), Southeast by East (SEbE), Southeast by South (SEbS), South by East (SbE)','South by West (SbW), Southwest by South (SWbS), Southwest by West (SWbW), West by South (WbS)','West by North (WbN), Northwest by West (NWbW), Northwest by North (NWbN), North by West (NbW)'] },
+        { t:'key', title:'Uses', items:['Finding directions for navigation','Plotting courses on maps and charts','Finding your way during outdoor activities'] } ] },
+      { id:'north', title:'True north and magnetic north', blocks:[
+        { t:'img', src:'notes/compass/true-magnetic.jpg', cap:'True north and magnetic north', side:true },
+        { t:'gloss', items:[['True north','The direction of the geographic North Pole'],['Magnetic north','The direction a compass needle points, lined up with the Earth’s magnetic field'],['Variation (declination)','The angle between true north and magnetic north. It changes from place to place.']] },
+        { t:'p', x:'The difference exists because the magnetic poles are not in the same place as the geographic poles. Navigators and map-makers must allow for it to get accurate bearings — especially in remote or unfamiliar places.' } ] },
+      { id:'chart', title:'Using a navigation chart', blocks:[
+        { t:'key', title:'A chart includes', items:['A grid of latitude and longitude to locate positions','A compass rose to show directions','Symbols for depths, hazards, buoys and other details'] },
+        { t:'steps', items:[{ x:'Find your starting point and your destination.' },{ x:'Use a compass to work out the bearing.' },{ x:'Work out the distance using the chart’s scale.' }] } ] },
+      { id:'daynight', title:'Finding direction by day and night', blocks:[
+        { t:'key', title:'By day — the sun', items:['The sun rises in the east and sets in the west.'] },
+        { t:'key', title:'By night — the stars', items:['Northern hemisphere: Polaris, the North Star (ގަހާތަރި), in the Little Bear (Ursa Minor), shows north.','Southern hemisphere: the Southern Cross (ދެކުނު ހާލި) shows south.'] } ] },
+      { id:'safety', title:'Safety equipment on sea-going vessels', blocks:[
+        { t:'p', x:'Every sea-going vessel, including fishing boats, should carry:' },
+        { t:'cards', items:[
+          { img:'notes/compass/lifejacket.jpg', name:'Life jackets', x:'A flotation device for everyone on board.' },
+          { img:'notes/compass/lifebuoy.jpg', name:'Lifebuoys', x:'For emergencies in the water.' },
+          { img:'notes/compass/extinguisher.jpg', name:'Fire extinguishers', x:'To put out fires on board.' },
+          { img:'notes/compass/flares.jpg', name:'Distress signals', x:'Flares or an EPIRB (Emergency Position Indicating Radio Beacon).' },
+          { img:'notes/compass/radio.jpg', name:'Radio equipment', x:'For communication.' },
+          { img:'notes/compass/firstaid-kit.jpg', name:'First-aid kit', x:'For medical emergencies.' },
+          { img:'notes/compass/bilge-pump.jpg', name:'Bilge pump', x:'To pump water out of the boat.' },
+          { img:'notes/compass/compass.jpg', name:'Compass', x:'Accurate navigation that works without GPS or electronics — vital in poor visibility or if equipment fails.' } ] } ] } ] },
+
+  { id:'swimming-fc', level:'First Class', title:'Swimming', icon:'wave', color:'#0891B2', summary:'Freestyle 150 m, backstroke 100 m and breaststroke 50 m: body, legs, arms and breathing.', keys:['swim'],
+    sections:[
+      { id:'freestyle', title:'Freestyle — 150 metres', blocks:[
+        { t:'img', src:'notes/swimming/freestyle.jpg', cap:'Freestyle', side:true },
+        { t:'p', x:'Swim on your front, moving the arms one after the other and kicking the legs.' },
+        { t:'gloss', items:[['Body','Straight, face down, close to the surface'],['Legs','Kick up and down one after the other; legs relaxed, toes pointed'],['Arms','Reach one arm forward and pull it through the water, then the other'],['Breathing','Breathe out into the water; turn your head to the side to breathe in as one arm comes forward']] } ] },
+      { id:'backstroke', title:'Backstroke — 100 metres', blocks:[
+        { t:'img', src:'notes/swimming/backstroke.jpg', cap:'Backstroke', side:true },
+        { t:'p', x:'Swim on your back, moving the arms one after the other and kicking the legs.' },
+        { t:'gloss', items:[['Body','Lie on your back, straight, face up, hips near the surface'],['Legs','Kick up and down one after the other; straight but relaxed, toes pointed'],['Arms','Swing one arm back over your head into the water and pull it under towards your hip while the other arm moves'],['Breathing','Face stays above the water — breathe normally, do not hold your breath']] } ] },
+      { id:'breaststroke', title:'Breaststroke — 50 metres', blocks:[
+        { t:'img', src:'notes/swimming/breaststroke.jpg', cap:'Breaststroke', side:true },
+        { t:'p', x:'Move both arms together and kick the legs like a frog.' },
+        { t:'gloss', items:[['Body','Straight, face down, both arms stretched forward'],['Arms','Sweep both arms outward, pull the water towards your chest, then stretch forward again'],['Legs','Bend your knees, bring your heels towards your body, turn your feet out and kick backwards like a frog'],['Breathing','Lift your head to breathe in as your arms pull to your chest; put your face back in and breathe out']] } ] } ] }
 ];
