@@ -162,7 +162,8 @@ window.TRAILMARK_FIREBASE = (window.TRAILMARK_FIREBASE && window.TRAILMARK_FIREB
 <title>Milandhoo Scout Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Slab:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Slab:wght@500;600;700&family=Noto+Sans+Thaana:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://dvfonts.yashau.com/css2?family=Faruma&display=swap">
 <style>
 /* Layout: logo-blue sidebar + paper topbar shell; cards on an off-white topographic ground; bottom nav on phones. */
 :root{
@@ -633,6 +634,7 @@ svg.chart .grid{stroke:var(--line-2)}
 .ncard-img img{width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px}
 .ncard b{font-size:.95rem}.ncard i{font-size:.8rem;color:var(--ink-2)}.ncard span{font-size:.84rem}
 @media print{ .ncard{break-inside:avoid} }
+.dv{font-family:"Faruma","MV Faruma","Noto Sans Thaana",sans-serif;font-size:1.45rem;line-height:2.2;direction:rtl;text-align:right;margin:4px 0 10px}
 .ngloss{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px}.ngloss dt{font-weight:700}
 .note-rel{margin-top:14px;padding:12px;border-radius:12px;background:var(--wash);display:grid;gap:8px}
 .note-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;color:var(--nc,var(--ink))}
@@ -2734,6 +2736,7 @@ function noteBlock(b){
   if(b.t==='key') return `<div class="nb key">${b.title?`<b>${esc(b.title)}</b>`:''}<ul>${b.items.map(i => `<li>${ic('check','sm')}<span>${esc(i)}</span></li>`).join('')}</ul></div>`;
   if(b.t==='img') return `<figure class="nimg${b.side?' nside':''}"><img src="${b.src}" alt="${esc(b.cap||'')}" loading="lazy"><figcaption>${esc(b.cap||'')}</figcaption></figure>`;
   if(b.t==='steps') return `<ol class="nsteps${b.items.some(i=>i.img)?' pics':''}">${b.items.map((i,k) => `<li>${i.img?`<img src="${i.img}" alt="Step ${k+1}" loading="lazy">`:''}<span class="row nw" style="gap:10px;align-items:flex-start"><span class="n">${k+1}</span><span>${esc(i.x)}</span></span></li>`).join('')}</ol>`;
+  if(b.t==='dv') return `<p class="dv" lang="dv" dir="rtl">${esc(b.x)}</p>`;
   if(b.t==='cards') return `<div class="ncards">${b.items.map(i => `<div class="ncard"><div class="ncard-img${i.img2?' two':''}"><img src="${i.img}" alt="${esc(i.name)}" loading="lazy">${i.img2?`<img src="${i.img2}" alt="" loading="lazy">`:''}</div><b>${esc(i.name)}</b>${i.sci?`<i>${esc(i.sci)}</i>`:''}${i.x?`<span>${esc(i.x)}</span>`:''}</div>`).join('')}</div>`;
   if(b.t==='gloss') return `<dl class="ngloss">${b.items.map(([w,m]) => `<dt>${esc(w)}</dt><dd>${esc(m)}</dd>`).join('')}</dl>`;
   return ''; }

@@ -1,7 +1,7 @@
 /* Scout Standard study notes (9th Raa Scout Group / Hulhudhuffaaru School), rewritten for easy reading.
    Every point from the original notes is kept; spelling is corrected. Each topic: sections of blocks.
    Block types: p (paragraph) · key {title, items} · warn · tip · img {src, cap, side} · steps [{img, x}] · gloss [[word, meaning]]
-   · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Scout Standard' (default), 'Tenderfoot', 'Second Class' or 'First Class'.
+   · dv (Dhivehi text, shown right-to-left in Faruma) · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Scout Standard' (default), 'Tenderfoot', 'Second Class' or 'First Class'.
    keys: words that link a topic to badges and syllabus items with matching names. */
 window.SCOUT_NOTES = [
   { id:'cooking', title:'Cooking', icon:'fire', color:'#C2410C', summary:'Maldivian meals for a group of four, served with dessert and drinks.', keys:['cook'],
@@ -613,7 +613,7 @@ window.SCOUT_NOTES = [
           { img:'notes/tenderfoot/national.jpg', name:'National Scout Emblem', x:'The emblem of the Scout Association of Maldives — a yellow fleur-de-lis with a tuna, on green.' },
           { img:'notes/tenderfoot/group.jpg', name:'Group Scout Emblem', x:'The emblem of our own group: the 8th Shaviyani Scout Group.' } ] } ] },
       { id:'promise', title:'The Scout Promise', blocks:[
-        { t:'img', src:'notes/tenderfoot/promise-dv.jpg', cap:'The Scout Promise in Dhivehi' },
+        { t:'dv', x:'މާތްﷲ އަށާއި އަޅުގަނޑުގެ ވަޒަނަށް އަދާކުރަންޖެހޭ ވާޖިބުތައް ފުރިހަމަ ގޮތުގައި އަދާކުރުމަށާއި، އަބަދުވެސް އެހެން މީހުންނަށް އެހީތެރިވުމަށާއި ސްކައުޓް ޤާނޫނާ އެއްގޮތަށް ޢަމަލުކުރުމަށް އަޅުގަނޑު ވަޢުދުވަމެވެ.' },
         { t:'tip', x:'On my honour, I promise that I will do my best, to do my duty to Allah and the country; to help other people at all times and to obey the Scout Law.' } ] },
       { id:'law', title:'The Scout Law', blocks:[
         { t:'steps', items:[
