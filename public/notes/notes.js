@@ -637,6 +637,50 @@ window.SCOUT_NOTES = [
         { t:'p', x:'It is used when someone is making or renewing their promise.' },
         { t:'img', src:'notes/tenderfoot/sign-hand.jpg', cap:'Three fingers up, thumb over the little finger' } ] } ] },
 
+  { id:'flag-anthem', level:'Tenderfoot', title:'National Flag & Anthem', icon:'flag', color:'#B91C1C', summary:'What the Maldivian flag looks like and means, and the words of the national anthem.', keys:['flag','anthem','tenderfoot'],
+    sections:[
+      { id:'flag', title:'The national flag', blocks:[
+        { t:'img', src:'notes/tenderfoot/flag.jpg', cap:'Flag of the Maldives', side:true },
+        { t:'p', x:'The national flag of the Republic of Maldives is a rectangle whose width is two-thirds of its length. It has a green rectangle with a white crescent in the centre, surrounded by a red border.' },
+        { t:'gloss', items:[['Red border','The blood of the national heroes who gave their lives for the independence and sovereignty of the nation'],['Green rectangle','Life, progress and prosperity'],['White crescent','The Islamic faith of the nation']] } ] },
+      { id:'anthem', title:'The national anthem', blocks:[
+        { t:'dv', x:'ޤައުމީ މިއެކުވެރިކަން މަތީ ތިބެގެން ކުރީމު ސަލާމް\nޤައުމީ ބަހުން ގިނަ ހެޔޮ ދުޢާކުރަމުން ކުރީމު ސަލާމް' },
+        { t:'dv', x:'ޤައުމީ ނިޝާނަށް ހުރުމަތާއެކު ބޯލަނބައިތިބެގެން\nއައުދާނަކަން ލިބިގެން އޮވާ ދިދައަށް ކުރީމު ސަލާމް\nޤައުމީ މިއެކުވެރިކަން މަތީ ތިބެގެން ކުރީމު ސަލާމް\nޤައުމީ ބަހުން ގިނަ ހެޔޮ ދުޢާކުރަމުން ކުރީމު ސަލާމް' },
+        { t:'dv', x:'ނަސްރާ ނަސީބާ ކާމިޔާބުގެ ރަމްޒަކަށް ހިމެނޭ\nފެއްސާ ރަތާއި ހުދާ އެކީ ފެނުމުން ކުރީމު ސަލާމް\nޤައުމީ މިއެކުވެރިކަން މަތީ ތިބެގެން ކުރީމު ސަލާމް\nޤައުމީ ބަހުން ގިނަ ހެޔޮ ދުޢާކުރަމުން ކުރީމު ސަލާމް' } ] } ] },
+
+  { id:'formations', level:'Tenderfoot', title:'Troop Formations', icon:'users', color:'#0369A1', summary:'Horseshoe and troop circle formations: how to form them, the hand signal and when they are used.', keys:['formation','drill','parade','tenderfoot'],
+    sections:[
+      { id:'horseshoe', title:'Horseshoe formation', blocks:[
+        { t:'img', src:'notes/tenderfoot/horseshoe.jpg', cap:'Hand signal and horseshoe layout (☒ = leader)' },
+        { t:'key', title:'How to form it', items:['Patrols fall in, in a single line shaped like a horseshoe, in front of the drill master.','Patrols keep the same order as in the troop line.','Patrol leaders fall in on the right of their patrols.'] },
+        { t:'tip', x:'Used for demonstrations, announcements and special ceremonies.' } ] },
+      { id:'circle', title:'Troop circle formation', blocks:[
+        { t:'img', src:'notes/tenderfoot/circle.jpg', cap:'Hand signal and troop circle layout (☒ = leader)' },
+        { t:'key', title:'How to form it', items:['Patrols form a complete circle around the leader, in the same order as in the troop line.'] },
+        { t:'tip', x:'Used for ceremonies and circle games.' } ] } ] },
+
+  { id:'knots-tf', level:'Tenderfoot', title:'Knots & Whipping', icon:'knot', color:'#7C3AED', summary:'The reef knot and the sheet bend: what they are for and how they look.', keys:['knot','rope','tenderfoot'],
+    sections:[
+      { id:'reef', title:'Reef knot', blocks:[
+        { t:'p', x:'The reef knot is a parcel knot, so it should never be used to tie two strong ropes together. Use it only to join small, light cord (for example thin wool string, jute string or thin coir rope) of the same size.' },
+        { t:'img', src:'notes/tenderfoot/reef.jpg', cap:'Reef knot, steps A to C' },
+        { t:'key', title:'Its advantages', items:['It is a flat knot, so it is quick and easy to tie and untie.','It is excellent for bandages and for tying parcels with ribbon.','It is used when making hammocks and joali.'] } ] },
+      { id:'sheet', title:'Sheet bend', blocks:[
+        { t:'p', x:'The sheet bend is the most useful and practical knot for tying together two ropes of different thickness.' },
+        { t:'img', src:'notes/tenderfoot/sheet-bend.jpg', cap:'Sheet bend, steps A to D' },
+        { t:'key', title:'Uses', items:['Tying a string to cloth.','Attaching the flag cord to the eye of the flag.','Attaching the rope to the top corner of the sail (dhammaanu).'] },
+        { t:'tip', x:'When the knot is tied, the two short ends are on the same side of the knot.' } ] } ] },
+
+  { id:'woodcraft', level:'Tenderfoot', title:'Woodcraft Signs', icon:'binoculars', color:'#15803D', summary:'Tracking signs made from sticks, stones and grass to leave a trail for others to follow.', keys:['track','woodcraft','trail','tenderfoot'],
+    sections:[
+      { id:'what', title:'What woodcraft signs are', blocks:[
+        { t:'p', x:'Tracking signs are used to leave a trail for people to follow. Only those who know the signs can read the clues and follow the trail — it is like a secret code. The signs are usually made from sticks, stones and other natural materials.' } ] },
+      { id:'drawn', title:'The signs', blocks:[
+        { t:'img', src:'notes/tenderfoot/woodcraft.jpg', cap:'Woodcraft signs and their meanings' },
+        { t:'gloss', items:[['Go this way','An arrow, or a line of stones with a cluster at the end'],['Don’t go this way','A cross'],['Keep on following','A small stone on top of a bigger stone'],['I have gone home','A circle with a stone in the middle'],['Tent this way','A triangle (tent) with an arrow'],['Message 8 steps away','A box with VIII and an arrow'],['Water near by','Wavy lines'],['Good / bad drinking water','A heart on wavy lines — upright for good, upside down for bad'],['Mosque this way','A building with a crescent, and an arrow'],['River / bridge near by','Wavy lines in a box / a bridge drawn in a box']] } ] },
+      { id:'sticks', title:'Signs with sticks, stones and grass', blocks:[
+        { t:'img', src:'notes/tenderfoot/woodcraft-sticks.jpg', cap:'Keep going, ten steps, camp this way, turn back, danger, gone home, distance, wait, sickness in camp, good and bad people, drinking water' } ] } ] },
+
   /* ---------- Second Class notes (8th Shaviyani Scout Group) ---------- */
   { id:'world-scouting', level:'Second Class', title:'Structure of World Scouting', icon:'users', color:'#1D4ED8', summary:'WOSM, the World Scout Conference, Committee and Bureau, and the six Scout Regions.', keys:['world scout','wosm','scout movement'],
     sections:[
