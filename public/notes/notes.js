@@ -1,7 +1,7 @@
 /* Scout Standard study notes (9th Raa Scout Group / Hulhudhuffaaru School), rewritten for easy reading.
    Every point from the original notes is kept; spelling is corrected. Each topic: sections of blocks.
    Block types: p (paragraph) · key {title, items} · warn · tip · img {src, cap, side} · steps [{img, x}] · gloss [[word, meaning]]
-   · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Scout Standard' (default) or 'First Class'.
+   · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Scout Standard' (default), 'Second Class' or 'First Class'.
    keys: words that link a topic to badges and syllabus items with matching names. */
 window.SCOUT_NOTES = [
   { id:'cooking', title:'Cooking', icon:'fire', color:'#C2410C', summary:'Maldivian meals for a group of four, served with dessert and drinks.', keys:['cook'],
@@ -602,5 +602,126 @@ window.SCOUT_NOTES = [
       { id:'breaststroke', title:'Breaststroke — 50 metres', blocks:[
         { t:'img', src:'notes/swimming/breaststroke.jpg', cap:'Breaststroke', side:true },
         { t:'p', x:'Move both arms together and kick the legs like a frog.' },
-        { t:'gloss', items:[['Body','Straight, face down, both arms stretched forward'],['Arms','Sweep both arms outward, pull the water towards your chest, then stretch forward again'],['Legs','Bend your knees, bring your heels towards your body, turn your feet out and kick backwards like a frog'],['Breathing','Lift your head to breathe in as your arms pull to your chest; put your face back in and breathe out']] } ] } ] }
+        { t:'gloss', items:[['Body','Straight, face down, both arms stretched forward'],['Arms','Sweep both arms outward, pull the water towards your chest, then stretch forward again'],['Legs','Bend your knees, bring your heels towards your body, turn your feet out and kick backwards like a frog'],['Breathing','Lift your head to breathe in as your arms pull to your chest; put your face back in and breathe out']] } ] } ] },
+
+  /* ---------- Second Class notes (8th Shaviyani Scout Group) ---------- */
+  { id:'world-scouting', level:'Second Class', title:'Structure of World Scouting', icon:'users', color:'#1D4ED8', summary:'WOSM, the World Scout Conference, Committee and Bureau, and the six Scout Regions.', keys:['world scout','wosm','scout movement'],
+    sections:[
+      { id:'structure', title:'How world Scouting is organised', blocks:[
+        { t:'steps', items:[
+          { x:'World Organization of the Scout Movement (WOSM) — over 40 million members and 164 National Scout Organizations all over the world.' },
+          { x:'World Scout Conference — meets every 3 years.' },
+          { x:'World Scout Committee — elected for a 6-year term at the World Scout Conference.' },
+          { x:'World Scout Bureau — led by the Secretary General of WOSM, who is appointed by the World Scout Committee. Regional Offices, part of the Bureau, support the Regions.' },
+          { x:'Scout Regions — six regions around the world.' }] } ] },
+      { id:'regions', title:'The six Scout Regions', blocks:[
+        { t:'key', items:['Africa Scout Region','Arab Scout Region','Asia-Pacific Scout Region (the Maldives is here)','Eurasia Scout Region','European Scout Region','Interamerican Scout Region'] } ] } ] },
+
+  { id:'tent', level:'Second Class', title:'Pitching Your Tent', icon:'tent', color:'#15803D', summary:'Choosing a spot and setting up a tent step by step.', keys:['camp','tent'],
+    sections:[
+      { id:'pitch', title:'How to set up a tent', blocks:[
+        { t:'img', src:'notes/second/tent.jpg', cap:'Pitching a ridge tent' },
+        { t:'steps', items:[
+          { x:'Choose a sheltered, flat spot away from wind and falling branches.' },
+          { x:'Clear away twigs and stones, and lay down the groundsheet.' },
+          { x:'Lay the tent out top side up and peg it down loosely.' },
+          { x:'Put the tent poles into the fabric, starting from one corner.' },
+          { x:'Thread the poles through the clips at the corners to raise the tent.' },
+          { x:'Push the poles apart so the tent is taut and rain runs off the roof.' },
+          { x:'Re-set the pegs and hammer them in firmly.' },
+          { x:'Finally, put on the rain cover. Done!' }] } ] } ] },
+
+  { id:'firstaid-sc', level:'Second Class', title:'First Aid & Health', icon:'heart', color:'#B91C1C', summary:'Triangular bandages, stings and bites, sunburn, nose bleeds, shock, sprains, foreign bodies and rules of health.', keys:['first aid','ambulance','health','bandage'],
+    sections:[
+      { id:'bandage', title:'Using a triangular bandage', blocks:[
+        { t:'img', src:'notes/second/sling.jpg', cap:'Large arm sling (A) and finished sling (B)', side:true },
+        { t:'key', title:'Large sling — supports an injured arm or shoulder', items:['Place the bandage under the arm with the point (apex) towards the elbow.','Bring the two ends up over the shoulders and tie them at the neck.','Check the arm is fully supported and adjust for comfort.'] },
+        { t:'key', title:'Small sling — supports a hand or wrist injury', items:['Fold the bandage into a broad band.','Put the injured hand in the band and take the ends round the neck.','Tie securely at the neck so the wrist is supported.'] } ] },
+      { id:'knee', title:'Knee and foot bandages', blocks:[
+        { t:'img', src:'notes/second/knee.jpg', cap:'Knee bandage', side:true },
+        { t:'key', title:'Knee — holds a dressing or supports an injury', items:['Place the centre of the bandage over the knee.','Cross the ends behind the leg and bring them forward.','Tie securely over the knee.'] },
+        { t:'img', src:'notes/second/foot.jpg', cap:'Foot bandage', side:true },
+        { t:'key', title:'Foot — covers and protects the foot', items:['Place the foot in the centre of the bandage.','Fold the point over the toes.','Cross the ends around the ankle and tie securely.'] } ] },
+      { id:'stings', title:'Stings and bites', blocks:[
+        { t:'key', title:'Insect stings', items:['Remove the sting carefully with tweezers or by scraping it out.','Wash with soap and water.','Put on a cold compress to reduce swelling.'] },
+        { t:'key', title:'Animal bites', items:['Clean the wound with water and antiseptic.','Cover with a sterile dressing.','Get medical help — the person may need rabies treatment.'] } ] },
+      { id:'sunburn', title:'Sunburn and nose bleeds', blocks:[
+        { t:'key', title:'Sunburn', items:['Move the person to a cool, shady place.','Put a cool, damp cloth on the burnt skin.','Use aloe vera gel or a moisturising lotion.','Do not break blisters.','Drink plenty of water.'] },
+        { t:'key', title:'Nose bleed', items:['Sit the person down and lean them forward.','Pinch the soft part of the nose for 10–15 minutes.','Do not blow the nose for several hours.'] } ] },
+      { id:'shock', title:'Electric shock', blocks:[
+        { t:'warn', x:'Do not touch the person until the power is off.' },
+        { t:'steps', items:[{ x:'Make sure the scene is safe: turn off the power.' },{ x:'Check breathing and pulse; give CPR if needed.' },{ x:'Call the emergency services.' }] } ] },
+      { id:'sprains', title:'Sprains and cramps', blocks:[
+        { t:'key', title:'Sprains', items:['Follow R.I.C.E.: Rest, Ice, Compression, Elevation.','If it is severe, keep the joint still.'] },
+        { t:'key', title:'Cramps', items:['Gently stretch and massage the muscle.','Apply warmth to relax it.','Drink water.'] } ] },
+      { id:'foreign', title:'Something in the eye or ear', blocks:[
+        { t:'key', title:'Eye', items:['Flush the eye with clean water or saline.','Do not rub the eye.','Get medical help if it does not come out.'] },
+        { t:'key', title:'Ear', items:['Tilt the head so the object can fall out.','Do not poke in it with cotton buds or anything else.','Get professional help if needed.'] } ] },
+      { id:'health', title:'General rules of health', blocks:[
+        { t:'key', title:'Physical health', items:['Exercise regularly.','Have regular medical check-ups.','Keep a healthy weight with a balanced diet and activity.'] },
+        { t:'key', title:'Cleanliness and good habits', items:['Bathe every day.','Wash your hands often — especially before eating and after using the toilet.','Keep your nails short and clean.','Avoid harmful habits such as smoking.'] },
+        { t:'key', title:'Care of the eyes', items:['Do not read in poor light.','Take regular breaks from screens.','Wear eye protection where there is danger.','Have your eyes checked regularly.'] },
+        { t:'key', title:'Eating habits', items:['Eat a balanced diet with a variety of foods.','Cut down on junk food and sugary drinks.','Drink plenty of water.','Eat meals at regular times.'] },
+        { t:'key', title:'Sleep', items:['Get 7–9 hours of good sleep each night.','Go to bed and get up at the same times, even at weekends.','Sleep somewhere quiet and free from distractions.','Avoid heavy meals and caffeine before bed.'] } ] } ] },
+
+  { id:'environment-sc', level:'Second Class', title:'Environment Education', icon:'leaf', color:'#0E7490', summary:'Protecting the environment, chemicals in Maldivian waters, reefs, sea pollution and garbage rules.', keys:['environment','conservation'],
+    sections:[
+      { id:'importance', title:'Why protect the environment', blocks:[
+        { t:'key', items:['It protects natural resources for the future.','It preserves biodiversity and keeps ecosystems in balance.','It keeps air, water and food clean for everyone.'] } ] },
+      { id:'chemicals', title:'Hazardous chemicals in Maldivian waters', blocks:[
+        { t:'key', items:['Pesticides and fertilisers from farming.','Oil spills, plastics and heavy metals from boats.','Untreated sewage and harmful cleaning chemicals.'] } ] },
+      { id:'reefs', title:'Protecting reefs', blocks:[
+        { t:'key', items:['Promote sustainable tourism and limit access to reefs.','Do not anchor on reefs — use mooring buoys.','Prevent overfishing and protect marine areas.','Teach people about reef conservation.'] } ] },
+      { id:'pollution', title:'Fighting sea pollution', blocks:[
+        { t:'key', items:['Manage waste properly — no dumping.','Stricter rules on industrial waste.','Use fewer single-use plastics and more eco-friendly products.','Hold coastal clean-ups regularly.'] } ] },
+      { id:'garbage', title:'Garbage disposal rules in the Maldives', blocks:[
+        { t:'key', items:['No dumping waste into the sea.','Separate waste and follow recycling rules.','There are strict penalties for breaking the rules.','Programmes encourage people to reuse and reduce waste.'] } ] } ] },
+
+  { id:'compass-sc', level:'Second Class', title:'Compass: 16 Points', icon:'compass', color:'#0369A1', summary:'The 16 points of the compass, and true and magnetic north.', keys:['compass','map','navigat'],
+    sections:[
+      { id:'points', title:'The 16 points of the compass', blocks:[
+        { t:'img', src:'notes/second/compass16.jpg', cap:'16-point compass rose with degrees', side:true },
+        { t:'p', x:'The compass rose is divided into 16 points, each a direction on the horizon.' },
+        { t:'gloss', items:[['N','North — 0°'],['NNE','North-northeast'],['NE','Northeast — 45°'],['ENE','East-northeast'],['E','East — 90°'],['ESE','East-southeast'],['SE','Southeast — 135°'],['SSE','South-southeast'],['S','South — 180°'],['SSW','South-southwest'],['SW','Southwest — 225°'],['WSW','West-southwest'],['W','West — 270°'],['WNW','West-northwest'],['NW','Northwest — 315°'],['NNW','North-northwest']] },
+        { t:'tip', x:'Use: the compass is essential for navigation — mariners use it to set the ship’s course.' } ] },
+      { id:'north', title:'Magnetic and true north', blocks:[
+        { t:'gloss', items:[['True north','The direction of the Earth’s geographic North Pole'],['Magnetic north','The direction a compass needle points, lined up with the Earth’s magnetic field'],['Key difference','Magnetic north moves as the Earth’s magnetic field changes; true north stays the same'],['Variation (declination)','The angle between magnetic and true north. It changes with place and time, and navigators must allow for it.']] } ] } ] },
+
+  { id:'knots-sc', level:'Second Class', title:'Knots & Lashings', icon:'knot', color:'#7C3AED', summary:'Basic turns, timber hitch, fisherman’s knot, trestles, diagonal, square and figure-of-8 lashings, taut line hitch.', keys:['knot','lash','pioneer','rope','trestle'],
+    sections:[
+      { id:'turns', title:'The three basic turns', blocks:[
+        { t:'p', x:'Many knots look like an endless maze, but even the most complex knot is made from three basic turns: the bight, the loop and the overhand.' },
+        { t:'img', src:'notes/second/turns.jpg', cap:'Bight, overhand loop, underhand loop and overhand knot' } ] },
+      { id:'timber', title:'Timber hitch', blocks:[
+        { t:'p', x:'Used to start a diagonal lashing and to drag logs.' },
+        { t:'img', src:'notes/second/timber-hitch.jpg', cap:'Timber hitch, steps 1 to 3' } ] },
+      { id:'fishermans', title:'Fisherman’s knot', blocks:[
+        { t:'p', x:'Use this knot to join thin, stiff or slippery lines.' },
+        { t:'img', src:'notes/second/fishermans.jpg', cap:'Fisherman’s knot, steps 1 to 5 (front and back view)' } ] },
+      { id:'lashing', title:'Lashings and trestles', blocks:[
+        { t:'p', x:'When you know your lashings you can make many things at camp: clothes hangers, towel racks, a raised fireplace, a dining table, a tent pitched without tent poles, a flagpole — even a signal tower or a monkey bridge.' },
+        { t:'img', src:'notes/second/trestles.jpg', cap:'A-trestle, X-trestle and H-trestle' },
+        { t:'tip', x:'Three types of trestle are mainly used in pioneering projects: the A-trestle, the X-trestle and the H-trestle.' } ] },
+      { id:'diagonal', title:'Diagonal lashing', blocks:[
+        { t:'p', x:'Used to “spring” two spars together. Start with a timber hitch around both spars, and tighten it to draw the spars together.' },
+        { t:'img', src:'notes/second/diagonal.jpg', cap:'Diagonal lashing, steps 1 to 6' },
+        { t:'steps', items:[{ x:'Start with a timber hitch around both spars.' },{ x:'Tighten the timber hitch and get ready for the first wraps.' },{ x:'Make your first wrap.' },{ x:'Complete three wraps, then get ready to frap.' },{ x:'Make three fraps, going between the poles to pull the rope tight on itself.' },{ x:'Finish the frapping and end with a clove hitch.' }] } ] },
+      { id:'square', title:'Square lashing', blocks:[
+        { t:'p', x:'Used whenever two spars cross at an angle and touch where they cross.' },
+        { t:'img', src:'notes/second/square.jpg', cap:'Square lashing, steps 1 to 6' },
+        { t:'steps', items:[{ x:'Start with a clove hitch below the cross-piece on the upright pole.' },{ x:'Begin your first wrap.' },{ x:'Carry on until you have three wraps.' },{ x:'Get ready to frap.' },{ x:'Make the first frap, pulling tight on the wraps — not the poles.' },{ x:'Make three fraps, then finish with another clove hitch.' }] } ] },
+      { id:'figure8', title:'Figure-of-8 (tripod) lashing', blocks:[
+        { t:'p', x:'Ties three poles (spars) together to make a tripod. Tripods are the base of many Scout pioneering projects.' },
+        { t:'img', src:'notes/second/figure8.jpg', cap:'Figure-of-8 lashing: follow the weaving sequence, then open into a tripod' } ] },
+      { id:'taut', title:'Taut line hitch (midshipman’s hitch)', blocks:[
+        { t:'img', src:'notes/second/taut-line.jpg', cap:'Taut line hitch, steps 1 to 4', side:true },
+        { t:'p', x:'Popular with campers for tying guy lines to tent pegs. You can tighten or loosen the line simply by sliding the knot up or down.' } ] } ] },
+
+  { id:'logbook-sc', level:'Second Class', title:'Log Book Tasks', icon:'book', color:'#B5483F', summary:'Cooking, common trees, birds & fish, observation skills and hike — instructions in Dhivehi.', keys:['log book','logbook','hike','cook','observation'],
+    sections:[
+      { id:'cooking', title:'Common trees, birds & fish · Cooking', blocks:[
+        { t:'p', x:'These log book instructions are in Dhivehi. Cooking covers breakfast, lunch and dinner.' },
+        { t:'img', src:'notes/second/logbook-cooking.jpg', cap:'Log book: common trees, birds & fish, and cooking' } ] },
+      { id:'hike', title:'Observation skills · Hike', blocks:[
+        { t:'img', src:'notes/second/logbook-hike.jpg', cap:'Log book: observation skills and hike' } ] } ] }
 ];
