@@ -663,7 +663,7 @@ window.SCOUT_NOTES = [
         { t:'dv', x:'ޤައުމީ ނިޝާނަށް ހުރުމަތާއެކު ބޯލަނބައިތިބެގެން\nއައުދާނަކަން ލިބިގެން އޮވާ ދިދައަށް ކުރީމު ސަލާމް\nޤައުމީ މިއެކުވެރިކަން މަތީ ތިބެގެން ކުރީމު ސަލާމް\nޤައުމީ ބަހުން ގިނަ ހެޔޮ ދުޢާކުރަމުން ކުރީމު ސަލާމް' },
         { t:'dv', x:'ނަސްރާ ނަސީބާ ކާމިޔާބުގެ ރަމްޒަކަށް ހިމެނޭ\nފެއްސާ ރަތާއި ހުދާ އެކީ ފެނުމުން ކުރީމު ސަލާމް\nޤައުމީ މިއެކުވެރިކަން މަތީ ތިބެގެން ކުރީމު ސަލާމް\nޤައުމީ ބަހުން ގިނަ ހެޔޮ ދުޢާކުރަމުން ކުރީމު ސަލާމް' } ] } ] },
 
-  { id:'formations', level:'Tenderfoot', title:'Troop Formations', icon:'users', color:'#0369A1', summary:'Troop line, U, horseshoe, circle, open and close column: how to form them, the hand signal and when they are used.', keys:['troop formation','drill','parade','tenderfoot'],
+  { id:'formations', level:'Tenderfoot', title:'Troop Formations', icon:'users', color:'#0369A1', summary:'Troop line, U, horseshoe, circle, open and close column, parallel files and dismiss: how to form them, the hand signal and when they are used.', keys:['troop formation','drill','parade','tenderfoot'],
     sections:[
       { id:'single', title:'Single rank (troop line)', blocks:[
         { t:'img', src:'notes/tenderfoot/single-rank.jpg', cap:'Hand signal and troop line layout (☒ = leader)' },
@@ -688,9 +688,16 @@ window.SCOUT_NOTES = [
       { id:'close', title:'Close column of patrols', blocks:[
         { t:'img', src:'notes/tenderfoot/close-column.jpg', cap:'Hand signal and close column layout (☒ = leader)' },
         { t:'key', title:'How to form it', items:['Patrols fall in one behind the other, lining up on the front patrol and on the right.','The patrol leader stands on the right of the patrol.'] },
-        { t:'tip', x:'Used for assembly in small rooms or areas, and crowded parades.' } ] } ] },
+        { t:'tip', x:'Used for assembly in small rooms or areas, and crowded parades.' } ] },
+      { id:'parallel', title:'Parallel files of patrols', blocks:[
+        { t:'img', src:'notes/tenderfoot/parallel.jpg', cap:'Hand signal and parallel files layout (□ = leader)' },
+        { t:'key', title:'How to form it', items:['Patrol leaders take position two paces apart.','Their patrol members fall in behind them.'] },
+        { t:'tip', x:'Used for relays and other games, and for giving information.' } ] },
+      { id:'dismiss', title:'Dismiss', blocks:[
+        { t:'img', src:'notes/tenderfoot/dismiss.jpg', cap:'Dismiss signal' },
+        { t:'tip', x:'Used to break up a formation, or to start an activity once clear instructions have been given.' } ] } ] },
 
-  { id:'knots-tf', level:'Tenderfoot', title:'Knots & Whipping', icon:'knot', color:'#7C3AED', summary:'The reef knot and the sheet bend: what they are for and how they look.', keys:['knot','rope','tenderfoot'],
+  { id:'knots-tf', level:'Tenderfoot', title:'Knots & Whipping', icon:'knot', color:'#7C3AED', summary:'Reef knot, sheet bend, clove hitch, bowline, round turn and two half hitches, sheepshank and common whipping.', keys:['knot','rope','tenderfoot'],
     sections:[
       { id:'reef', title:'Reef knot', blocks:[
         { t:'p', x:'The reef knot is a parcel knot, so it should never be used to tie two strong ropes together. Use it only to join small, light cord (for example thin wool string, jute string or thin coir rope) of the same size.' },
@@ -700,7 +707,22 @@ window.SCOUT_NOTES = [
         { t:'p', x:'The sheet bend is the most useful and practical knot for tying together two ropes of different thickness.' },
         { t:'img', src:'notes/tenderfoot/sheet-bend.jpg', cap:'Sheet bend, steps A to D' },
         { t:'key', title:'Uses', items:['Tying a string to cloth.','Attaching the flag cord to the eye of the flag.','Attaching the rope to the top corner of the sail (dhammaanu).'] },
-        { t:'tip', x:'When the knot is tied, the two short ends are on the same side of the knot.' } ] } ] },
+        { t:'tip', x:'When the knot is tied, the two short ends are on the same side of the knot.' } ] },
+      { id:'clove', title:'Clove hitch', blocks:[
+        { t:'p', x:'When a clove hitch is tied to a pole, the two free ends go in opposite directions. It is used to tie round staffs and posts in temporary fencing, and it is the knot used in square and diagonal lashing. Once fastened, it does not slip easily.' },
+        { t:'img', src:'notes/tenderfoot/clove-hitch.jpg', cap:'Clove hitch: made with loops (top) and tied around a pole (bottom), steps A to D' } ] },
+      { id:'bowline', title:'Bowline', blocks:[
+        { t:'p', x:'The most useful and most used way of making a fixed loop at the end of a rope. It is quick and easy to tie and untie, and it never slips or jams. The bowline is known as the “king of knots” and as a life-saving knot — use it to tie a rope round your own or someone else’s waist for climbing, rescue and life saving.' },
+        { t:'img', src:'notes/tenderfoot/bowline.jpg', cap:'Bowline, steps A to C' } ] },
+      { id:'roundturn', title:'Round turn and two half hitches', blocks:[
+        { t:'p', x:'Used to fasten one end of a rope to a post, tree trunk and so on. Because the two hitches are tied away from the round turn, it is excellent for tent guy lines: the line can be tightened or loosened just by sliding the hitches away from or towards the peg.' },
+        { t:'img', src:'notes/tenderfoot/round-turn.jpg', cap:'Round turn and two half hitches, steps A to C' } ] },
+      { id:'sheepshank', title:'Sheepshank', blocks:[
+        { t:'p', x:'Used to shorten a rope or take up the slack without cutting it. It can also protect a weak part of a rope: if one strand is damaged, tie a sheepshank with the damaged part in the centre of the knot.' },
+        { t:'img', src:'notes/tenderfoot/sheepshank.jpg', cap:'Sheepshank, steps 1 to 3' } ] },
+      { id:'whipping', title:'Common whipping', blocks:[
+        { t:'p', x:'Whipping binds the end of a rope so it does not unravel. There are many kinds; common whipping is one of the simplest. It can also stop wooden pegs and stakes from splitting.' },
+        { t:'img', src:'notes/tenderfoot/whipping.jpg', cap:'Common whipping, steps 1 to 3' } ] } ] },
 
   { id:'woodcraft', level:'Tenderfoot', title:'Woodcraft Signs', icon:'binoculars', color:'#15803D', summary:'Tracking signs made from sticks, stones and grass to leave a trail for others to follow.', keys:['track','woodcraft','trail','tenderfoot'],
     sections:[
@@ -711,6 +733,16 @@ window.SCOUT_NOTES = [
         { t:'gloss', items:[['Go this way','An arrow, or a line of stones with a cluster at the end'],['Don’t go this way','A cross'],['Keep on following','A small stone on top of a bigger stone'],['I have gone home','A circle with a stone in the middle'],['Tent this way','A triangle (tent) with an arrow'],['Message 8 steps away','A box with VIII and an arrow'],['Water near by','Wavy lines'],['Good / bad drinking water','A heart on wavy lines — upright for good, upside down for bad'],['Mosque this way','A building with a crescent, and an arrow'],['River / bridge near by','Wavy lines in a box / a bridge drawn in a box']] } ] },
       { id:'sticks', title:'Signs with sticks, stones and grass', blocks:[
         { t:'img', src:'notes/tenderfoot/woodcraft-sticks.jpg', cap:'Keep going, ten steps, camp this way, turn back, danger, gone home, distance, wait, sickness in camp, good and bad people, drinking water' } ] } ] },
+
+  { id:'wounds', level:'Tenderfoot', title:'Cleaning & Dressing a Wound', icon:'heart', color:'#B91C1C', summary:'Which wounds need a doctor, and how to clean, dress and bandage a cut.', keys:['wound','first aid','tenderfoot'],
+    sections:[
+      { id:'what', title:'What a wound is', blocks:[
+        { t:'p', x:'A wound is a place where the skin has been broken or cut through to the flesh.' },
+        { t:'key', title:'Wounds that need a doctor', items:['Deep wounds with gaping edges.','Puncture wounds — tetanus germs may have been carried deep inside.','Wounds with severe bleeding.','Wounds in dangerous areas such as the chest and face.'] } ] },
+      { id:'care', title:'Clean, dress and bandage', blocks:[
+        { t:'gloss', items:[['Cleaning','Let the wound bleed for a moment to wash out germs. Then wash it well with antiseptic and let it dry before covering it.'],['Dressing','Hold the dressing by one corner only, and make sure the part that touches the wound touches nothing else.'],['Bandage','Once the wound is dressed, hold the dressing in place with a bandage. The bandage itself must not touch the wound.']] },
+        { t:'img', src:'notes/tenderfoot/wound-dressing.jpg', cap:'Bandaging a dressing in place, and adhesive dressings' },
+        { t:'key', title:'Remember the three things to do', items:['Clean the cut.','Cover it to keep out germs.','Rest the injured part.'] } ] } ] },
 
   /* ---------- Second Class notes (8th Shaviyani Scout Group) ---------- */
   { id:'world-scouting', level:'Second Class', title:'Structure of World Scouting', icon:'users', color:'#1D4ED8', summary:'WOSM, the World Scout Conference, Committee and Bureau, and the six Scout Regions.', keys:['world scout','wosm','scout movement'],
