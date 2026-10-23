@@ -1033,7 +1033,6 @@ async function buildSeed(){
     { id:'e_service', title:'Reef-friendly beach clean-up', type:'service', date:iso(addDays(nextThu, 9)), start:'16:00', end:'18:00', location:'Public beach', leaders:['u_asst'], patrols:['p_pine'], permission:false, equipment:'Gloves, sacks, water', recur:'none', remind:true, notes:'' },
     { id:'e_comp', title:'District pioneering competition', type:'competition', date:iso(addDays(nextThu, 30)), start:'08:00', end:'14:00', location:'District scout centre', leaders:['u_leader','u_admin'], patrols:['all'], permission:true, equipment:'Ropes, gloves, patrol flag', recur:'none', remind:true, notes:'' },
     { id:'e_invest', title:'Investiture ceremony', type:'ceremony', date:iso(addDays(nextThu, 21)), start:'15:30', end:'17:00', location:'School hall', leaders:['u_admin'], patrols:['all'], permission:false, equipment:'Full uniform', recur:'none', remind:true, notes:'Parents invited.' },
-    { id:'e_hol', title:'Mid-term break', type:'holiday', date:iso(addDays(nextThu, 36)), endDate:iso(addDays(nextThu, 44)), start:'', end:'', location:'', leaders:[], patrols:['all'], permission:false, equipment:'', recur:'none', remind:false, notes:'No meetings.' },
     { id:'e_pastcamp', title:'Patrol overnight camp', type:'camp', date:`${y}-09-26`, endDate:`${y}-09-27`, start:'08:00', end:'12:00', location:'School grounds', leaders:['u_leader','u_asst'], patrols:['all'], permission:true, equipment:'', recur:'none', remind:false, notes:'' },
     { id:'e_pastclean', title:'Beach clean-up', type:'service', date:iso(addDays(today,-30)), start:'16:00', end:'18:00', location:'Public beach', leaders:['u_asst'], patrols:['all'], permission:false, equipment:'', recur:'none', remind:false, notes:'' },
   ];
@@ -1311,7 +1310,7 @@ const SCHOOL_DAYS = [
   ['sd27_newyear','New Year 2027','holiday','2027-01-01'],
   ['sd27_teachrep','Teachers’ Reporting Day 2027','special','2027-01-13'],
   ['sd27_acad','Beginning of Academic Year 2027','special','2027-01-17'] ];
-const SCHOOL_DAYS_REMOVED = ['sd26_transfer','sd26_transfer_end','sd26_exam2'];
+const SCHOOL_DAYS_REMOVED = ['sd26_transfer','sd26_transfer_end','sd26_exam2','e_hol'];   // e_hol: the sample 'Mid-term break'
 function schoolDays(){ if(S?.events && ['admin','leader'].includes(ME?.role) && S.events.some(e => SCHOOL_DAYS_REMOVED.includes(e.id))){ S.events = S.events.filter(e => !SCHOOL_DAYS_REMOVED.includes(e.id)); save(); }
   if(!S?.settings || S.settings.schoolDays2026 || !['admin','leader'].includes(ME?.role)) return; let n = 0;
   SCHOOL_DAYS.forEach(([id, title, type, date, endDate]) => { if(S.events.some(e => e.id===id)) return; n++;
