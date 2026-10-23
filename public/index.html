@@ -261,7 +261,7 @@ svg.i.sm{width:16px;height:16px} svg.i.lg{width:26px;height:26px}
 .shell.collapsed .side-brand .txt,.shell.collapsed .nav-label,.shell.collapsed .nav-sec{display:none}
 .side nav{flex:1;overflow-y:auto;padding:6px 10px 12px}
 .nav-sec{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--side-ink-2);padding:14px 12px 6px}
-.nav-item{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:0;background:none;color:var(--side-ink);border-radius:10px;cursor:pointer;text-align:left;position:relative;font-weight:500;min-height:42px}
+.nav-item{text-decoration:none;display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border:0;background:none;color:var(--side-ink);border-radius:10px;cursor:pointer;text-align:left;position:relative;font-weight:500;min-height:42px}
 .nav-item:hover{background:var(--side-hover)}
 .nav-item.active{background:var(--side-hover);color:#fff}
 .nav-item.active::before{content:"";position:absolute;left:-10px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--gold)}
@@ -558,10 +558,10 @@ svg.chart .grid{stroke:var(--line-2)}
   .prof-btn .who,.collapse-btn{display:none}
   main{padding:16px 16px calc(96px + env(safe-area-inset-bottom,0px))}
   .bnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
-  .bnav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.68rem;font-weight:600;color:var(--ink-2);padding:6px 0;min-height:52px;cursor:pointer;border-radius:10px;position:relative}
-  .bnav button.on{color:var(--green)}
-  .bnav button.on svg{color:var(--gold-ink)}
-  .bnav button.on::after{content:"";position:absolute;top:-6px;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
+  .bnav a{text-decoration:none}.bnav button,.bnav a{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.68rem;font-weight:600;color:var(--ink-2);padding:6px 0;min-height:52px;cursor:pointer;border-radius:10px;position:relative}
+  .bnav a.on,.bnav button.on{color:var(--green)}
+  .bnav a.on svg,.bnav button.on svg{color:var(--gold-ink)}
+  .bnav a.on::after,.bnav button.on::after{content:"";position:absolute;top:-6px;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--gold)}
   .g3,.g2{grid-template-columns:minmax(0,1fr)}
   .counter{top:calc(58px + env(safe-area-inset-top,0px))}
   .login{grid-template-columns:1fr}
@@ -1082,6 +1082,10 @@ async function buildSeed(){
 /* ================= Permissions, selectors, UI kit ================= */
 let ME = null;
 const R = { route:'dashboard', id:null, tab:null, q:{} };
+/* Pages have their own address (#/route/id) so a menu item can be opened in a new tab. */
+const hashRoute = () => { const [r, id] = decodeURIComponent(location.hash.replace(/^#\/?/, '')).split('/'); return r ? { route:r, id:id||null } : null; };
+const routeHref = (r, id) => '#/' + r + (id ? '/' + encodeURIComponent(id) : '');
+function startRoute(){ const h = hashRoute(); if(h && VIEWS[h.route]){ R.route = h.route; R.id = h.id; return true; } return false; }
 const PERMS = {
   leader:['scout.add','scout.edit','scout.delete','attendance.take','attendance.finalize','attendance.delete','patrol.edit','badge.award','badge.signoff','badge.catalog','syllabus.signoff','syllabus.edit','session.edit','session.delete','event.edit','event.delete','photo.upload','photo.delete','photo.download','contacts.view','medical.view','export','import'],
   assistant:['attendance.take','badge.signoff','syllabus.signoff','medical.view','photo.download'],
@@ -1313,7 +1317,7 @@ function renderApp(){ twoTerms();
   $('#app').innerHTML = `<div class="shell ${collapsed?'collapsed':''}" id="shell">
   <aside class="side" aria-label="Main navigation">
     <div class="side-brand">${logoHTML(40)}<div class="txt"><div class="name">${esc(S.settings.groupName.replace(/ School Scout Troop$/,''))}</div><div class="sub">${esc(S.settings.year)} · Scout portal</div></div></div>
-    <nav>${nav.map(n => n.sec ? `<div class="nav-sec">${n.sec}</div>` : `<button class="nav-item" data-a="go" data-r="${n.id}" data-nav="${n.id}" title="${n.label}">${ic(n.icon)}<span class="nav-label">${n.label}</span>${n.count?`<span class="cnt" data-unread></span>`:''}</button>`).join('')}</nav>
+    <nav>${nav.map(n => n.sec ? `<div class="nav-sec">${n.sec}</div>` : `<a class="nav-item" href="${routeHref(n.id)}" data-a="go" data-r="${n.id}" data-nav="${n.id}" title="${n.label}">${ic(n.icon)}<span class="nav-label">${n.label}</span>${n.count?`<span class="cnt" data-unread></span>`:''}</a>`).join('')}</nav>
     <div class="side-foot"><button class="nav-item collapse-btn" data-a="collapse" title="Collapse or expand the sidebar" aria-label="Collapse or expand the sidebar">${ic('collapse')}</button></div>
   </aside>
   <div class="drawer-mask" data-a="closeDrawer"></div>
@@ -1331,7 +1335,7 @@ function renderApp(){ twoTerms();
     </header>
     <main id="main" tabindex="-1"></main>
   </div>
-  <nav class="bnav" aria-label="Quick navigation">${bn.map(([r,l,i]) => `<button data-a="go" data-r="${r}" data-bnav="${r}">${ic(i)}<span>${l}</span>${r==='notifications'?'<span class="bell-dot hide" data-unread style="top:2px;right:calc(50% - 22px)"></span>':''}</button>`).join('')}<button data-a="openDrawer" data-bnav="more">${ic('dots')}<span>More</span></button></nav>
+  <nav class="bnav" aria-label="Quick navigation">${bn.map(([r,l,i]) => `<a href="${routeHref(r)}" data-a="go" data-r="${r}" data-bnav="${r}">${ic(i)}<span>${l}</span>${r==='notifications'?'<span class="bell-dot hide" data-unread style="top:2px;right:calc(50% - 22px)"></span>':''}</a>`).join('')}<button data-a="openDrawer" data-bnav="more">${ic('dots')}<span>More</span></button></nav>
 </div>`;
   renderMain();
 }
@@ -1351,7 +1355,7 @@ function renderMain(){ twoTerms();
   AFTER[R.route] && AFTER[R.route]();
   updateChrome();
 }
-function go(route, extra={}){ R.route = route; R.id = extra.id ?? null; R.tab = extra.tab ?? null; R.q = extra.q || {}; closePops(); while(modalStack.length) closeModal(); $('#shell')?.classList.remove('drawer'); renderMain(); window.scrollTo(0,0); try { if(!isScout()) localStorage.setItem('tm_route', JSON.stringify({ route, id:R.id })); } catch(e){} }
+function go(route, extra={}){ R.route = route; R.id = extra.id ?? null; R.tab = extra.tab ?? null; R.q = extra.q || {}; if(!extra.fromHistory){ const h = routeHref(route, R.id); if(location.hash !== h) history.pushState(null, '', h); } closePops(); while(modalStack.length) closeModal(); $('#shell')?.classList.remove('drawer'); renderMain(); window.scrollTo(0,0); try { if(!isScout()) localStorage.setItem('tm_route', JSON.stringify({ route, id:R.id })); } catch(e){} }
 function refresh(){ save(); renderMain(); }
 function closePops(){ ['#bell-pop','#prof-pop'].forEach(s => { const el = $(s); if(el) el.innerHTML = ''; }); const sr = $('#search-res'); sr && sr.classList.add('hide'); $('#search')?.classList.remove('open'); }
 
@@ -1383,7 +1387,7 @@ F.login = async d => {
   if(!u || u.disabled || u.pw !== await sha(d.password)){ $('#login-card').innerHTML = loginForm('That email and password do not match an active account. Check both, or reset your password.'); return; }
   ME = u; Store.set('kv','session',{ uid:u.id }); audit('Signed in'); save();
   let last = null; try { last = JSON.parse(localStorage.getItem('tm_route')||'null'); } catch(e){}
-  R.route = isScout() ? 'me' : 'dashboard'; renderApp();
+  if(!startRoute()) R.route = isScout() ? 'me' : 'dashboard'; renderApp();
 };
 A.demoLogin = el => { $('#f_email').value = el.dataset.e; $('#f_password').value = 'scout123'; F.login({ email:el.dataset.e, password:'scout123' }); };
 A.forgot = () => { $('#login-card').innerHTML = `<h2>Reset your password</h2><p class="muted" style="margin:6px 0 20px">Enter your account email and we'll create a reset code.</p>
@@ -1451,9 +1455,11 @@ document.addEventListener('click', e => {
   if(!e.target.closest('.pop,#bell-btn,.prof-btn,.search')) closePops();
   if(!e.target.closest('.bpick')) $$('.bpick-pop').forEach(x => x.classList.add('hide'));
   if(!el) return; const fn = A[el.dataset.a]; if(!fn) return;
+  if(el.tagName==='A' && el.getAttribute('href')?.startsWith('#/') && (e.ctrlKey || e.metaKey || e.shiftKey || e.button)) return;   // let the browser open it in a new tab/window
   if(el.tagName==='A' || el.type==='submit' && !el.closest('form[data-f]')) e.preventDefault();
   fn(el, e);
 });
+window.addEventListener('popstate', () => { if(!ME) return; const h = hashRoute(); if(h && VIEWS[h.route]) go(h.route, { id:h.id, fromHistory:true }); });
 document.addEventListener('keydown', e => { if(e.key!=='Enter') return; const t = e.target;
   if(t.matches?.('.bpick-pop input')){ e.preventDefault(); t.closest('.bpick').querySelector('.bpick-opt')?.click(); }
   else if(t.matches?.('[data-i=bcheckFind],[data-i=pickFind]')) e.preventDefault(); });
@@ -2545,7 +2551,7 @@ const Cloud = {
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
     this.subscribe();
     if(role!=='scout'){ genReminders(); audit('Signed in'); }
-    save(); R.route = isScout() ? 'me' : 'dashboard'; renderApp();
+    save(); if(!startRoute()) R.route = isScout() ? 'me' : 'dashboard'; renderApp();
   },
   findMe(){ const e = (this.auth.currentUser?.email || '').toLowerCase(); return S.users.find(x => (x.email||'').toLowerCase()===e); },
   assemble(st){
@@ -2814,7 +2820,7 @@ VIEWS.guide = () => { const sec = (icon, t, items) => `<div class="card"><div cl
 
 /* ================= Boot ================= */
 (async function boot(){
-  applyTheme();
+  applyTheme(); startRoute();
   if(Cloud.on){ await Store.open(); Object.assign(IMG, await Store.all('img')); return Cloud.start(); }
   try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { const b = $('#theme-btn'); if(b) b.innerHTML = ic(isDark()?'sun':'moon'); }); } catch(e){}
   await Store.open();
