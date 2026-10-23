@@ -2750,8 +2750,8 @@ const noteFor = text => { const t = String(text||'').toLowerCase(); return NOTES
 const noteMins = n => Math.max(1, Math.round(JSON.stringify(n.sections).length / 1100));
 function noteChip(n, sec){ return `<button type="button" class="note-chip" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}"${sec?` data-sec="${sec}"`:''}>${ic(n.icon,'sm')} ${esc(n.title)}</button>`; }
 const noteLevel = n => n.level || 'Extra reading';
-const NOTE_LEVELS = [['Tenderfoot','Study notes for Tenderfoot from the 8th Shaviyani Scout Group.'],['Second Class','Study notes for Second Class from the 8th Shaviyani Scout Group.'],['First Class','Study notes for First Class from the 8th Shaviyani Scout Group.'],['Extra reading','']];
-const NOTE_LV_COL = { 'Tenderfoot':'#6B21A8', 'Second Class':'#0D78B6', 'First Class':'#128944', 'Extra reading':'#B45309' };
+const NOTE_LEVELS = [['Tenderfoot','Study notes for Tenderfoot from the 8th Shaviyani Scout Group.'],['Second Class','Study notes for Second Class from the 8th Shaviyani Scout Group.'],['First Class','Study notes for First Class from the 8th Shaviyani Scout Group.'],['Log book',''],['Extra reading','']];
+const NOTE_LV_COL = { 'Tenderfoot':'#6B21A8', 'Second Class':'#0D78B6', 'First Class':'#128944', 'Log book':'#B5483F', 'Extra reading':'#B45309' };
 const NOTE_QUICK = [['knot','Knots'],['first aid','First aid'],['compass','Compass'],['fish','Fish & birds'],['whistle','Whistle calls']];
 /* first picture inside a topic, used as its cover */
 const noteCover = n => { if(n._cover !== undefined) return n._cover; for(const s of n.sections) for(const b of s.blocks||[]){ const src = b.t==='img' ? b.src : b.t==='cards' ? b.items[0]?.img : b.t==='steps' ? b.items.find(i => i.img)?.img : ''; if(src) return n._cover = src; } return n._cover = ''; };

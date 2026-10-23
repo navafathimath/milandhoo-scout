@@ -1,7 +1,7 @@
 /* Scout Standard study notes (9th Raa Scout Group / Hulhudhuffaaru School), rewritten for easy reading.
    Every point from the original notes is kept; spelling is corrected. Each topic: sections of blocks.
    Block types: p (paragraph) · key {title, items} · warn · tip · img {src, cap, side} · steps [{img, x}] · gloss [[word, meaning]]
-   · whistle [[label, 'LSS', description]] · dv (Dhivehi text, shown right-to-left in Faruma) · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Extra reading' (default; the 9th Raa notes), 'Tenderfoot', 'Second Class' or 'First Class'.
+   · whistle [[label, 'LSS', description]] · dv (Dhivehi text, shown right-to-left in Faruma) · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Extra reading' (default; the 9th Raa notes), 'Tenderfoot', 'Second Class', 'First Class' or 'Log book'.
    keys: words that link a topic to badges and syllabus items with matching names. */
 window.SCOUT_NOTES = [
   { id:'cooking', title:'Cooking', icon:'fire', color:'#C2410C', summary:'Maldivian meals for a group of four, served with dessert and drinks.', keys:['cook'],
@@ -464,22 +464,6 @@ window.SCOUT_NOTES = [
         { t:'key', title:'Height — stick-and-shadow method (or a ranging rod)', items:['Stand a stick of known height upright and measure its shadow.','Measure the shadow of the object at the same time.','Height of object = height of stick × (object’s shadow ÷ stick’s shadow).'] },
         { t:'tip', x:'Example: a 1 m stick casts a 0.5 m shadow, and the flagpole casts a 3.4 m shadow. Height = 1 × 3.4 ÷ 0.5 = 6.8 m.' } ] } ] },
 
-  { id:'logbook-fc', level:'First Class', title:'Log Book Tasks', icon:'book', color:'#B5483F', summary:'What to write in your First Class log book for cooking and the hike / expedition.', keys:['log book','logbook','expedition','hike','cook'],
-    sections:[
-      { id:'cooking', title:'Cooking', blocks:[
-        { t:'img', src:'notes/logbook/cooking.jpg', cap:'Cooking log book card (with Dhivehi instructions)', side:true },
-        { t:'key', title:'Weekend camp menu', items:['Write a menu for a weekend camp, with the costing and quantities of everything you need.'] },
-        { t:'key', title:'Filleting a fish', items:['Video yourself filleting a fish, then answer:','How did you get the fish?','What kind of fish was it?','Who helped you complete this task?','How was the experience?'] },
-        { t:'tip', x:'Take screenshots from your video, print them and paste them in your log book.' } ] },
-      { id:'hike', title:'Hike — expedition', blocks:[
-        { t:'img', src:'notes/logbook/hike.jpg', cap:'Hike – expedition log book card', side:true },
-        { t:'steps', items:[
-          { x:'Say that you went on a camp called “Oilvaali Camp” in Sh. Milandhoo for 4 days and 3 nights (give the dates). Its main purpose was to complete the expedition you need for First Class.' },
-          { x:'Write which materials you used to make the raft and how you made it. Include how many people the raft could carry.' },
-          { x:'Describe where you travelled on the raft and roughly how far.' },
-          { x:'Note the important landmarks, plants and animals, with timings, weather, tides and environmental conditions.' },
-          { x:'Paste some pictures from the rafting event (get them from the scout Facebook page).' }] } ] } ] },
-
   { id:'knots-fc', level:'First Class', title:'Knots, Lashings & Splicing', icon:'knot', color:'#1D4ED8', summary:'Shear lashing, fireman’s chair, butterfly knot, rolling hitch, parbuckling and three splices.', keys:['knot','lash','splic','pioneer','rope'],
     sections:[
       { id:'shear', title:'Shear lashing', blocks:[
@@ -692,17 +676,6 @@ window.SCOUT_NOTES = [
         { t:'img', src:'notes/tenderfoot/wound-dressing.jpg', cap:'Bandaging a dressing in place, and adhesive dressings' },
         { t:'key', title:'Remember the three things to do', items:['Clean the cut.','Cover it to keep out germs.','Rest the injured part.'] } ] } ] },
 
-  { id:'about-me', level:'Tenderfoot', title:'It’s All About Me (Log Book)', icon:'book', color:'#B5483F', summary:'The first page of your log book: your details, favourites and ambitions, with a photo.', keys:['log book','logbook','tenderfoot'],
-    sections:[
-      { id:'page', title:'Fill in your “All About Me” page', blocks:[
-        { t:'img', src:'notes/tenderfoot/all-about-me.jpg', cap:'“It’s All About Me” log book page — print it, or copy it into your log book' },
-        { t:'p', x:'Stick a photo of yourself in the box, then complete every line.' },
-        { t:'key', title:'About me', items:['My name','My address','My island'] },
-        { t:'key', title:'My life', items:['My best friend','My hobby','I am good at','Languages I can speak'] },
-        { t:'key', title:'My favourites', items:['Colour','Food','Drink','Game','Book','Subject'] },
-        { t:'key', title:'My future', items:['Dream destination','My goal in life','My ambition'] } ] } ] },
-
-  /* ---------- Second Class notes (8th Shaviyani Scout Group) ---------- */
   { id:'world-scouting', level:'Second Class', title:'Structure of World Scouting', icon:'users', color:'#1D4ED8', summary:'WOSM, the World Scout Conference, Committee and Bureau, and the six Scout Regions.', keys:['world scout','wosm','scout movement'],
     sections:[
       { id:'structure', title:'How world Scouting is organised', blocks:[
@@ -867,11 +840,40 @@ window.SCOUT_NOTES = [
       { id:'recall', title:'Let’s recall what we learned', blocks:[
         { t:'key', title:'Test yourself', items:['Cover the names and identify each tree, bird and fish from its picture.','Give the Dhivehi name when you hear the English name, and the other way round.','Name one use of the wood of each tree.','Which bird is found only in the Maldives? (Dhivehi kan’bili)'] } ] } ] },
 
-  { id:'logbook-sc', level:'Second Class', title:'Log Book Tasks', icon:'book', color:'#B5483F', summary:'Cooking, common trees, birds & fish, observation skills and hike — instructions in Dhivehi.', keys:['log book','logbook','hike','cook','observation'],
+  /* ---------- Log book notes ---------- */
+  { id:'about-me', level:'Log book', title:'It’s All About Me (Tenderfoot)', icon:'book', color:'#B5483F', summary:'The first page of your log book: your details, favourites and ambitions, with a photo.', keys:['log book','logbook','tenderfoot'],
+    sections:[
+      { id:'page', title:'Fill in your “All About Me” page', blocks:[
+        { t:'img', src:'notes/tenderfoot/all-about-me.jpg', cap:'“It’s All About Me” log book page — print it, or copy it into your log book' },
+        { t:'p', x:'Stick a photo of yourself in the box, then complete every line.' },
+        { t:'key', title:'About me', items:['My name','My address','My island'] },
+        { t:'key', title:'My life', items:['My best friend','My hobby','I am good at','Languages I can speak'] },
+        { t:'key', title:'My favourites', items:['Colour','Food','Drink','Game','Book','Subject'] },
+        { t:'key', title:'My future', items:['Dream destination','My goal in life','My ambition'] } ] } ] },
+
+  /* ---------- Second Class notes (8th Shaviyani Scout Group) ---------- */,
+
+  { id:'logbook-sc', level:'Log book', title:'Log Book Tasks: Second Class', icon:'book', color:'#B5483F', summary:'Cooking, common trees, birds & fish, observation skills and hike — instructions in Dhivehi.', keys:['log book','logbook','hike','cook','observation'],
     sections:[
       { id:'cooking', title:'Common trees, birds & fish · Cooking', blocks:[
         { t:'p', x:'These log book instructions are in Dhivehi. Cooking covers breakfast, lunch and dinner.' },
         { t:'img', src:'notes/second/logbook-cooking.jpg', cap:'Log book: common trees, birds & fish, and cooking' } ] },
       { id:'hike', title:'Observation skills · Hike', blocks:[
-        { t:'img', src:'notes/second/logbook-hike.jpg', cap:'Log book: observation skills and hike' } ] } ] }
+        { t:'img', src:'notes/second/logbook-hike.jpg', cap:'Log book: observation skills and hike' } ] } ] },
+
+  { id:'logbook-fc', level:'Log book', title:'Log Book Tasks: First Class', icon:'book', color:'#B5483F', summary:'What to write in your First Class log book for cooking and the hike / expedition.', keys:['log book','logbook','expedition','hike','cook'],
+    sections:[
+      { id:'cooking', title:'Cooking', blocks:[
+        { t:'img', src:'notes/logbook/cooking.jpg', cap:'Cooking log book card (with Dhivehi instructions)', side:true },
+        { t:'key', title:'Weekend camp menu', items:['Write a menu for a weekend camp, with the costing and quantities of everything you need.'] },
+        { t:'key', title:'Filleting a fish', items:['Video yourself filleting a fish, then answer:','How did you get the fish?','What kind of fish was it?','Who helped you complete this task?','How was the experience?'] },
+        { t:'tip', x:'Take screenshots from your video, print them and paste them in your log book.' } ] },
+      { id:'hike', title:'Hike — expedition', blocks:[
+        { t:'img', src:'notes/logbook/hike.jpg', cap:'Hike – expedition log book card', side:true },
+        { t:'steps', items:[
+          { x:'Say that you went on a camp called “Oilvaali Camp” in Sh. Milandhoo for 4 days and 3 nights (give the dates). Its main purpose was to complete the expedition you need for First Class.' },
+          { x:'Write which materials you used to make the raft and how you made it. Include how many people the raft could carry.' },
+          { x:'Describe where you travelled on the raft and roughly how far.' },
+          { x:'Note the important landmarks, plants and animals, with timings, weather, tides and environmental conditions.' },
+          { x:'Paste some pictures from the rafting event (get them from the scout Facebook page).' }] } ] } ] }
 ];
