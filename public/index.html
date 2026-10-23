@@ -184,6 +184,20 @@ button.sl-r{cursor:pointer}button.sl-r:hover{background:var(--surface-2)}button.
 .login2-grp{text-align:center;color:#1E3A4F;font-size:.82rem;font-weight:600;margin-top:12px}
 @media (max-width:700px){ .login2{background-image:url(img/login-scene-sm-2.jpg);background-position:30% center} .login2-card{padding:44px 20px 22px} }
 @media (orientation:portrait) and (max-width:900px){ .login2{background-image:url(img/login-scene-tall-2.jpg);background-position:center top;align-items:flex-start;padding-top:max(24vh,170px)} .login2-card{margin:0 auto 16px} }
+
+/* Dashboard welcome banner: tent picture */
+.welcome2{position:relative;border-radius:20px;overflow:hidden;min-height:250px;display:flex;align-items:stretch;gap:16px;color:#fff;background:#0A4F82 url(img/dash-tent.jpg?v=2) right 60%/auto 135% no-repeat}
+.welcome2::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#08406B 0%,#0A4F82 42%,rgba(10,79,130,.6) 60%,rgba(10,79,130,0) 78%);pointer-events:none}
+.w2-l{position:relative;flex:1 1 auto;min-width:0;padding:26px 28px}
+.w2-l .eyebrow{color:#9FE0B8}.w2-l h1{color:#fff;font-size:1.7rem;margin-top:4px}.w2-l p{color:#DCEEF8;margin-top:4px}
+.w2-chips{display:flex;flex-direction:row;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}.w2-chips button{width:auto;flex:0 0 auto;display:inline-flex}.w2-chips button{border:0;background:rgba(255,255,255,.92);color:#13283A;border-radius:99px;padding:6px 12px;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}.w2-chips button:hover{background:#fff}
+.w2-law{display:inline-flex;gap:8px;align-items:flex-start;margin-top:14px;font-size:.86rem;background:rgba(255,255,255,.14);border-left:3px solid #9FE0B8;border-radius:8px;padding:8px 12px;max-width:560px}.w2-law svg{color:#9FE0B8;flex:none;margin-top:2px}
+.w2-next{position:relative;align-self:flex-end;margin:0 calc(25% - 20px) 22px 0;width:260px;flex:none;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#13283A;border-radius:16px;padding:14px 16px;box-shadow:0 20px 40px -24px rgba(0,0,0,.6)}
+.w2-next .eyebrow{color:#128944}.w2-next b{display:block;font-family:var(--f-head);font-size:1.08rem;margin:3px 0}.w2-next .muted{color:#4E6577}
+.w2-cd{display:inline-flex;align-items:center;gap:5px;background:#E6F5EC;color:#128944;font-weight:800;font-size:.76rem;border-radius:99px;padding:3px 10px;margin:8px 8px 0 0}
+.w2-next .btn{margin-top:8px}
+@media (max-width:1100px){ .w2-next{margin-right:22px} .w2-l{max-width:none} .welcome2::before{background:linear-gradient(90deg,#08406B 0%,rgba(10,79,130,.85) 55%,rgba(10,79,130,.35) 100%)} }
+@media (max-width:760px){ .welcome2{flex-direction:column;background-size:cover;background-position:70% 60%} .welcome2::before{background:linear-gradient(180deg,rgba(8,64,107,.92) 0%,rgba(10,79,130,.75) 60%,rgba(10,79,130,.4) 100%)} .w2-l{padding:20px 18px 6px} .w2-l h1{font-size:1.4rem} .w2-next{align-self:stretch;width:auto;margin:6px 14px 16px} }
 </style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
@@ -1495,6 +1509,8 @@ document.addEventListener('keydown', e => {
   if($('#lightbox') && (e.key==='ArrowRight' || e.key==='ArrowLeft')) lbStep(e.key==='ArrowRight'?1:-1);
 });
 /* ================= Dashboard ================= */
+const SCOUT_LAW = ['A scout’s honour is to be trusted.','A scout is loyal.','A scout’s duty is to be useful and help others.','A scout is a friend to all and a brother or sister to every other scout.','A scout is courteous.','A scout is environmentally friendly.','A scout obeys the orders of parents, patrol leaders and scout leaders.','A scout smiles and whistles under all difficulties.','A scout is thrifty.','A scout is clean in thought, word and deed.'];
+const daysTo = d => { const n = Math.round((pd(d) - pd(TODAY()))/86400000); return n<=0 ? 'Today' : n===1 ? 'Tomorrow' : `in ${n} days`; };
 VIEWS.dashboard = () => {
   const h = new Date().getHours(); const greet = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   const ns = nextSession(), nx = nextUp(); const act = activeScouts().filter(s => s.status==='Active');
@@ -1521,6 +1537,15 @@ VIEWS.dashboard = () => {
     ['map', behind, 'Syllabus items behind', 'Across current stages', 'syllabus'],
     ['refresh', ren.length, 'Renewals due (30 days)', `${S.scouts.filter(s=>s.status==='Expired').length} already expired`, 'scouts', true],
   ];
+  const tw = termWeek(addDays(pd(TODAY()), -pd(TODAY()).getDay()));
+  const law = SCOUT_LAW[Math.floor(pd(TODAY()).getTime()/86400000) % SCOUT_LAW.length];
+  const chips = [];
+  if(can('attendance.take')){ const past = expandEvents(iso(addDays(pd(TODAY()), -7)), TODAY()).filter(e => e.type==='meeting' && (e.occ < TODAY() || (e.start && e.start <= `${pad(new Date().getHours())}:${pad(new Date().getMinutes())}`))).pop();
+    if(past && !S.registers.some(r => r.date===past.occ)) chips.push([`📋 Attendance not taken for ${fmtD(past.occ,'dow')}`, 'attendance']); }
+  S.scouts.filter(s => s.status!=='Inactive' && s.dob && s.dob.slice(5)===TODAY().slice(5)).forEach(s => chips.push([`🎂 ${esc(s.first)}’s birthday today`, 'scout', s.id]));
+  const dayOff = expandEvents(TODAY(), iso(addDays(pd(TODAY()), 14))).find(e => e.type==='holiday' || e.type==='special');
+  if(dayOff) chips.push([`${dayOff.type==='holiday'?'🏖':'⭐'} ${esc(dayOff.title)} · ${fmtD(dayOff.occ,'dow')}${dayOff.type==='holiday'?' · no meeting':''}`, 'calendar']);
+  if(ren.length) chips.push([`🔄 ${ren.length} renewal${ren.length===1?'':'s'} due`, 'scouts']);
   const qa = [
     can('attendance.take') && ['clipboard','Take attendance','newRegister'],
     can('session.edit') && ['fire','Plan session','newSession'],
@@ -1528,10 +1553,13 @@ VIEWS.dashboard = () => {
     can('scout.add') && ['plus','Add scout','addScout'],
   ].filter(Boolean);
   return `
-  <section class="welcome">
-    <svg class="bgsvg" viewBox="0 0 300 160" aria-hidden="true"><path d="M0 160l60-70 40 30 60-80 70 90 30-30 40 60z" fill="#5E9FC8"/><path d="M160 160l-26-40h52z" fill="#9FE0B8"/></svg>
-    <div style="flex:1;min-width:230px;position:relative;z-index:1"><div class="eyebrow" style="color:var(--gold-pale)">${fmtD(TODAY(),'long')}</div><h1 style="margin-top:4px">${greet}, ${esc(ME.name.split(' ')[0])}</h1><p style="color:var(--side-ink-2);margin-top:6px">${act.length} active scouts across ${S.patrols.length} patrols · ${esc(term.name)}, ${esc(S.settings.year)}</p></div>
-    <div class="next">${nx ? `<div class="eyebrow">${nx.kind==='session' ? 'Next session' : 'Next · '+esc(EVENT_TYPES[nx.type]?.label||'Event')}</div><div style="font-family:var(--f-head);font-size:1.1rem;color:#fff;margin:4px 0">${esc(nx.title)}</div><div class="small" style="color:var(--side-ink-2)">${nx.date===TODAY()?'Today':fmtD(nx.date,'dow')}${nx.time?' · '+fmtT(nx.time):''}${nx.where?' · '+esc(nx.where):''}${nx.slip?' · Permission slip':''}</div>${nx.kind==='session' ? `<button class="btn sm gold" style="margin-top:10px" data-a="go" data-r="session" data-id="${nx.id}">Open plan ${ic('right','sm')}</button>` : `<button class="btn sm gold" style="margin-top:10px" data-a="openEvent" data-id="${nx.id}" data-occ="${nx.date}">View details ${ic('right','sm')}</button>`}` : `<div class="eyebrow">Next session</div><div style="color:#fff;margin-top:4px">Nothing planned yet</div>${can('session.edit')?`<button class="btn sm gold" style="margin-top:10px" data-a="newSession">Plan a session</button>`:''}`}</div>
+  <section class="welcome2">
+    <div class="w2-l"><div class="eyebrow">${fmtD(TODAY(),'long')}${tw ? ` · ${esc(term.name)} · Week ${tw.w}` : ''}</div><h1>${greet}, ${esc(ME.name.split(' ')[0])}</h1><p>${act.length} active scouts across ${S.patrols.length} patrols</p>
+      ${chips.length ? `<div class="w2-chips">${chips.map(([t,r,id]) => `<button data-a="go" data-r="${r}"${id?` data-id="${id}"`:''}>${t}</button>`).join('')}</div>` : ''}
+      <div class="w2-law">${ic('star','sm')} <span><b>Scout Law of the day:</b> ${esc(law)}</span></div></div>
+    ${nx ? `<div class="w2-next"><div class="eyebrow">${nx.kind==='session' ? 'Next session' : 'Next · '+esc(EVENT_TYPES[nx.type]?.label||'Event')}</div><b>${esc(nx.title)}</b><div class="small muted">${fmtD(nx.date,'dow')}${nx.time?' · '+fmtT(nx.time):''}${nx.where?' · '+esc(nx.where):''}</div>
+      <span class="w2-cd">${ic('clock','sm')} ${daysTo(nx.date)}</span>
+      ${nx.kind==='session' ? `<button class="btn sm gold" data-a="go" data-r="session" data-id="${nx.id}">Open plan ${ic('right','sm')}</button>` : `<button class="btn sm gold" data-a="openEvent" data-id="${nx.id}" data-occ="${nx.date}">View details ${ic('right','sm')}</button>`}</div>` : ''}
   </section>
   ${qa.length ? `<div class="quick" style="margin:16px 0 18px">${qa.map(([i,l,a]) => `<button class="btn" data-a="${a}">${ic(i,'sm')} ${l}</button>`).join('')}</div>` : '<div style="height:16px"></div>'}
   <div class="grid kpis" style="margin-bottom:16px">
