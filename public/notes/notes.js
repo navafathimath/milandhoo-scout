@@ -744,6 +744,16 @@ window.SCOUT_NOTES = [
         { t:'img', src:'notes/tenderfoot/wound-dressing.jpg', cap:'Bandaging a dressing in place, and adhesive dressings' },
         { t:'key', title:'Remember the three things to do', items:['Clean the cut.','Cover it to keep out germs.','Rest the injured part.'] } ] } ] },
 
+  { id:'about-me', level:'Tenderfoot', title:'It’s All About Me (Log Book)', icon:'book', color:'#B5483F', summary:'The first page of your log book: your details, favourites and ambitions, with a photo.', keys:['log book','logbook','tenderfoot'],
+    sections:[
+      { id:'page', title:'Fill in your “All About Me” page', blocks:[
+        { t:'img', src:'notes/tenderfoot/all-about-me.jpg', cap:'“It’s All About Me” log book page — print it, or copy it into your log book' },
+        { t:'p', x:'Stick a photo of yourself in the box, then complete every line.' },
+        { t:'key', title:'About me', items:['My name','My address','My island'] },
+        { t:'key', title:'My life', items:['My best friend','My hobby','I am good at','Languages I can speak'] },
+        { t:'key', title:'My favourites', items:['Colour','Food','Drink','Game','Book','Subject'] },
+        { t:'key', title:'My future', items:['Dream destination','My goal in life','My ambition'] } ] } ] },
+
   /* ---------- Second Class notes (8th Shaviyani Scout Group) ---------- */
   { id:'world-scouting', level:'Second Class', title:'Structure of World Scouting', icon:'users', color:'#1D4ED8', summary:'WOSM, the World Scout Conference, Committee and Bureau, and the six Scout Regions.', keys:['world scout','wosm','scout movement'],
     sections:[
