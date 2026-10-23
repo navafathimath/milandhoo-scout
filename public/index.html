@@ -1306,13 +1306,12 @@ const SCHOOL_DAYS = [
   ['sd26_victory','Victory Day','holiday','2026-11-03'],
   ['sd26_republic','Republic Day','holiday','2026-11-11'],
   ['sd26_pdday','Professional Development Day','holiday','2026-11-12'],
-  ['sd26_exam2','Second Term Exam','special','2026-12-01','2026-12-10'],
   ['sd26_endt2','End of Second Term 2026','special','2026-12-17'],
   ['sd26_hol2','Second Term Holidays','holiday','2026-12-18','2027-01-12'],
   ['sd27_newyear','New Year 2027','holiday','2027-01-01'],
   ['sd27_teachrep','Teachers’ Reporting Day 2027','special','2027-01-13'],
   ['sd27_acad','Beginning of Academic Year 2027','special','2027-01-17'] ];
-const SCHOOL_DAYS_REMOVED = ['sd26_transfer','sd26_transfer_end'];
+const SCHOOL_DAYS_REMOVED = ['sd26_transfer','sd26_transfer_end','sd26_exam2'];
 function schoolDays(){ if(S?.events && ['admin','leader'].includes(ME?.role) && S.events.some(e => SCHOOL_DAYS_REMOVED.includes(e.id))){ S.events = S.events.filter(e => !SCHOOL_DAYS_REMOVED.includes(e.id)); save(); }
   if(!S?.settings || S.settings.schoolDays2026 || !['admin','leader'].includes(ME?.role)) return; let n = 0;
   SCHOOL_DAYS.forEach(([id, title, type, date, endDate]) => { if(S.events.some(e => e.id===id)) return; n++;
