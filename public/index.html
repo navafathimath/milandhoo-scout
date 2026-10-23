@@ -635,6 +635,9 @@ svg.chart .grid{stroke:var(--line-2)}
 .ncard b{font-size:.95rem}.ncard i{font-size:.8rem;color:var(--ink-2)}.ncard span{font-size:.84rem}
 @media print{ .ncard{break-inside:avoid} }
 .dv{font-family:"Faruma","MV Faruma","Noto Sans Thaana",sans-serif;font-size:1.45rem;line-height:2.2;direction:rtl;text-align:right;margin:4px 0 10px;white-space:pre-line}
+.nwh{display:grid;gap:14px;margin:8px 0}.nwh-r{display:grid;grid-template-columns:170px auto 1fr;gap:14px;align-items:center}
+.nwh-bars{display:flex;gap:8px;align-items:center}.nwh-bars i{display:block;height:14px;border-radius:3px;background:var(--primary)}.nwh-bars i.l{width:72px}.nwh-bars i.s{width:24px}.nwh-bars i.more{background:none;height:auto;font-style:normal;color:var(--primary);font-weight:700}
+@media (max-width:640px){ .nwh-r{grid-template-columns:1fr;gap:4px} .nwh-bars i.l{width:56px} }
 .ngloss{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px}.ngloss dt{font-weight:700}
 .note-rel{margin-top:14px;padding:12px;border-radius:12px;background:var(--wash);display:grid;gap:8px}
 .note-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;color:var(--nc,var(--ink))}
@@ -2736,6 +2739,7 @@ function noteBlock(b){
   if(b.t==='key') return `<div class="nb key">${b.title?`<b>${esc(b.title)}</b>`:''}<ul>${b.items.map(i => `<li>${ic('check','sm')}<span>${esc(i)}</span></li>`).join('')}</ul></div>`;
   if(b.t==='img') return `<figure class="nimg${b.side?' nside':''}"><img src="${b.src}" alt="${esc(b.cap||'')}" loading="lazy"><figcaption>${esc(b.cap||'')}</figcaption></figure>`;
   if(b.t==='steps') return `<ol class="nsteps${b.items.some(i=>i.img)?' pics':''}">${b.items.map((i,k) => `<li>${i.img?`<img src="${i.img}" alt="Step ${k+1}" loading="lazy">`:''}<span class="row nw" style="gap:10px;align-items:flex-start"><span class="n">${k+1}</span><span>${esc(i.x)}</span></span></li>`).join('')}</ol>`;
+  if(b.t==='whistle') return `<div class="nwh">${b.items.map(([l,code,d]) => `<div class="nwh-r"><b>${esc(l)}</b><span class="nwh-bars" aria-label="${esc(d)}">${[...code].map(c => c==='.' ? '<i class="more">…</i>' : `<i class="${c==='L'?'l':'s'}"></i>`).join('')}</span><span class="muted small">${esc(d)}</span></div>`).join('')}</div>`;
   if(b.t==='dv') return `<p class="dv" lang="dv" dir="rtl">${esc(b.x)}</p>`;
   if(b.t==='cards') return `<div class="ncards">${b.items.map(i => `<div class="ncard"><div class="ncard-img${i.img2?' two':''}"><img src="${i.img}" alt="${esc(i.name)}" loading="lazy">${i.img2?`<img src="${i.img2}" alt="" loading="lazy">`:''}</div><b>${esc(i.name)}</b>${i.sci?`<i>${esc(i.sci)}</i>`:''}${i.x?`<span>${esc(i.x)}</span>`:''}</div>`).join('')}</div>`;
   if(b.t==='gloss') return `<dl class="ngloss">${b.items.map(([w,m]) => `<dt>${esc(w)}</dt><dd>${esc(m)}</dd>`).join('')}</dl>`;

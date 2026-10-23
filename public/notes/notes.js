@@ -1,7 +1,7 @@
 /* Scout Standard study notes (9th Raa Scout Group / Hulhudhuffaaru School), rewritten for easy reading.
    Every point from the original notes is kept; spelling is corrected. Each topic: sections of blocks.
    Block types: p (paragraph) · key {title, items} · warn · tip · img {src, cap, side} · steps [{img, x}] · gloss [[word, meaning]]
-   · dv (Dhivehi text, shown right-to-left in Faruma) · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Scout Standard' (default), 'Tenderfoot', 'Second Class' or 'First Class'.
+   · whistle [[label, 'LSS', description]] · dv (Dhivehi text, shown right-to-left in Faruma) · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Scout Standard' (default), 'Tenderfoot', 'Second Class' or 'First Class'.
    keys: words that link a topic to badges and syllabus items with matching names. */
 window.SCOUT_NOTES = [
   { id:'cooking', title:'Cooking', icon:'fire', color:'#C2410C', summary:'Maldivian meals for a group of four, served with dessert and drinks.', keys:['cook'],
@@ -637,6 +637,21 @@ window.SCOUT_NOTES = [
         { t:'p', x:'It is used when someone is making or renewing their promise.' },
         { t:'img', src:'notes/tenderfoot/sign-hand.jpg', cap:'Three fingers up, thumb over the little finger' } ] } ] },
 
+  { id:'history', level:'Tenderfoot', title:'Scout History', icon:'history', color:'#92400E', summary:'Baden-Powell and the start of world Scouting, and how Scouting grew in the Maldives.', keys:['history','baden','tenderfoot'],
+    sections:[
+      { id:'world', title:'World Scout history', blocks:[
+        { t:'img', src:'notes/tenderfoot/baden-powell.jpg', cap:'Lord Baden-Powell, founder of Scouting', side:true },
+        { t:'p', x:'Robert Stephenson Smyth Baden-Powell (“B-P”) is the founder of Scouting. He was a soldier, national hero, educator, artist and prolific writer. As a boy he loved the outdoors and adventure — he even tracked animals through the woods around his school.' },
+        { t:'gloss', items:[['22 Feb 1857','Born in England'],['Age 26','Promoted to captain in the army and sent to South Africa, where he used his training methods'],['1907','First Scout camp, on Brownsea Island'],['1908','His book “Scouting for Boys” was published and became an instant best seller'],['1919','Gilwell Park opened as the international Scout training centre'],['1920','First World Jamboree at Olympia, London, where he was acclaimed Chief Scout of the World'],['8 Jan 1941','He died (“went home”) in Kenya']] } ] },
+      { id:'maldives', title:'Maldives Scout history', blocks:[
+        { t:'gloss', items:[['30 May 1956','Scouting registered in the Maldives'],['1961','Cub Scouting began at Majeedhiyya School'],['—','International recognition when Majeedhiyya School was registered as the 1st Male’ Scout Group'],['26 Feb 1963','First investiture, for Cub Scouts'],['18 Jun 1963','Second investiture for Cubs, and the first investiture for Scouts'],['28 Apr 1965','First camp, at Hulhule’, for 4 days'],['28 Jan 1984','An association for Scouting was established'],['1986','Scouting first spread to the islands'],['20–23 Sep 1986','First National Scout Jamboree, at Kuda Bandos'],['23 Jul 1990','The Maldives became a member of the World Organization of the Scout Movement']] } ] } ] },
+
+  { id:'whistle', level:'Tenderfoot', title:'Whistle Calls', icon:'megaphone', color:'#0D78B6', summary:'The five whistle signals: attention, patrol leaders, duty patrol leader, all come here and emergency.', keys:['whistle','signal','tenderfoot'],
+    sections:[
+      { id:'calls', title:'Whistle calls', blocks:[
+        { t:'p', x:'A long bar is a long blast; a short bar is a short blast.' },
+        { t:'whistle', items:[['Attention','L','1 long blast'],['Patrol leaders','LSSL','1 long, 2 short, 1 long'],['Duty patrol leader','LSS','1 long, 2 short'],['All come here','LSSSS.','1 long, more than 3 short'],['Emergency','LSLS.','long, short, long, short… repeated']] } ] } ] },
+
   { id:'flag-anthem', level:'Tenderfoot', title:'National Flag & Anthem', icon:'flag', color:'#B91C1C', summary:'What the Maldivian flag looks like and means, and the words of the national anthem.', keys:['flag','anthem','tenderfoot'],
     sections:[
       { id:'flag', title:'The national flag', blocks:[
@@ -648,8 +663,16 @@ window.SCOUT_NOTES = [
         { t:'dv', x:'ޤައުމީ ނިޝާނަށް ހުރުމަތާއެކު ބޯލަނބައިތިބެގެން\nއައުދާނަކަން ލިބިގެން އޮވާ ދިދައަށް ކުރީމު ސަލާމް\nޤައުމީ މިއެކުވެރިކަން މަތީ ތިބެގެން ކުރީމު ސަލާމް\nޤައުމީ ބަހުން ގިނަ ހެޔޮ ދުޢާކުރަމުން ކުރީމު ސަލާމް' },
         { t:'dv', x:'ނަސްރާ ނަސީބާ ކާމިޔާބުގެ ރަމްޒަކަށް ހިމެނޭ\nފެއްސާ ރަތާއި ހުދާ އެކީ ފެނުމުން ކުރީމު ސަލާމް\nޤައުމީ މިއެކުވެރިކަން މަތީ ތިބެގެން ކުރީމު ސަލާމް\nޤައުމީ ބަހުން ގިނަ ހެޔޮ ދުޢާކުރަމުން ކުރީމު ސަލާމް' } ] } ] },
 
-  { id:'formations', level:'Tenderfoot', title:'Troop Formations', icon:'users', color:'#0369A1', summary:'Horseshoe and troop circle formations: how to form them, the hand signal and when they are used.', keys:['formation','drill','parade','tenderfoot'],
+  { id:'formations', level:'Tenderfoot', title:'Troop Formations', icon:'users', color:'#0369A1', summary:'Troop line, U, horseshoe, circle, open and close column: how to form them, the hand signal and when they are used.', keys:['troop formation','drill','parade','tenderfoot'],
     sections:[
+      { id:'single', title:'Single rank (troop line)', blocks:[
+        { t:'img', src:'notes/tenderfoot/single-rank.jpg', cap:'Hand signal and troop line layout (☒ = leader)' },
+        { t:'key', title:'How to form it', items:['Patrol leaders stand in front of the centre of their patrols.','Patrols fall in two paces behind their leaders, with two paces between patrols.','The assistant patrol leader stands at the far right of the patrol, with the other members beside them.'] },
+        { t:'tip', x:'Used for general line-up, inspection in the meeting room, and getting ready to move the troop across a wide area.' } ] },
+      { id:'council', title:'Council or “U” formation', blocks:[
+        { t:'img', src:'notes/tenderfoot/u-formation.jpg', cap:'Hand signal and U layout (☒ = leader)' },
+        { t:'key', title:'How to form it', items:['Patrols fall in, in a single line shaped like a “U”, in front of the drill master.','Patrols keep the same order as in the troop line.','Patrol leaders fall in on the right of their patrols.'] },
+        { t:'tip', x:'Used for demonstrations and announcements.' } ] },
       { id:'horseshoe', title:'Horseshoe formation', blocks:[
         { t:'img', src:'notes/tenderfoot/horseshoe.jpg', cap:'Hand signal and horseshoe layout (☒ = leader)' },
         { t:'key', title:'How to form it', items:['Patrols fall in, in a single line shaped like a horseshoe, in front of the drill master.','Patrols keep the same order as in the troop line.','Patrol leaders fall in on the right of their patrols.'] },
@@ -657,7 +680,15 @@ window.SCOUT_NOTES = [
       { id:'circle', title:'Troop circle formation', blocks:[
         { t:'img', src:'notes/tenderfoot/circle.jpg', cap:'Hand signal and troop circle layout (☒ = leader)' },
         { t:'key', title:'How to form it', items:['Patrols form a complete circle around the leader, in the same order as in the troop line.'] },
-        { t:'tip', x:'Used for ceremonies and circle games.' } ] } ] },
+        { t:'tip', x:'Used for ceremonies and circle games.' } ] },
+      { id:'open', title:'Open column of patrols', blocks:[
+        { t:'img', src:'notes/tenderfoot/open-column.jpg', cap:'Hand signal and open column layout (☒ = leader)' },
+        { t:'key', title:'How to form it', items:['Patrols fall in one behind the other, lining up on the front patrol and on the right.','Leave a gap equal to the length of a patrol between patrols.','The patrol leader stands two paces in front of the centre of the patrol.'] },
+        { t:'tip', x:'Used for inspection and parades.' } ] },
+      { id:'close', title:'Close column of patrols', blocks:[
+        { t:'img', src:'notes/tenderfoot/close-column.jpg', cap:'Hand signal and close column layout (☒ = leader)' },
+        { t:'key', title:'How to form it', items:['Patrols fall in one behind the other, lining up on the front patrol and on the right.','The patrol leader stands on the right of the patrol.'] },
+        { t:'tip', x:'Used for assembly in small rooms or areas, and crowded parades.' } ] } ] },
 
   { id:'knots-tf', level:'Tenderfoot', title:'Knots & Whipping', icon:'knot', color:'#7C3AED', summary:'The reef knot and the sheet bend: what they are for and how they look.', keys:['knot','rope','tenderfoot'],
     sections:[
