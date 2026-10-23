@@ -431,5 +431,104 @@ window.SCOUT_NOTES = [
           { img:'notes/nature/kattafulhi.jpg', name:'Kattafulhi', sci:'Kuhlia mugil', x:'Barred flagtail' },
           { img:'notes/nature/kirulhiya.jpg', name:'Kirulhiya mas', sci:'Kyphosus cinerascens', x:'Snubnose rudderfish, blue sea chub' } ] } ] },
       { id:'recall', title:'Let’s recall what we learned', blocks:[
-        { t:'key', title:'Test yourself', items:['Cover the names and identify each tree, bird and fish from its picture.','Give the Dhivehi name when you hear the English name, and the other way round.','Say where on your island you have seen each one.'] } ] } ] }
+        { t:'key', title:'Test yourself', items:['Cover the names and identify each tree, bird and fish from its picture.','Give the Dhivehi name when you hear the English name, and the other way round.','Say where on your island you have seen each one.'] } ] } ] },
+
+  { id:'emergencies', level:'First Class', title:'Emergencies: How Scouts Respond', icon:'alert', color:'#C2410C', summary:'Fire, drowning, fainting, gas, electric shock, artificial respiration and how to summon help.', keys:['emergenc','rescue','life saver','first aid'],
+    sections:[
+      { id:'what', title:'What an emergency is', blocks:[
+        { t:'p', x:'An emergency is a sudden, unexpected situation that needs quick action to prevent harm.' },
+        { t:'p', x:'Scouts are always ready, alert and trained to save lives.' },
+        { t:'tip', x:'“A Scout is never taken by surprise; he knows exactly what to do.” — Baden-Powell' } ] },
+      { id:'rules', title:'General rules in any emergency', blocks:[
+        { t:'key', items:['Stay calm and alert.','Make sure you are safe first.','Assess the situation.','Call for help immediately.','Give first aid if you are trained.','Never panic or run about aimlessly.'] } ] },
+      { id:'fire', title:'Fire in a house or school', blocks:[
+        { t:'steps', items:[{ x:'Raise the alarm: shout “Fire! Fire!”' },{ x:'Alert teachers, adults and the fire service.' },{ x:'Get out immediately. Do not use lifts.' },{ x:'If smoke is thick, crawl low under the smoke.' },{ x:'Call the fire service on 118.' }] },
+        { t:'warn', x:'If someone’s clothes catch fire: STOP, DROP and ROLL.' } ] },
+      { id:'drowning', title:'Drowning', blocks:[
+        { t:'warn', x:'Do NOT jump in if you cannot swim.' },
+        { t:'steps', items:[{ x:'Reach with a stick or rope, or throw a float.' },{ x:'Pull the person to safety.' },{ x:'Check for breathing and pulse.' },{ x:'Begin rescue breathing (mouth-to-mouth) if needed.' },{ x:'Summon help: ambulance, adults or the coastguard.' }] } ] },
+      { id:'fainting', title:'Fainting', blocks:[
+        { t:'img', src:'notes/emergency/fainting.jpg', cap:'Lay the person flat and raise the legs', side:true },
+        { t:'key', title:'Signs', items:['Sudden collapse','Pale face','Sweating'] },
+        { t:'steps', items:[{ x:'Lay the person flat on their back.' },{ x:'Raise the legs slightly.' },{ x:'Loosen tight clothing.' },{ x:'Keep fresh air flowing. Do not pour water on the face.' },{ x:'If they do not recover, get medical help.' }] } ] },
+      { id:'gas', title:'Gas suffocation', blocks:[
+        { t:'key', title:'Causes', items:['Leaking gas','A closed room','Smoke'] },
+        { t:'warn', x:'Do not go in without fresh air or a mask.' },
+        { t:'steps', items:[{ x:'Open doors and windows.' },{ x:'Move the person into fresh air.' },{ x:'Start artificial respiration if they are not breathing.' },{ x:'Call the emergency services.' }] } ] },
+      { id:'shock', title:'Electric shock', blocks:[
+        { t:'warn', x:'Do not touch the person while the current is flowing.' },
+        { t:'steps', items:[{ x:'Turn off the main switch or pull out the plug.' },{ x:'If you cannot, move the wire away with a dry wooden stick or dry cloth.' },{ x:'Check breathing and pulse.' },{ x:'If they are not breathing, start artificial respiration.' },{ x:'Call an ambulance or an adult immediately.' }] } ] },
+      { id:'schafer', title:'Artificial respiration — Schafer method', blocks:[
+        { t:'p', x:'Used when the person is not breathing, especially after drowning.' },
+        { t:'img', src:'notes/emergency/schafer.jpg', cap:'Schafer method' },
+        { t:'steps', items:[{ x:'Lay the person face down, arms bent, head turned to one side.' },{ x:'Kneel beside their hips.' },{ x:'Press your hands on the lower ribs to push air out.' },{ x:'Release to let air back in.' },{ x:'Repeat in a steady rhythm, about 12–15 times a minute.' }] } ] },
+      { id:'holger', title:'Artificial respiration — Holger-Nielsen method', blocks:[
+        { t:'img', src:'notes/emergency/holger-nielsen.jpg', cap:'Holger-Nielsen method', side:true },
+        { t:'steps', items:[{ x:'The person lies face down; the rescuer kneels at their head.' },{ x:'Take turns pressing on the back and lifting the arms.' },{ x:'Press on the back: air goes out. Lift the arms: air comes in.' },{ x:'Carry on until normal breathing returns.' }] } ] },
+      { id:'mouth', title:'Mouth-to-mouth resuscitation', blocks:[
+        { t:'img', src:'notes/emergency/mouth-to-mouth.jpg', cap:'Tilt the head back, pinch the nose, breathe in', side:true },
+        { t:'steps', items:[{ x:'Lay the person on their back.' },{ x:'Tilt the head back and lift the chin.' },{ x:'Pinch the nose shut.' },{ x:'Seal your mouth over theirs.' },{ x:'Blow for 1 second and watch the chest rise.' },{ x:'Give 2 breaths, then 30 chest compressions (if trained in CPR).' }] },
+        { t:'key', title:'Precautions', items:['Check the mouth for anything blocking it.','Use a barrier (cloth or plastic) if possible.','Do not blow too hard.'] },
+        { t:'tip', x:'Today, first aid courses teach CPR: mouth-to-mouth breaths together with chest compressions. The Schafer and Holger-Nielsen methods are older methods you learn for the syllabus.' } ] },
+      { id:'help', title:'How to summon help', blocks:[
+        { t:'key', title:'Always give', items:['Your name','Where the incident is','What kind of emergency it is','How many people are hurt','Any danger still present'] },
+        { t:'gloss', items:[['Police','119'],['Fire & Rescue','118'],['Ambulance','102'],['Coastguard','191']] } ] },
+      { id:'recap', title:'Quick recap', blocks:[
+        { t:'gloss', items:[['Fire','Get everyone out and call for help'],['Drowning','Rescue safely — reach, throw, don’t jump'],['Fainting','Raise the legs, fresh air'],['Gas','Fresh air first'],['Electric shock','Switch off the current first'],['No breathing','Artificial respiration: Schafer, Holger-Nielsen or mouth-to-mouth']] },
+        { t:'key', title:'Emergency drill challenge', items:['Split into small groups.','Each group gets one emergency (fire, fainting and so on).','Act out the correct response — 2 minutes each.'] },
+        { t:'tip', x:'Stay calm and confident. Practice makes you ready. “Be Prepared — that’s the Scout way!”' } ] } ] },
+
+  { id:'environment', level:'First Class', title:'Environmental Education', icon:'wave', color:'#0E7490', summary:'Why nature matters: chemicals, coral reefs, sea pollution, climate change and what Scouts can do.', keys:['environment','conservation','world conservation'],
+    sections:[
+      { id:'why', title:'Why protecting the environment matters', blocks:[
+        { t:'key', items:['Protecting the environment keeps ecosystems in balance — and all life on Earth, including people, depends on them.','Pollution affects the air we breathe, the water we drink and the soil we grow food in. Reducing pollution and saving resources protects our health.','What we do today decides whether future generations have clean resources and a stable climate.'] } ] },
+      { id:'chemicals', title:'Hazardous chemicals and their impact', blocks:[
+        { t:'p', x:'Chemicals pollute land, water and air, harming plants, animals and people.' },
+        { t:'gloss', items:[['Plastic waste','Hurts marine life and pollutes the oceans'],['Oil spills','Poison fish and damage coastlines'],['Pesticides','Harm insects and birds, and contaminate water']] },
+        { t:'tip', x:'Scouts’ role: reduce waste, avoid harmful products and spread the word about safe disposal.' } ] },
+      { id:'reef', title:'Protecting the reef', blocks:[
+        { t:'p', x:'Coral reefs are among the richest ecosystems on Earth, home to thousands of sea creatures. They are natural barriers that protect our islands from storms and erosion.' },
+        { t:'key', title:'Main threats', items:['Pollution — plastic and chemicals','Warming seas','Overfishing'] },
+        { t:'tip', x:'Scouts’ role: reduce plastic waste, respect marine life and raise awareness.' } ] },
+      { id:'sea', title:'Sea pollution and its effects', blocks:[
+        { t:'gloss', items:[['Harms marine life','Plastic, chemicals and oil damage sea animals and coral reefs'],['Breaks food chains','Pollutants harm small creatures, which affects all sea life — and people'],['Risks our health','Polluted seafood can make people ill'],['Main sources','Plastic waste, industrial chemicals and oil spills']] },
+        { t:'tip', x:'Scouts’ action: join beach clean-ups, use less plastic and raise awareness.' } ] },
+      { id:'climate', title:'Greenhouse effect, climate change and sea level', blocks:[
+        { t:'key', title:'The greenhouse effect', items:['Greenhouse gases trap heat and warm the Earth.','Key gases: carbon dioxide (CO₂), methane and water vapour.','This leads to global warming and climate change.'] },
+        { t:'key', title:'Sea level rise', items:['Melting ice caps and warming water (which expands) make the sea level rise.','Impacts: flooding, loss of habitats and coastal erosion — a real danger for low islands like ours.'] },
+        { t:'tip', x:'Scouts’ action: reduce your carbon footprint and spread awareness.' } ] },
+      { id:'scouting', title:'How Scouting can help', blocks:[
+        { t:'key', items:['Plant trees, reduce waste and recycle.','Take part in clean-ups and conservation projects.','Spread awareness in your community.'] } ] },
+      { id:'bp', title:'Baden-Powell and nature', blocks:[
+        { t:'key', items:['B-P stressed the “open air” and a close connection with nature.','He believed studying nature builds character and responsibility.','He encouraged Scouts to care for the environment.'] },
+        { t:'tip', x:'B-P’s last message to Scouts: “Try and leave this world a little better than you found it.” Every Scout can make a difference!' } ] } ] },
+
+  { id:'estimation', level:'First Class', title:'Estimation', icon:'mountain', color:'#6B5B7A', summary:'Judging height and length without measuring tools, then checking with real measurements.', keys:['estimat','measure'],
+    sections:[
+      { id:'what', title:'What estimation is', blocks:[
+        { t:'p', x:'Estimation is making a careful guess or judgement about a measurement — such as height, length or distance — without using exact measuring tools.' },
+        { t:'p', x:'It helps us make quick, sensible decisions when exact measuring is not possible: judging the height of a tree, the distance to a building, or how much material a job needs.' } ] },
+      { id:'task', title:'Your estimation task', blocks:[
+        { t:'p', x:'Answer these in your log book. The examples show the kind of answer expected.' },
+        { t:'gloss', items:[['Place to estimate height','e.g. the flagpole near the school ground'],['Estimated height','e.g. 7 metres'],['Actual height','e.g. 6.8 metres'],['Place to estimate length','e.g. length of the school hall'],['Estimated length','e.g. 20 metres'],['Actual length','e.g. 19.6 metres']] } ] },
+      { id:'how', title:'Equipment and method', blocks:[
+        { t:'key', title:'Length — measuring tape', items:['Lay the tape along the ground to find the actual length.'] },
+        { t:'key', title:'Height — stick-and-shadow method (or a ranging rod)', items:['Stand a stick of known height upright and measure its shadow.','Measure the shadow of the object at the same time.','Height of object = height of stick × (object’s shadow ÷ stick’s shadow).'] },
+        { t:'tip', x:'Example: a 1 m stick casts a 0.5 m shadow, and the flagpole casts a 3.4 m shadow. Height = 1 × 3.4 ÷ 0.5 = 6.8 m.' } ] } ] },
+
+  { id:'logbook-fc', level:'First Class', title:'Log Book Tasks', icon:'book', color:'#B5483F', summary:'What to write in your First Class log book for cooking and the hike / expedition.', keys:['log book','logbook','expedition','hike','cook'],
+    sections:[
+      { id:'cooking', title:'Cooking', blocks:[
+        { t:'img', src:'notes/logbook/cooking.jpg', cap:'Cooking log book card (with Dhivehi instructions)', side:true },
+        { t:'key', title:'Weekend camp menu', items:['Write a menu for a weekend camp, with the costing and quantities of everything you need.'] },
+        { t:'key', title:'Filleting a fish', items:['Video yourself filleting a fish, then answer:','How did you get the fish?','What kind of fish was it?','Who helped you complete this task?','How was the experience?'] },
+        { t:'tip', x:'Take screenshots from your video, print them and paste them in your log book.' } ] },
+      { id:'hike', title:'Hike — expedition', blocks:[
+        { t:'img', src:'notes/logbook/hike.jpg', cap:'Hike – expedition log book card', side:true },
+        { t:'steps', items:[
+          { x:'Say that you went on a camp called “Oilvaali Camp” in Sh. Milandhoo for 4 days and 3 nights (give the dates). Its main purpose was to complete the expedition you need for First Class.' },
+          { x:'Write which materials you used to make the raft and how you made it. Include how many people the raft could carry.' },
+          { x:'Describe where you travelled on the raft and roughly how far.' },
+          { x:'Note the important landmarks, plants and animals, with timings, weather, tides and environmental conditions.' },
+          { x:'Paste some pictures from the rafting event (get them from the scout Facebook page).' }] } ] } ] }
 ];
