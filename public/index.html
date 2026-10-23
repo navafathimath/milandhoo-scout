@@ -106,6 +106,7 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
 .rl-r{border-bottom:1px solid var(--line-2)}.rl-r:last-child{border-bottom:0}
 .rl-ini{width:34px;height:34px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line-2);color:var(--ink-2);display:grid;place-items:center;font-weight:700;font-size:.72rem;overflow:hidden}
 .rl-ini img{width:100%;height:100%;object-fit:cover}
+.rl-ini.girl{border:1.5px solid color-mix(in srgb,var(--girl) 65%,transparent)}.rl-ini.boy{border:1.5px solid color-mix(in srgb,var(--boy) 65%,transparent)}
 .rl-nm{min-width:0}.rl-nm b{display:block;font-weight:600;font-size:.92rem}.rl-nm small{display:flex;gap:4px;align-items:center;color:var(--ink-2);font-size:.75rem}
 .rl-pill{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:600;border-radius:6px;padding:3px 8px;background:var(--surface-2);border:1px solid var(--line-2);color:var(--ink-2);max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .rl-opt{display:grid;grid-template-columns:repeat(4,82px);border:1px solid var(--line);border-radius:8px;overflow:hidden}
@@ -1876,8 +1877,8 @@ VIEWS.register = () => {
 function regLeftHTML(c){ return `${c.U ? `<b>${c.U}</b> scout${c.U===1?'':'s'} not yet recorded` : 'Everyone is recorded'} · Recorded by ${esc(ME.name)}`; }
 function counterHTML(c){ const t = c.P+c.L+c.A+c.E; return ['P','L','A','E'].map(k => `<div class="rs-${k}"><b class="num">${c[k]}</b><span>${ST_LABEL[k]}</span></div>`).join('') + `<div class="rs-U"><b class="num">${c.U}</b><span>Unmarked</span></div><div class="rs-T"><b class="num">${t ? pct(c.P+c.L, t) : 0}%</b><span>Attendance</span></div>`; }
 function regRow(r, s, locked){ const e = r.entries[s.id] || {}; const p = patrol(s.patrol); const g = genderOf(s.gender); const img = s.photo && imgData(s.photo);
-  return `<div class="rl-r" id="rr_${s.id}"><span class="rl-ini">${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
-  <div class="rl-nm"><b>${esc(sname(s))}</b><small>${g || 'Scout'}${s.medical?` · <span title="Has medical notes" style="color:var(--bad)">${ic('heart','sm')}</span>`:''}</small></div>
+  return `<div class="rl-r" id="rr_${s.id}"><span class="rl-ini ${g==='Girl'?'girl':g==='Boy'?'boy':''}" ${g?`title="${g}"`:''}>${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
+  <div class="rl-nm"><b>${esc(sname(s))}${s.medical?` <span title="Has medical notes" style="color:var(--bad);vertical-align:-2px">${ic('heart','sm')}</span>`:''}</b></div>
   <div class="rl-pt">${p ? `<span class="rl-pill">${pDot(p)}${esc(p.name)}</span>` : ''}</div>
   <div class="rl-opt" role="radiogroup" aria-label="Attendance for ${esc(sname(s))}">${['P','L','A','E'].map(k => `<button class="${e.s===k?'on':''}" data-s="${k}" role="radio" aria-checked="${e.s===k}" ${locked?'disabled':''} data-a="mark" data-sid="${s.id}" data-k="${k}">${ST_LABEL[k]}</button>`).join('')}</div>
   ${e.s==='L' ? `<div class="rl-x"><label for="lt_${s.id}">Arrival time</label><input id="lt_${s.id}" class="inp" type="time" style="width:130px" value="${esc(e.time||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="time"></div>`
