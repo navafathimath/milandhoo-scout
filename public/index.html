@@ -621,15 +621,22 @@ svg.chart .grid{stroke:var(--line-2)}
 .nb{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;margin:10px 0}.nb.tip{background:var(--wash)}.nb.warn{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--ink)}.nb.warn svg{color:var(--warn);flex:none;margin-top:3px}
 .nb.key{display:block;background:var(--surface-2);border:1px solid var(--line)}.nb.key ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}.nb.key li{display:flex;gap:8px}.nb.key li svg{color:var(--ok);flex:none;margin-top:4px}
 .nimg{margin:10px 0;text-align:center}.nimg img{max-width:100%;background:#fff;border-radius:10px;border:1px solid var(--line);padding:6px}.nimg figcaption{font-size:.8rem;color:var(--ink-2);margin-top:4px}
-.nimg.side{float:right;width:220px;margin:0 0 10px 16px}
+.nimg.nside{float:right;width:240px;margin:0 0 10px 16px}
 .nsteps{list-style:none;margin:10px 0;padding:0;display:grid;gap:10px}.nsteps li{display:flex;gap:12px;align-items:flex-start}
 .nsteps .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--primary);color:var(--on-primary);display:grid;place-items:center;font-weight:700;font-size:.85rem}
 .nsteps.pics{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}.nsteps.pics li{flex-direction:column;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;position:relative}
 .nsteps.pics li{gap:8px}.nsteps.pics img{width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px}
+.note-lv{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:4px 0 10px}.note-lv h2{display:flex;gap:8px;align-items:center;margin:0}
+.ncards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin:10px 0}
+.ncard{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:2px;line-height:1.35}
+.ncard-img{display:grid;gap:6px;margin-bottom:6px}.ncard-img.two{grid-template-columns:1fr 1fr}
+.ncard-img img{width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px}
+.ncard b{font-size:.95rem}.ncard i{font-size:.8rem;color:var(--ink-2)}.ncard span{font-size:.84rem}
+@media print{ .ncard{break-inside:avoid} }
 .ngloss{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px}.ngloss dt{font-weight:700}
 .note-rel{margin-top:14px;padding:12px;border-radius:12px;background:var(--wash);display:grid;gap:8px}
 .note-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-weight:600;color:var(--nc,var(--ink))}
-@media (max-width:640px){ .nimg.side{float:none;width:auto;margin:10px 0} .note-toc{top:56px} }
+@media (max-width:640px){ .nimg.nside{float:none;width:auto;margin:10px 0} .note-toc{top:56px} }
 @media print{ .side,.top,.bnav,.note-toc,.btn{display:none!important} .note-sec{break-inside:avoid-page;box-shadow:none} }
 .pick-h{position:sticky;top:0;z-index:1;background:var(--surface);font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);padding:10px 0 6px;border-bottom:1px solid var(--line)}
 .srow .gset{display:flex;gap:6px;justify-content:flex-end}
@@ -2712,25 +2719,29 @@ const noteOf = id => NOTES().find(n => n.id===id);
 const noteFor = text => { const t = String(text||'').toLowerCase(); return NOTES().filter(n => n.keys.some(k => t.includes(k))); };
 const noteMins = n => Math.max(1, Math.round(JSON.stringify(n.sections).length / 1100));
 function noteChip(n, sec){ return `<button type="button" class="note-chip" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}"${sec?` data-sec="${sec}"`:''}>${ic(n.icon,'sm')} ${esc(n.title)}</button>`; }
-VIEWS.notes = () => `${pageH('Scout Standard', 'Scout Notes', '')}
-  <p class="muted" style="margin:-8px 0 16px;max-width:70ch">Study notes for the Scout Standard from the 9th Raa Scout Group. Open a topic to read it, or jump straight to a section.</p>
-  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">${NOTES().map(n => `<button class="card note-card" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}">
+const noteLevel = n => n.level || 'Scout Standard';
+const NOTE_LEVELS = [['Scout Standard','Study notes for the Scout Standard from the 9th Raa Scout Group.'],['First Class','Study notes for First Class from the 8th Shaviyani Scout Group.']];
+VIEWS.notes = () => `${pageH('Study notes', 'Scout Notes', '')}
+  <p class="muted" style="margin:-8px 0 16px;max-width:70ch">Open a topic to read it, or jump straight to a section.</p>
+  ${NOTE_LEVELS.map(([lv, about]) => { const ns = NOTES().filter(n => noteLevel(n)===lv); return ns.length ? `<div class="note-lv"><h2>${esc(lv)} <span class="chip">${ns.length}</span></h2><p class="muted small">${esc(about)}</p></div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:22px">${ns.map(n => `<button class="card note-card" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}">
     <span class="note-ic">${ic(n.icon,'lg')}</span><h2>${esc(n.title)}</h2><p class="muted small">${esc(n.summary)}</p>
-    <div class="row small" style="gap:12px;margin-top:auto"><span><b>${n.sections.length}</b> section${n.sections.length===1?'':'s'}</span>${n.preview?'<span class="chip">Preview</span>':`<span>${noteMins(n)} min read</span>`}</div></button>`).join('')}</div>`;
+    <div class="row small" style="gap:12px;margin-top:auto"><span><b>${n.sections.length}</b> section${n.sections.length===1?'':'s'}</span>${n.preview?'<span class="chip">Preview</span>':`<span>${noteMins(n)} min read</span>`}</div></button>`).join('')}</div>` : ''; }).join('')}`;
 function noteBlock(b){
   if(b.t==='p') return `<p>${esc(b.x)}</p>`;
   if(b.t==='tip') return `<div class="nb tip">${ic('star','sm')}<span>${esc(b.x)}</span></div>`;
   if(b.t==='warn') return `<div class="nb warn">${ic('alert','sm')}<span>${esc(b.x)}</span></div>`;
   if(b.t==='key') return `<div class="nb key">${b.title?`<b>${esc(b.title)}</b>`:''}<ul>${b.items.map(i => `<li>${ic('check','sm')}<span>${esc(i)}</span></li>`).join('')}</ul></div>`;
-  if(b.t==='img') return `<figure class="nimg${b.side?' side':''}"><img src="${b.src}" alt="${esc(b.cap||'')}" loading="lazy"><figcaption>${esc(b.cap||'')}</figcaption></figure>`;
+  if(b.t==='img') return `<figure class="nimg${b.side?' nside':''}"><img src="${b.src}" alt="${esc(b.cap||'')}" loading="lazy"><figcaption>${esc(b.cap||'')}</figcaption></figure>`;
   if(b.t==='steps') return `<ol class="nsteps${b.items.some(i=>i.img)?' pics':''}">${b.items.map((i,k) => `<li>${i.img?`<img src="${i.img}" alt="Step ${k+1}" loading="lazy">`:''}<span class="row nw" style="gap:10px;align-items:flex-start"><span class="n">${k+1}</span><span>${esc(i.x)}</span></span></li>`).join('')}</ol>`;
+  if(b.t==='cards') return `<div class="ncards">${b.items.map(i => `<div class="ncard"><div class="ncard-img${i.img2?' two':''}"><img src="${i.img}" alt="${esc(i.name)}" loading="lazy">${i.img2?`<img src="${i.img2}" alt="" loading="lazy">`:''}</div><b>${esc(i.name)}</b>${i.sci?`<i>${esc(i.sci)}</i>`:''}${i.x?`<span>${esc(i.x)}</span>`:''}</div>`).join('')}</div>`;
   if(b.t==='gloss') return `<dl class="ngloss">${b.items.map(([w,m]) => `<dt>${esc(w)}</dt><dd>${esc(m)}</dd>`).join('')}</dl>`;
   return ''; }
 VIEWS.note = () => { const n = noteOf(R.id); if(!n) return empty('book','Notes not found');
   const badges = S.badges.filter(b => noteFor(b.name).includes(n)), items = S.syllabus.filter(i => noteFor(i.topic+' '+i.objective).includes(n));
   setTimeout(() => { const t = R.q.sec && document.getElementById('ns-'+R.q.sec); if(t) t.scrollIntoView({ behavior:'smooth', block:'start' }); }, 50);
   return `<button class="btn ghost sm" data-a="go" data-r="notes" style="margin-bottom:10px">${ic('left','sm')} All notes</button>
-  <div class="card note-head" style="--nc:${n.color}"><span class="note-ic">${ic(n.icon,'lg')}</span><div style="flex:1;min-width:200px"><div class="eyebrow">Scout Standard notes</div><h1>${esc(n.title)}</h1><p class="muted">${esc(n.summary)}</p></div>
+  <div class="card note-head" style="--nc:${n.color}"><span class="note-ic">${ic(n.icon,'lg')}</span><div style="flex:1;min-width:200px"><div class="eyebrow">${esc(noteLevel(n))} notes</div><h1>${esc(n.title)}</h1><p class="muted">${esc(n.summary)}</p></div>
     <button class="btn" data-a="notePrint">${ic('download','sm')} Print / PDF</button></div>
   <nav class="note-toc" aria-label="Contents">${n.sections.map((x,i) => `<a href="#ns-${x.id}" data-a="noteJump" data-sec="${x.id}"><span class="num">${i+1}</span>${esc(x.title)}</a>`).join('')}</nav>
   ${n.sections.map((x,i) => `<section class="card note-sec" id="ns-${x.id}"><h2><span class="num">${i+1}</span>${esc(x.title)}</h2>${(x.blocks||[{t:'tip', x:'Preview only: the full notes for this section are added after you choose an option.'}]).map(noteBlock).join('')}</section>`).join('')}

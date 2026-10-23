@@ -1,6 +1,7 @@
 /* Scout Standard study notes (9th Raa Scout Group / Hulhudhuffaaru School), rewritten for easy reading.
    Every point from the original notes is kept; spelling is corrected. Each topic: sections of blocks.
    Block types: p (paragraph) · key {title, items} · warn · tip · img {src, cap, side} · steps [{img, x}] · gloss [[word, meaning]]
+   · cards [{img, img2, name, sci, x}] (pictures with a name, e.g. trees, birds, fish, tracks). level: 'Scout Standard' (default) or 'First Class'.
    keys: words that link a topic to badges and syllabus items with matching names. */
 window.SCOUT_NOTES = [
   { id:'cooking', title:'Cooking', icon:'fire', color:'#C2410C', summary:'Maldivian meals for a group of four, served with dessert and drinks.', keys:['cook'],
@@ -308,5 +309,127 @@ window.SCOUT_NOTES = [
       { id:'out', title:'Putting the fire out', blocks:[
         { t:'key', title:'With water', items:['Sprinkle water using the backs of your fingers.','Spread out the sticks and coals.','Sprinkle again. Do not leave until the coals are cool enough to touch.'] },
         { t:'key', title:'Without water', items:['Spread out the sticks and coals.','Scrape burning embers off large logs and sticks.','Cover everything with sand.','Check and be sure the fire is dead out.'] } ] }
-    ] }
+    ] },
+
+  /* ---------- First Class notes (8th Shaviyani Scout Group) ---------- */
+  { id:'tracking', level:'First Class', title:'Tracking', icon:'binoculars', color:'#1F4E79', summary:'Reading the story of footprints in the sand: human, bird and animal tracks.', keys:['track'],
+    sections:[
+      { id:'what', title:'What tracking is', blocks:[
+        { t:'tip', x:'Tracking is the skill of observing and understanding footprints and signs left by humans, birds and animals.' },
+        { t:'p', x:'It helps scouts in adventure, survival and learning about nature.' } ] },
+      { id:'why', title:'Why tracking is important for scouts', blocks:[
+        { t:'key', title:'1. Learn observation skills', items:['Tracking sharpens your eyes to notice small details: footprints, broken twigs, disturbed sand, animal droppings or feather trails.','It trains scouts to be alert and mindful of their surroundings.'] },
+        { t:'key', title:'2. Understand animal behaviour', items:['By looking at tracks, scouts can learn how animals move, feed or hide.','Example: turtle tracks lead to a nest, crab tracks show sideways movement, bird tracks near water show feeding spots.'] },
+        { t:'key', title:'3. Improve survival and exploration', items:['In survival situations, tracking can help find food, fresh water or other people.','It helps scouts follow lost members or find safe routes.'] } ] },
+      { id:'human', title:'Human tracks', blocks:[
+        { t:'img', src:'notes/tracking/human.jpg', cap:'Human footprints in sand', side:true },
+        { t:'gloss', items:[['Walking normally','Even spacing, clear heel and toe'],['Running','Longer strides, deeper front part'],['Limping','Uneven steps, one foot deeper'],['Carrying weight','Deeper footprints than normal'],['Walking backwards','Toes dig in first, heel lighter']] } ] },
+      { id:'animals', title:'Bird and animal tracks', blocks:[
+        { t:'cards', items:[
+          { img:'notes/tracking/crow-foot.jpg', img2:'notes/tracking/crow-track.jpg', name:'Crow', x:'Three toes forward, one toe back.' },
+          { img:'notes/tracking/duck-foot.jpg', img2:'notes/tracking/duck-track.jpg', name:'Duck', x:'Webbed footprint, wide, often in pairs near water.' },
+          { img:'notes/tracking/cat-paw.jpg', img2:'notes/tracking/cat-track.jpg', name:'Cat', x:'Four toes, with the claw marks hidden.' },
+          { img:'notes/tracking/rabbit.jpg', img2:'notes/tracking/rabbit-track.jpg', name:'Rabbit', x:'Front prints small, back prints larger, often in hopping pairs.' },
+          { img:'notes/tracking/crab.jpg', img2:'notes/tracking/crab-track.jpg', name:'Crab', x:'Tiny sideways marks with little dot trails.' },
+          { img:'notes/tracking/hermit-crab.jpg', name:'Hermit crab', x:'Small uneven trails with a shell drag line.' },
+          { img:'notes/tracking/turtle.jpg', img2:'notes/tracking/turtle-hatchling.jpg', name:'Turtle', x:'Big flipper marks and a belly drag line towards or away from the sea.' } ] } ] },
+      { id:'story', title:'Reading the story of tracks', blocks:[
+        { t:'key', title:'Tracks tell us', items:['Direction of movement','Speed (walking, running)','Weight carried','Animal behaviour (feeding, escaping, resting)'] } ] },
+      { id:'tips', title:'Tips for better tracking', blocks:[
+        { t:'key', items:['Look at tracks early in the morning or late in the evening — shadows show them better.','Walk slowly and observe carefully.','Use a stick to measure stride length.','Notice the surroundings: broken twigs, droppings, feathers, shells.'] },
+        { t:'tip', x:'Tracking = Observation + Patience + Adventure. “Every footprint tells a story — it’s up to a scout to read it!”' } ] } ] },
+
+  { id:'firstaid-fc', level:'First Class', title:'First Aid: Bleeding, Fractures & Stretchers', icon:'cross', color:'#0F8A84', summary:'Main arteries, stopping bleeding, slings and splints for fractures, and carrying a stretcher.', keys:['first aid','fracture','splint','stretcher','ambulance'],
+    sections:[
+      { id:'what', title:'What first aid is', blocks:[
+        { t:'p', x:'First aid means helping someone right away when they are hurt or sick, before a doctor or ambulance comes. It also keeps the person calm while waiting for help.' },
+        { t:'tip', x:'It helps stop small problems from becoming big problems.' },
+        { t:'key', title:'In these notes you will learn to', items:['Locate the main arteries in the body','Stop bleeding','Give first aid for fractures of the arm, leg and collarbone, making and using a sling or splint','Know why you should not move a person with a fracture','Carry an injured person safely on a stretcher (2-person and 4-person methods)'] } ] },
+      { id:'arteries', title:'Main arteries in the body', blocks:[
+        { t:'img', src:'notes/firstaid2/arteries.jpg', cap:'Main arteries and pulse points', side:true },
+        { t:'p', x:'Arteries carry blood from the heart to the body. If an artery is cut, a lot of blood can come out very fast.' },
+        { t:'key', title:'3 important arteries to know', items:['Carotid artery — on the neck. Place two fingers on either side of your windpipe; the pulse you feel is the carotid artery.','Brachial artery — inside of the upper arm. It runs along the inner side of the biceps.','Femoral artery — top of the leg, in the groin. This large artery is deep in the upper thigh, near where the leg joins the body.'] },
+        { t:'warn', x:'If someone is bleeding from these areas, press on the artery to slow the bleeding.' } ] },
+      { id:'bleeding', title:'Stop bleeding', blocks:[
+        { t:'img', src:'notes/firstaid2/pressure.jpg', cap:'Press hard on the wound with a clean pad', side:true },
+        { t:'steps', items:[{ x:'Stay calm and wear gloves if possible.' },{ x:'Use a clean cloth or bandage and press hard on the wound.' },{ x:'Raise the injured part above the level of the heart if possible.' },{ x:'Keep pressing until the bleeding stops or help arrives.' }] } ] },
+      { id:'fractures', title:'Fractures', blocks:[
+        { t:'p', x:'A fracture means a broken bone.' },
+        { t:'key', title:'Signs', items:['Pain and swelling','Cannot move the part','The area looks strange or bent'] },
+        { t:'steps', items:[{ img:'notes/firstaid2/xray-leg.jpg', x:'Leg' },{ img:'notes/firstaid2/xray-arm.jpg', x:'Arm' },{ img:'notes/firstaid2/xray-collarbone.jpg', x:'Collarbone' }] } ] },
+      { id:'arm', title:'Fractured arm or forearm', blocks:[
+        { t:'img', src:'notes/firstaid2/arm-sling.jpg', cap:'Arm supported in a sling', side:true },
+        { t:'p', x:'If someone breaks their arm or forearm:' },
+        { t:'steps', items:[{ x:'Do not move the arm.' },{ x:'Use a sling to hold the arm close to the body.' },{ x:'Put something soft (like a towel or scarf) under the arm.' },{ x:'Call for help or take them to a health centre.' }] } ] },
+      { id:'leg', title:'Fractured leg', blocks:[
+        { t:'img', src:'notes/firstaid2/leg-splint.jpg', cap:'Splints tied above and below the break', side:true },
+        { t:'p', x:'A broken leg must be kept still. You can tie splints — strong, straight things such as wood or cardboard — around the leg.' },
+        { t:'steps', items:[{ x:'Keep the leg still.' },{ x:'Tie splints (straight sticks or cardboard) around the leg.' },{ x:'Tie above and below the break.' },{ x:'Do not move the person unless it is necessary.' }] } ] },
+      { id:'collarbone', title:'Fractured collarbone', blocks:[
+        { t:'img', src:'notes/firstaid2/collarbone-sling.jpg', cap:'Sling with a broad bandage across the chest', side:true },
+        { t:'key', title:'Signs', items:['The shoulder drops','Pain when lifting the arm'] },
+        { t:'p', x:'Use a sling to support the arm and tie it across the chest.' },
+        { t:'steps', items:[{ x:'Make a sling, as for the arm.' },{ x:'Use a broad bandage to tie the arm gently to the body.' }] },
+        { t:'tip', x:'This keeps the arm from swinging and reduces movement.' } ] },
+      { id:'dontmove', title:'Why not move a fracture?', blocks:[
+        { t:'img', src:'notes/firstaid2/do-not-carry.jpg', cap:'Do not carry someone with a fracture like this', side:true },
+        { t:'p', x:'If we move a broken bone, we can cause more pain or more damage and make the injury worse. It might tear muscles or blood vessels.' },
+        { t:'p', x:'That is why we support the injury but do not move it.' },
+        { t:'warn', x:'Let a doctor handle it!' } ] },
+      { id:'stretcher', title:'Carrying a stretcher', blocks:[
+        { t:'p', x:'Sometimes we need to carry an injured person safely.' },
+        { t:'img', src:'notes/firstaid2/stretcher-2.jpg', cap:'Two-person carry', side:true },
+        { t:'key', title:'Two-person carry', items:['One at the head, one at the feet.','Bend your knees to lift and keep your back straight.','Count “1, 2, 3 — lift!” and move together.','Keep the stretcher flat and level.'] },
+        { t:'img', src:'notes/firstaid2/stretcher-4.jpg', cap:'Four-person carry' },
+        { t:'key', title:'Four-person carry', items:['One helper at each corner — two at the head, two at the feet.','Count together and lift in step.','Walk slowly and talk to each other to stay balanced.'] } ] },
+      { id:'tips', title:'Quick tips', blocks:[
+        { t:'key', items:['Put the strongest people at the head end — it needs more support.','Always lift with your legs, not your back.','If one person feels tired, stop and change over before carrying on.'] } ] } ] },
+
+  { id:'nature', level:'First Class', title:'Common Trees, Birds & Fish', icon:'leaf', color:'#2F7D32', summary:'Dhivehi names, scientific names and common English names of local trees, birds and fish.', keys:['tree','bird','fish','naturalist','nature','conservation'],
+    sections:[
+      { id:'trees', title:'Common trees', blocks:[
+        { t:'tip', x:'Learn each tree’s Dhivehi name, its scientific name (in brackets) and its common English names.' },
+        { t:'cards', items:[
+          { img:'notes/nature/fenfoah.jpg', img2:'notes/nature/fenfoah-2.jpg', name:'Fen foah ruh', sci:'Areca catechu', x:'Areca palm, betel nut palm, pinang' },
+          { img:'notes/nature/funa.jpg', img2:'notes/nature/funa-2.jpg', name:'Funa', sci:'Calophyllum inophyllum', x:'Alexandrian laurel, beauty leaf, dilo oil tree, Indian laurel, oil-nut tree' },
+          { img:'notes/nature/laami.jpg', img2:'notes/nature/laami-2.jpg', name:'Laami', sci:'Ficus amplissima', x:'Bat tree' },
+          { img:'notes/nature/burevi.jpg', img2:'notes/nature/burevi-2.jpg', name:'Burevi', sci:'Lumnitzera racemosa', x:'Black mangrove' },
+          { img:'notes/nature/sabudheli.jpg', img2:'notes/nature/sabudheli-2.jpg', name:'Sabudheli', sci:'Manilkara zapota', x:'Chiku, naseberry, sapota, sapodilla' },
+          { img:'notes/nature/muranga.jpg', img2:'notes/nature/muranga-2.jpg', name:'Muran’ga gas', sci:'Moringa oleifera', x:'Ben oil tree, drumstick tree, horseradish tree' },
+          { img:'notes/nature/kuredhi.jpg', img2:'notes/nature/kuredhi-2.jpg', name:'Kuredhi', sci:'Pemphis acidula', x:'Pemphis, shrubby coral pemphis, coastal iron wood' },
+          { img:'notes/nature/gulchampaa.jpg', img2:'notes/nature/gulchampaa-2.jpg', name:'Gulchampaa', sci:'Plumeria obtusa', x:'White champa, dwarf plumeria, white frangipani' },
+          { img:'notes/nature/udhdhandi.jpg', img2:'notes/nature/udhdhandi-2.jpg', name:'Udhdhan’di', sci:'Saccharum officinarum', x:'Sugarcane' },
+          { img:'notes/nature/magoo.jpg', img2:'notes/nature/magoo-2.jpg', name:'Magoo', sci:'Scaevola taccada', x:'Sea lettuce' },
+          { img:'notes/nature/kuhlha.jpg', img2:'notes/nature/kuhlha-2.jpg', name:'Kuhlha', sci:'Sonneratia caseolaris', x:'Red apple mangrove, mangrove apple' },
+          { img:'notes/nature/hirundhu.jpg', img2:'notes/nature/hirundhu-2.jpg', name:'Hirun’dhu', sci:'Thespesia populnea', x:'Indian tulip tree, portia tree, seaside mahoe' } ] } ] },
+      { id:'birds', title:'Common birds', blocks:[
+        { t:'cards', items:[
+          { img:'notes/nature/maakanaa.jpg', name:'Maakanaa', sci:'Ardea cinerea', x:'Grey heron' },
+          { img:'notes/nature/valla.jpg', name:'Valla', sci:'Sterna hirundo', x:'Common tern' },
+          { img:'notes/nature/maaranga.jpg', name:'Maaran’ga', sci:'Anous stolidus', x:'Brown noddy' },
+          { img:'notes/nature/kaalhu.jpg', name:'Kaalhu', sci:'Corvus splendens', x:'House crow, common crow' },
+          { img:'notes/nature/koveli.jpg', img2:'notes/nature/koveli-2.jpg', name:'Dhivehi koveli', sci:'Eudynamys scolopacea', x:'Asian koel (male dark, female spotted)' },
+          { img:'notes/nature/dhandifulhu.jpg', name:'Dhan’difulhu dhooni', sci:'Phaethon lepturus', x:'White-tailed tropicbird' },
+          { img:'notes/nature/kirudhooni.jpg', name:'Kirudhooni', sci:'Sterna sumatrana', x:'Black-naped tern' },
+          { img:'notes/nature/bodugaadhooni.jpg', name:'Bodugaadhooni', sci:'Sterna bergii', x:'Great crested tern' },
+          { img:'notes/nature/vaali.jpg', name:'Vaali', sci:'Sterna anaethetus', x:'Bridled tern' },
+          { img:'notes/nature/chonchon.jpg', name:'Chon chon ilolhi', sci:'Tringa nebularia', x:'Common greenshank' },
+          { img:'notes/nature/rathafai.jpg', name:'Rathafai', sci:'Arenaria interpres', x:'Ruddy turnstone' },
+          { img:'notes/nature/hoagulha.jpg', name:'Dhivehi hoagulhaa', sci:'Puffinus lherminieri', x:'Audubon’s shearwater' } ] } ] },
+      { id:'fish', title:'Common fish', blocks:[
+        { t:'cards', items:[
+          { img:'notes/nature/fiyala.jpg', name:'Fiyala', sci:'Coryphaena hippurus', x:'Common dolphinfish' },
+          { img:'notes/nature/mudahandhi.jpg', name:'Muda han’dhi', sci:'Caranx ignobilis', x:'Giant trevally' },
+          { img:'notes/nature/maniyaa.jpg', name:'Maniyaa mas', sci:'Elagatis bipinnulata', x:'Rainbow runner' },
+          { img:'notes/nature/mushimas.jpg', name:'Mushimas', sci:'Selar crumenophthalmus', x:'Bigeye scad' },
+          { img:'notes/nature/giulhu.jpg', name:'Giulhu', sci:'Aprion virescens', x:'Green jobfish' },
+          { img:'notes/nature/raiymas.jpg', name:'Raiymas', sci:'Lutjanus bohar', x:'Two-spot red snapper' },
+          { img:'notes/nature/filolhu.jpg', name:'Filolhu', sci:'Lutjanus monostigma', x:'One-spot snapper' },
+          { img:'notes/nature/kandu.jpg', name:'Kan’du guruva', sci:'Plectorhinchus vittatus', x:'Oriental sweetlips' },
+          { img:'notes/nature/latti.jpg', name:'Latti', sci:'Euthynnus affinis', x:'Kawakawa' },
+          { img:'notes/nature/kurumas.jpg', name:'Kurumas', sci:'Acanthocybium solandri', x:'Wahoo' },
+          { img:'notes/nature/kattafulhi.jpg', name:'Kattafulhi', sci:'Kuhlia mugil', x:'Barred flagtail' },
+          { img:'notes/nature/kirulhiya.jpg', name:'Kirulhiya mas', sci:'Kyphosus cinerascens', x:'Snubnose rudderfish, blue sea chub' } ] } ] },
+      { id:'recall', title:'Let’s recall what we learned', blocks:[
+        { t:'key', title:'Test yourself', items:['Cover the names and identify each tree, bird and fish from its picture.','Give the Dhivehi name when you hear the English name, and the other way round.','Say where on your island you have seen each one.'] } ] } ] }
 ];
