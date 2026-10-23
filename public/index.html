@@ -857,7 +857,7 @@ const ST_LABEL = { P:'Present', L:'Late', A:'Absent', E:'Excused' };
 const EVENT_TYPES = {
   meeting:{label:'Meeting', color:'#0977B6'}, camp:{label:'Camp', color:'#128944'}, hike:{label:'Hike', color:'#4A9A6E'},
   service:{label:'Service project', color:'#3E7FAE'}, competition:{label:'Competition', color:'#A65446'},
-  ceremony:{label:'Ceremony', color:'#0A5C8F'}, holiday:{label:'Holiday', color:'#7D8F9C'} };
+  ceremony:{label:'Ceremony', color:'#0A5C8F'}, holiday:{label:'Holiday', color:'#7D8F9C'}, special:{label:'Special day', color:'#C2410C'} };
 const BADGE_CATS = { collective:'Collective Achievement', pursuit:'Pursuit', service:'Service', interest:'Interest' };
 const catLabel = c => BADGE_CATS[c] || 'Other';
 /* Badge picture (from the syllabus) or, for custom badges, the chosen icon. */
@@ -1138,7 +1138,7 @@ function upcoming(n=5, days=60){ return expandEvents(TODAY(), iso(addDays(new Da
 /* What's next for the dashboard: the earliest upcoming calendar event or session plan (a plan wins a tie on the same day). */
 function nextUp(){ const t = TODAY(), n = new Date(), hm = `${pad(n.getHours())}:${pad(n.getMinutes())}`;
   const done = (date, end) => date===t && end && end <= hm;
-  const ev = expandEvents(t, iso(addDays(n, 120))).filter(e => e.type!=='holiday' && !done(e.occ, e.end || e.start))[0];
+  const ev = expandEvents(t, iso(addDays(n, 120))).filter(e => e.type!=='holiday' && e.type!=='special' && !done(e.occ, e.end || e.start))[0];
   const ss = S.sessions.filter(x => !x.template && x.date >= t && !done(x.date, x.end || x.time)).sort(by('date'))[0];
   if(ss && (!ev || ss.date <= ev.occ)) return { kind:'session', title:ss.title, date:ss.date, time:ss.time, where:ss.location, id:ss.id };
   if(ev) return { kind:'event', title:ev.title, date:ev.occ, time:ev.start, where:ev.location, id:ev.id, type:ev.type, slip:ev.permission };
@@ -1297,6 +1297,24 @@ try { collapsed = localStorage.getItem('tm_collapsed')==='1'; } catch(e){}
 function applyTheme(){ let t = 'system'; try { t = localStorage.getItem('tm_theme') || 'system'; } catch(e){} if(t==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); return t; }
 function isDark(){ const t = document.documentElement.getAttribute('data-theme'); return t ? t==='dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
 
+/* School calendar special days (MoE 2026 → academic year 2027), added once. Holidays cancel the weekly meeting; special days are only marked. */
+const SCHOOL_DAYS = [
+  ['sd26_teachers','Teachers’ Day','special','2026-10-05'],
+  ['sd26_transfer','School Transfer Period 2 begins','special','2026-10-18'],
+  ['sd26_transfer_end','School Transfer Period 2 ends','special','2026-11-17'],
+  ['sd26_victory','Victory Day','holiday','2026-11-03'],
+  ['sd26_republic','Republic Day','holiday','2026-11-11'],
+  ['sd26_pdday','Professional Development Day','holiday','2026-11-12'],
+  ['sd26_exam2','Second Term Exam','special','2026-12-01','2026-12-10'],
+  ['sd26_endt2','End of Second Term 2026','special','2026-12-17'],
+  ['sd26_hol2','Second Term Holidays','holiday','2026-12-18','2027-01-12'],
+  ['sd27_newyear','New Year 2027','holiday','2027-01-01'],
+  ['sd27_teachrep','Teachers’ Reporting Day 2027','special','2027-01-13'],
+  ['sd27_acad','Beginning of Academic Year 2027','special','2027-01-17'] ];
+function schoolDays(){ if(!S?.settings || S.settings.schoolDays2026 || !['admin','leader'].includes(ME?.role)) return; let n = 0;
+  SCHOOL_DAYS.forEach(([id, title, type, date, endDate]) => { if(S.events.some(e => e.id===id)) return; n++;
+    S.events.push({ id, title, type, date, endDate:endDate||'', start:'', end:'', location:'', leaders:[], patrols:['all'], permission:false, equipment:'', recur:'none', remind:false, notes:'From the school calendar', skip:[] }); });
+  S.settings.schoolDays2026 = true; if(n) audit(`Added ${n} school calendar days (Oct 2026 – Jan 2027)`); save(); }
 /* The troop uses two terms. Older portals were set up with three default terms: fold Term 3 into Term 2 once. */
 function SYLLABUS_BADGES(){ const L = window.BADGE_SYLLABUS; return L && L.length ? JSON.parse(JSON.stringify(L)).map(b => ({ icon:'medal', ...b })) : null; }
 /* Existing portals switch once to the 43 syllabus badges. Old badges that someone has earned or started are kept (shown under Other);
@@ -1310,7 +1328,7 @@ function syllabusBadges(){ const L = SYLLABUS_BADGES(); if(!L || !S?.settings ||
   S.badges = [...L, ...keep]; S.settings.badgeSet = '2006'; audit(`Loaded the ${L.length} proficiency badges from the badge syllabus`); save(); }
 function twoTerms(){ syllabusBadges(); const t = S?.settings?.terms; if(!t || S.settings.termsSet || t.length!==3 || ME?.role!=='admin' || t.map(x => x.name).join()!=='Term 1,Term 2,Term 3') return;
   S.settings.terms = [t[0], { name:'Term 2', start:t[1].start, end:t[2].end }]; S.settings.termsSet = true; audit('Changed to two terms (Term 3 merged into Term 2)'); save(); }
-function renderApp(){ twoTerms();
+function renderApp(){ twoTerms(); schoolDays();
   if(!ME){ $('#app').innerHTML = loginView(); return; }
   const nav = navList();
   const bn = isScout() ? [['me','Me','users'],['calendar','Calendar','calendar'],['gallery','Photos','image'],['notifications','Alerts','bell']] : [['dashboard','Home','compass'],['attendance','Attendance','clipboard'],['scouts','Scouts','users'],['calendar','Calendar','calendar']];
@@ -1346,7 +1364,7 @@ function updateChrome(){
   $$('[data-bnav]').forEach(b => b.classList.toggle('on', b.dataset.bnav===top || (!inBn && b.dataset.bnav==='more')));
   const u = unread(); $$('[data-unread]').forEach(el => { el.textContent = u > 9 ? '9+' : u; el.classList.toggle('hide', !u); });
 }
-function renderMain(){ twoTerms();
+function renderMain(){ twoTerms(); schoolDays();
   if(isScout() && !['me','calendar','gallery','album','notifications','highlights','notes','note'].includes(R.route)) R.route = 'me';
   if(!isScout() && R.route==='me') R.route = 'dashboard';
   const v = VIEWS[R.route] || VIEWS.dashboard;
@@ -2323,7 +2341,7 @@ const evBtn = e => `<button class="ev" style="background:${EVENT_TYPES[e.type].c
 /* Month view: Sunday-first weeks (Friday, the public holiday, in red) with a week-of-term column, tinted event tags, today line, selectable days. */
 function termWeek(first){ const terms = S.settings.terms || []; for(let i=0;i<terms.length;i++){ const t = terms[i]; const last = iso(addDays(first, 6));
     if(last >= t.start && iso(first) <= t.end){ const s = pd(t.start); const sFirst = addDays(s, -s.getDay()); return { w:Math.round((first - sFirst)/(7*86400000))+1, t:i+1 }; } } return null; }
-const needsAction = e => e.permission || !(e.leaders||[]).length;
+const needsAction = e => !['holiday','special'].includes(e.type) && (e.permission || !(e.leaders||[]).length);
 const evTag = e => { const c = EVENT_TYPES[e.type].color; return `<button class="mev" style="--ec:${c}" data-a="openEvent" data-id="${e.id}" data-occ="${e.occ}" title="${esc(e.title)}">${needsAction(e)?`<span class="mev-flag" title="${e.permission?'Permission slip required':'No leader assigned'}"></span>`:''}${e.start?`<span class="mev-t">${fmtT(e.start).replace(':00','').replace(' ','').toLowerCase()}</span>`:''}<span class="mev-n">${esc(e.title)}</span></button>`; };
 function calMonth(cur){ const first = new Date(cur.getFullYear(), cur.getMonth(), 1); const start = addDays(first, -first.getDay());   // weeks start on Sunday
   const last = new Date(cur.getFullYear(), cur.getMonth()+1, 0); const weeks = Math.ceil((first.getDay() + last.getDate())/7);
@@ -2336,7 +2354,7 @@ function calMonth(cur){ const first = new Date(cur.getFullYear(), cur.getMonth()
         ${de.slice(0,3).map(evTag).join('')}${de.length>3?`<span class="small muted" style="padding-left:4px">+${de.length-3} more</span>`:''}</div>`; }).join('')}</div>`; }).join('')}</div>`; }
 /* Right-hand panel: today (or the picked day) and the next events. */
 function calSide(){ const t = TODAY(), day = CAL.sel || t, d = pd(day); const de = calEvents(day, day); const next = calEvents(iso(addDays(pd(t),1)), iso(addDays(pd(t),90))).slice(0,3);
-  const card = e => `<button class="side-ev" style="--ec:${EVENT_TYPES[e.type].color}" data-a="openEvent" data-id="${e.id}" data-occ="${e.occ}"><b>${esc(e.title)}</b><span>${fmtD(e.occ,'dow')}${e.start?' · '+fmtT(e.start)+(e.end?' – '+fmtT(e.end):''):' · All day'}</span>${e.location||e.permission?`<span>${e.location?ic('pin','sm')+' '+esc(e.location):''}${e.location&&e.permission?' · ':''}${e.permission?ic('file','sm')+' Permission slip':''}</span>`:''}${!(e.leaders||[]).length?`<span style="color:var(--warn)">${ic('alert','sm')} No leader assigned</span>`:''}</button>`;
+  const card = e => `<button class="side-ev" style="--ec:${EVENT_TYPES[e.type].color}" data-a="openEvent" data-id="${e.id}" data-occ="${e.occ}"><b>${esc(e.title)}</b><span>${fmtD(e.occ,'dow')}${e.start?' · '+fmtT(e.start)+(e.end?' – '+fmtT(e.end):''):' · All day'}</span>${e.location||e.permission?`<span>${e.location?ic('pin','sm')+' '+esc(e.location):''}${e.location&&e.permission?' · ':''}${e.permission?ic('file','sm')+' Permission slip':''}</span>`:''}${!(e.leaders||[]).length && !['holiday','special'].includes(e.type)?`<span style="color:var(--warn)">${ic('alert','sm')} No leader assigned</span>`:''}</button>`;
   return `<aside class="card cal-side"><div class="eyebrow">${day===t?'Today':'Selected day'}</div>
     <div class="row nw" style="gap:12px;align-items:flex-end;margin:6px 0 4px"><span class="cal-big">${d.getDate()}</span><div><b>${DOWL[d.getDay()]}</b><div class="small muted">${MONL[d.getMonth()]} ${d.getFullYear()}</div></div></div>
     ${de.length ? de.map(card).join('') : `<p class="small muted" style="margin:6px 0 12px">No events ${day===t?'today':'on this day'}.</p>`}
