@@ -142,6 +142,31 @@ button.sl-r{cursor:pointer}button.sl-r:hover{background:var(--surface-2)}button.
 .sl-att i{display:block;width:64px;height:6px;border-radius:9px;background:var(--line-2);overflow:hidden}.sl-att u{display:block;height:100%;border-radius:9px}
 .sl-r .c-show{display:none}.sl-r .gset{display:flex;gap:6px;justify-content:flex-end}
 @media (max-width:900px){ .sstat{grid-template-columns:repeat(3,minmax(0,1fr))} .sl-r{grid-template-columns:34px minmax(0,1fr) auto;gap:10px;padding:10px 12px} .sl-r .c-hide{display:none} .sl-r .c-show{display:inline} .sl-att i{width:44px} }
+/* Scout Notes hub: banner + picture shelves */
+.nhero{position:relative;overflow:hidden;border-radius:22px;padding:28px 30px;color:#fff;background:linear-gradient(120deg,#0A5C8F,#0D78B6 55%,#128944);margin-bottom:22px}
+.nhero .eyebrow{color:#BFE3F7}.nhero h1{color:#fff;font-size:clamp(1.5rem,3vw,2.1rem);margin:4px 0 6px}.nhero p{margin:0 0 16px;color:#DCEEF8;max-width:60ch}
+.nhero-art{position:absolute;right:-30px;top:-30px;opacity:.12}.nhero-art svg{width:240px;height:240px}
+.nhero-s{display:flex;align-items:center;gap:10px;max-width:560px;background:#fff;color:var(--ink-2);border-radius:14px;padding:0 14px;box-shadow:0 10px 30px -12px rgba(0,0,0,.4)}
+.nhero-s input{flex:1;border:0;outline:0;font:inherit;font-size:1rem;padding:13px 0;background:none;color:#13283A;min-width:0}
+.nhero-q{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.nhero-q button{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:99px;padding:6px 13px;font:inherit;font-size:.82rem;font-weight:600;cursor:pointer}
+.nhero-q button:hover{background:rgba(255,255,255,.26)}.nhero-q button.on{background:#fff;color:#0A5C8F}
+.nshelf{margin-bottom:24px}.nshelf-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}.nshelf-h h2{margin:0;font-size:1.25rem}
+.nshelf-h .dot{width:12px;height:12px;border-radius:4px;flex:none}.nshelf-all{margin-left:auto;border:0;background:none;color:var(--primary);font:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
+.nrail{display:grid;grid-auto-flow:column;grid-auto-columns:220px;gap:14px;overflow-x:auto;padding:2px 2px 12px;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.nrail>*{scroll-snap-align:start}
+.ngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.ncv{display:flex;flex-direction:column;text-align:left;border-radius:18px;overflow:hidden;background:var(--surface);border:1px solid var(--line);box-shadow:0 14px 30px -24px rgba(0,0,0,.5);cursor:pointer;padding:0;font:inherit;color:inherit;transition:transform .12s,box-shadow .12s}
+.ncv:hover{transform:translateY(-3px);box-shadow:0 18px 34px -22px rgba(0,0,0,.55)}
+.ncv-im{height:130px;display:grid;place-items:center;position:relative;overflow:hidden;background:#fff;border-bottom:4px solid var(--nc)}
+.ncv-im img{width:100%;height:100%;object-fit:contain;padding:6px}
+.ncv-ic{width:100%;height:100%;display:grid;place-items:center;background:color-mix(in srgb,var(--nc) 14%,#fff);color:var(--nc)}.ncv-ic svg{width:44px;height:44px}
+.ncv-tag{position:absolute;left:10px;top:10px;background:var(--nc);color:#fff;font-size:.64rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:99px;padding:3px 9px}
+.ncv-tx{padding:12px 14px;display:flex;flex-direction:column;gap:3px}.ncv-tx b{font-size:.95rem;line-height:1.25}
+.ncv-tx>span{font-size:.78rem;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ncv-lv{font-style:normal;font-size:.66rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.ncv-secs{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.ncv-secs .note-chip{font-size:.72rem;padding:3px 8px}
+.nsh-h{font-weight:700;margin-bottom:12px}
+@media (max-width:640px){ .nhero{padding:22px 18px;border-radius:18px} .nrail{grid-auto-columns:170px;gap:10px} .ncv-im{height:110px} .ngrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px} }
 </style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
@@ -2726,12 +2751,29 @@ const noteMins = n => Math.max(1, Math.round(JSON.stringify(n.sections).length /
 function noteChip(n, sec){ return `<button type="button" class="note-chip" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}"${sec?` data-sec="${sec}"`:''}>${ic(n.icon,'sm')} ${esc(n.title)}</button>`; }
 const noteLevel = n => n.level || 'Extra reading';
 const NOTE_LEVELS = [['Tenderfoot','Study notes for Tenderfoot from the 8th Shaviyani Scout Group.'],['Second Class','Study notes for Second Class from the 8th Shaviyani Scout Group.'],['First Class','Study notes for First Class from the 8th Shaviyani Scout Group.'],['Extra reading','']];
-VIEWS.notes = () => `${pageH('Study notes', 'Scout Notes', '')}
-  <p class="muted" style="margin:-8px 0 16px;max-width:70ch">Open a topic to read it, or jump straight to a section.</p>
-  ${NOTE_LEVELS.map(([lv, about]) => { const ns = NOTES().filter(n => noteLevel(n)===lv); return ns.length ? `<div class="note-lv"><h2>${esc(lv)} <span class="chip">${ns.length}</span></h2>${about ? `<p class="muted small">${esc(about)}</p>` : ''}</div>
-  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:22px">${ns.map(n => `<button class="card note-card" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}">
-    <span class="note-ic">${ic(n.icon,'lg')}</span><h2>${esc(n.title)}</h2><p class="muted small">${esc(n.summary)}</p>
-    <div class="row small" style="gap:12px;margin-top:auto"><span><b>${n.sections.length}</b> section${n.sections.length===1?'':'s'}</span>${n.preview?'<span class="chip">Preview</span>':`<span>${noteMins(n)} min read</span>`}</div></button>`).join('')}</div>` : ''; }).join('')}`;
+const NOTE_LV_COL = { 'Tenderfoot':'#6B21A8', 'Second Class':'#0D78B6', 'First Class':'#128944', 'Extra reading':'#B45309' };
+const NOTE_QUICK = [['knot','Knots'],['first aid','First aid'],['compass','Compass'],['fish','Fish & birds'],['whistle','Whistle calls']];
+/* first picture inside a topic, used as its cover */
+const noteCover = n => { if(n._cover !== undefined) return n._cover; for(const s of n.sections) for(const b of s.blocks||[]){ const src = b.t==='img' ? b.src : b.t==='cards' ? b.items[0]?.img : b.t==='steps' ? b.items.find(i => i.img)?.img : ''; if(src) return n._cover = src; } return n._cover = ''; };
+function noteCoverCard(n, extra=''){ const img = noteCover(n);
+  return `<button class="ncv" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}"><span class="ncv-im">${img ? `<img src="${img}" alt="" loading="lazy">` : `<span class="ncv-ic">${ic(n.icon,'lg')}</span>`}<span class="ncv-tag">${n.sections.length} section${n.sections.length===1?'':'s'}</span></span>
+    <span class="ncv-tx"><b>${esc(n.title)}</b><span>${esc(n.summary)}</span>${extra}</span></button>`; }
+function noteResults(q){ q = q.trim().toLowerCase(); if(!q) return '';
+  const hits = NOTES().map(n => { const secs = n.sections.filter(s => s.title.toLowerCase().includes(q)); const topic = (n.title+' '+n.summary).toLowerCase().includes(q); return (topic || secs.length) ? [n, secs] : null; }).filter(Boolean).sort((a,b) => NOTE_LEVELS.findIndex(l => l[0]===noteLevel(a[0])) - NOTE_LEVELS.findIndex(l => l[0]===noteLevel(b[0])));
+  if(!hits.length) return `<div class="card" style="padding:28px;text-align:center"><b>No notes match “${esc(q)}”.</b><div class="muted small" style="margin-top:4px">Try another word, like “bowline”, “compass” or “nose bleed”.</div></div>`;
+  return `<div class="nsh-h">${hits.length} topic${hits.length===1?'':'s'} match “${esc(q)}”</div><div class="ngrid">${hits.map(([n, secs]) => noteCoverCard(n, `<em class="ncv-lv" style="color:${NOTE_LV_COL[noteLevel(n)]}">${esc(noteLevel(n))}</em>${secs.length ? `<span class="ncv-secs">${secs.slice(0,4).map(s => `<span class="note-chip" style="--nc:${n.color}" data-a="go" data-r="note" data-id="${n.id}" data-q-sec="${s.id}">${esc(s.title)}</span>`).join('')}</span>` : ''}`)).join('')}</div>`; }
+VIEWS.notes = () => { const q = R.q.nq || '', lvAll = R.q.lv || ''; const all = NOTES();
+  return `<div class="nhero"><span class="nhero-art" aria-hidden="true">${ic('compass','lg')}</span><div class="eyebrow">Scout Notes · ${esc(S.settings.groupName)}</div><h1>What do you want to learn today?</h1>
+    <p>${all.length} study topics from Tenderfoot to First Class — knots, first aid, nature, navigation and more.</p>
+    <div class="nhero-s">${ic('search')}<input type="search" id="nq" placeholder="Search notes, knots, birds, signals…" value="${esc(q)}" data-i="noteFind" aria-label="Search notes"></div>
+    <div class="nhero-q">${NOTE_QUICK.map(([k,l]) => `<button class="${q===k?'on':''}" data-a="noteQuick" data-k="${k}">${esc(l)}</button>`).join('')}</div></div>
+  <div id="note-res">${q ? noteResults(q) : noteShelves(lvAll)}</div>`; };
+function noteShelves(lvAll){ return NOTE_LEVELS.map(([lv]) => { const ns = NOTES().filter(n => noteLevel(n)===lv); if(!ns.length || (lvAll && lvAll!==lv)) return ''; const open = lvAll===lv;
+    return `<section class="nshelf"><div class="nshelf-h"><span class="dot" style="background:${NOTE_LV_COL[lv]}"></span><h2>${esc(lv)}</h2><span class="muted small">${ns.length} topics</span><button class="nshelf-all" data-a="noteLevelAll" data-k="${open?'':lv}">${open?'← All levels':'See all →'}</button></div>
+    <div class="${open?'ngrid':'nrail'}">${ns.map(n => noteCoverCard(n)).join('')}</div></section>`; }).join(''); }
+I.noteFind = el => { R.q.nq = el.value; $('#note-res').innerHTML = el.value.trim() ? noteResults(el.value) : noteShelves(R.q.lv||''); $$('.nhero-q button').forEach(b => b.classList.toggle('on', b.dataset.k===el.value)); };
+A.noteQuick = el => { const v = R.q.nq===el.dataset.k ? '' : el.dataset.k; const f = $('#nq'); f.value = v; I.noteFind(f); };
+A.noteLevelAll = el => { R.q.lv = el.dataset.k; renderMain(); window.scrollTo(0,0); };
 function noteBlock(b){
   if(b.t==='p') return `<p>${esc(b.x)}</p>`;
   if(b.t==='tip') return `<div class="nb tip">${ic('star','sm')}<span>${esc(b.x)}</span></div>`;
