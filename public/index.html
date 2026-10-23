@@ -13,7 +13,43 @@
 <link rel="icon" href="icons/favicon.png" type="image/png">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}/* leader hierarchy: compass dial */
+.org{container-type:inline-size}
+.org-stage{--R:min(48cqi,190px)}
+.org-dial{position:relative;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:34px auto}
+.org-dial svg{position:absolute;inset:0;width:100%;height:100%}
+.org-dial .face{fill:var(--surface);stroke:var(--line);stroke-width:2}.org-dial .inner{fill:none;stroke:var(--line-2);stroke-width:1.5}
+.org-dial line{stroke:var(--line);stroke-width:1.5}.org-dial line.mj{stroke:var(--primary);stroke-width:3}
+.org-dial text{font-family:"Roboto Slab",serif;font-weight:700;font-size:17px;fill:var(--ink-2);text-anchor:middle;opacity:.7}.org-dial text.n{fill:var(--primary);opacity:1}
+.org-logo{position:absolute;left:50%;top:50%;width:64%;height:64%;transform:translate(-50%,-50%);object-fit:contain;border-radius:50%;opacity:.13;pointer-events:none}
+.org-med{position:absolute;left:calc(50% + var(--sx)*var(--R)*.98);top:calc(50% + var(--sy)*var(--R)*.98);transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:var(--c);display:grid;place-items:center;font-size:1.25rem;border:3px solid var(--surface);box-shadow:0 0 0 2px var(--c),0 8px 18px -8px var(--c);z-index:2}
+.org-med small{position:absolute;bottom:-7px;right:-7px;background:var(--surface);color:var(--c);font-size:.64rem;font-weight:800;border-radius:99px;padding:1px 6px;box-shadow:0 0 0 1.5px var(--c)}
+.org-stack{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;width:min(236px,calc(var(--R)*1.3));z-index:1}
+.org-node{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:7px 10px 7px 7px;width:100%;box-shadow:0 10px 22px -16px rgba(0,0,0,.4);min-width:0}
+.org-node>div{min-width:0}.org-node b{display:block;font-size:.88rem;line-height:1.25;overflow-wrap:anywhere}
+.org-r{font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.org-node.gl{background:linear-gradient(135deg,var(--primary),#0A5E8F);color:#fff;border:0}.org-node.gl .org-r{color:#BFE3F7}.org-node.gl .org-link{color:#fff}
+.org-node.lt{border-left:5px solid var(--ok)}.org-node.lt .org-r{color:var(--ok)}
+.org-node.li{border-left:5px solid #E0A030}.org-node.li .org-r{color:#B7791F}
+.org-avs{display:flex;flex:none}.org-avs .av+.av{margin-left:-12px}.org-avs .av{border:2px solid var(--surface)}
+.org-vl{width:2px;height:10px;background:var(--line)}
+.org-link{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left}.org-link:hover{text-decoration:underline}
+.org-teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.org-team{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;padding:10px 12px;box-shadow:0 12px 26px -20px rgba(0,0,0,.45)}
+.org-team h4{margin:0 0 2px;font-size:.9rem;color:var(--c);display:flex;gap:6px;align-items:flex-start}
+.org-ti{flex:none}
+.org-du{color:var(--ink-2);font-size:.72rem;margin-bottom:4px}
+.org-m{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.84rem;font-weight:600;border-top:1px solid var(--line-2)}
+.org-stage .org-node{padding:5px 8px 5px 5px;gap:7px}.org-stage .org-node b{font-size:.8rem}.org-stage .org-r{font-size:.54rem}
+.org-ei{width:34px;height:34px;border-radius:10px;background:var(--wash);display:grid;place-items:center;font-size:1.1rem;flex:none}
+@container (min-width:1000px){
+  .org-stage{--R:260px;position:relative;height:calc(var(--R)*2 + 280px)}
+  .org-dial{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0}
+  .org-teams{display:block;position:absolute;inset:0;pointer-events:none}
+  .org-team{position:absolute;width:220px;left:calc(50% + var(--cx));top:calc(50% + var(--cy));transform:translate(-50%,-50%);pointer-events:auto}
+  .org-stage .org-node{padding:7px 10px 7px 7px;gap:9px}.org-stage .org-node b{font-size:.93rem}.org-stage .org-r{font-size:.6rem}
+}
+</style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
 <script src="notes/notes.js"></script>
@@ -1629,13 +1665,73 @@ A.profilePDF = el => withPDF(async () => { const s = scout(el.dataset.id); const
   await pdfSave(ctx, `${s.sid}-${s.first}-${s.last}.pdf`.replace(/\s+/g,'-')); });
 
 /* ---- leaders ---- */
-VIEWS.leaders = () => { const list = S.users.filter(u => u.role!=='scout');
-  return `${pageH('Group', 'Leaders', ME.role==='admin' ? `<button class="btn primary" data-a="addUser">${ic('plus','sm')} Add user</button>` : '')}
-  <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">${list.map(u => { const ps = S.patrols.filter(p => p.leaders.includes(u.id));
+/* ---- leader hierarchy (compass dial) ---- */
+const ORG_COLORS = ['#0D78B6','#128944','#7C3AED','#C2410C','#B5483F','#0E7490','#B7791F','#6B5B7A'];
+function orgDefault(){ return { lead:[
+    { role:'Group Leader', m:['n:Ibrahim Adhil'] }, { role:'LT in charge', m:['n:Ibrahim Azim'] }, { role:'Leaders in charge', m:['n:Hussain Madhih'] } ],
+  teams:[
+    { id:uid('t'), name:'Attendance keeper', icon:'✅', color:'#0D78B6', desc:'Takes the register every meeting', m:['n:Aishath Mubeena','n:Fathimath Nawar'] },
+    { id:uid('t'), name:'Badge work', icon:'🎖️', color:'#128944', desc:'Checks and awards badges', m:['n:Abdulla Zaeem','n:Hussain Madhih'] },
+    { id:uid('t'), name:'Logbook, Notes, Notice & Certificates', icon:'📒', color:'#7C3AED', desc:'Records, notices and certificates', m:['n:Abdulla Zaeem'] },
+    { id:uid('t'), name:'Syllabus checker', icon:'📋', color:'#C2410C', desc:'Signs off syllabus items', m:['n:Amsoodha Ibrahim','n:Aminath Firasha'] },
+    { id:uid('t'), name:'Activity planner', icon:'🧭', color:'#B5483F', desc:'Plans sessions and outings', m:['n:Mohamed Afrah','n:Fathimath Nisreen'] } ] }; }
+function orgOf(){ if(!S.settings.org) S.settings.org = orgDefault(); return S.settings.org; }
+/* a member is a leader account id, or 'n:Name' for someone without an account (matched to an account by name when one exists) */
+function orgPerson(ref){ if(String(ref).startsWith('n:')){ const n = ref.slice(2).trim(); return S.users.find(u => u.role!=='scout' && u.name.trim().toLowerCase()===n.toLowerCase()) || { name:n }; } return user(ref) || null; }
+function orgPeople(refs){ return (refs||[]).map(orgPerson).filter(Boolean); }
+function orgName(p){ return p.id ? `<button class="org-link" data-a="go" data-r="leader" data-id="${p.id}">${esc(p.name)}</button>` : esc(p.name); }
+
+function orgDial(){ const o = orgOf(), n = o.teams.length;
+  const logo = S.settings.logo && imgData(S.settings.logo) ? imgData(S.settings.logo) : DEFAULT_LOGO;
+  const ticks = []; for(let i=0;i<72;i++){ const a = i*5*Math.PI/180, l = i%18===0 ? 22 : i%2 ? 8 : 14, r = 294;
+    ticks.push(`<line x1="${(300+r*Math.sin(a)).toFixed(1)}" y1="${(300-r*Math.cos(a)).toFixed(1)}" x2="${(300+(r-l)*Math.sin(a)).toFixed(1)}" y2="${(300-(r-l)*Math.cos(a)).toFixed(1)}" class="${i%18===0?'mj':''}"/>`); }
+  const nesw = [['N',0],['E',90],['S',180],['W',270]].map(([l,d]) => { const a = d*Math.PI/180; return `<text x="${(300+252*Math.sin(a)).toFixed(1)}" y="${(306-252*Math.cos(a)).toFixed(1)}" class="${l==='N'?'n':''}">${l}</text>`; }).join('');
+  const R = 260;  // dial radius on wide screens; cards sit outside it
+  const cards = o.teams.map((t,i) => { const a = i*2*Math.PI/Math.max(n,1), sx = Math.sin(a), cy = -Math.cos(a); let x, y;
+    if(Math.abs(sx) < .3){ x = R*.6+150; y = cy*(R+10); } else { x = Math.sign(sx)*Math.max(Math.abs(sx)*(R+140), R*.6+150); y = cy*(R+50); }
+    const ms = orgPeople(t.m);
+    return { t, sx, cy, ms, card:`<div class="org-team" style="--c:${t.color};--cx:${x.toFixed(0)}px;--cy:${y.toFixed(0)}px"><h4>${t.icon?`<span class="org-ti">${esc(t.icon)}</span>`:''}${esc(t.name)}</h4>${t.desc?`<div class="org-du">${esc(t.desc)}</div>`:''}
+      ${ms.map(p => `<div class="org-m">${av(p,28)}${orgName(p)}</div>`).join('') || '<div class="org-m muted small">No one assigned yet</div>'}</div>` }; });
+  return `<div class="org"><div class="org-stage">
+    <div class="org-dial">
+      <svg viewBox="0 0 600 600" aria-hidden="true"><circle cx="300" cy="300" r="294" class="face"/><circle cx="300" cy="300" r="254" class="inner"/>${ticks.join('')}${nesw}</svg>
+      <img class="org-logo" src="${logo}" alt="">
+      ${cards.map(c => `<span class="org-med" style="--c:${c.t.color};--sx:${c.sx.toFixed(3)};--sy:${c.cy.toFixed(3)}" title="${esc(c.t.name)}">${esc(c.t.icon||'⚜️')}<small>${c.ms.length}</small></span>`).join('')}
+      <div class="org-stack">${o.lead.map((l,i) => { const ps = orgPeople(l.m);
+        return `${i?'<span class="org-vl"></span>':''}<div class="org-node ${['gl','lt','li'][i]||'li'}"><span class="org-avs">${ps.slice(0,3).map(p => av(p, i?34:42)).join('') || av({name:'?'}, i?34:42)}</span><div><span class="org-r">${esc(l.role)}</span><b>${ps.map(orgName).join(' · ') || '<span class="muted">Not set</span>'}</b></div></div>`; }).join('')}</div>
+    </div>
+    <div class="org-teams">${cards.map(c => c.card).join('')}</div>
+  </div></div>`; }
+
+VIEWS.leaders = () => { const list = S.users.filter(u => u.role!=='scout'); const lv = R.q.lv || 'org';
+  return `${pageH('Group', 'Leaders', `<div class="seg"><button class="${lv==='org'?'on':''}" data-a="go" data-r="leaders" data-q-lv="org">Hierarchy</button><button class="${lv==='list'?'on':''}" data-a="go" data-r="leaders" data-q-lv="list">List</button></div>${ME.role==='admin' ? (lv==='org' ? `<button class="btn primary" data-a="orgEdit">${ic('edit','sm')} Edit roles</button>` : `<button class="btn primary" data-a="addUser">${ic('plus','sm')} Add user</button>`) : ''}`)}
+  ${lv==='org' ? orgDial() : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">${list.map(u => { const ps = S.patrols.filter(p => p.leaders.includes(u.id));
     return `<button class="card" style="text-align:left;cursor:pointer" data-a="go" data-r="leader" data-id="${u.id}"><div class="row nw">${av(u,56)}<div style="min-width:0"><h3>${esc(u.name)}</h3><div class="small muted">${ROLES[u.role]}${u.disabled?' · disabled':''}${u.sample?' · sample profile, cannot sign in':''}</div></div></div>
     <div class="row" style="margin-top:12px;gap:6px">${ps.map(p => `<span class="chip">${pDot(p)} ${esc(p.name)}</span>`).join('') || '<span class="small muted">No patrols assigned</span>'}</div>
     <div class="small muted" style="margin-top:10px">${u.qualifications.length} qualifications · ${S.scouts.filter(s => ps.some(p=>p.id===s.patrol)).length} scouts</div></button>`; }).join('')}</div>
-  ${ME.role==='admin' ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Scout accounts</h2><span class="small muted">Read-only access for scouts</span></div><div class="list">${S.users.filter(u=>u.role==='scout').map(u => `<div class="li">${av(scout(u.scoutId)||u,36)}<div class="grow"><b>${esc(u.name)}</b><div class="small muted">${esc(u.email)}</div></div><button class="btn sm" data-a="editUser" data-id="${u.id}">Manage</button></div>`).join('') || empty('users','No scout accounts')}</div></div>` : ''}`; };
+  ${ME.role==='admin' ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Scout accounts</h2><span class="small muted">Read-only access for scouts</span></div><div class="list">${S.users.filter(u=>u.role==='scout').map(u => `<div class="li">${av(scout(u.scoutId)||u,36)}<div class="grow"><b>${esc(u.name)}</b><div class="small muted">${esc(u.email)}</div></div><button class="btn sm" data-a="editUser" data-id="${u.id}">Manage</button></div>`).join('') || empty('users','No scout accounts')}</div></div>` : ''}`}`; };
+A.orgEdit = () => { const o = orgOf(); const row = (k, i, title, sub, ic2) => `<div class="li"><span class="org-ei">${ic2}</span><div class="grow"><b>${esc(title)}</b><div class="small muted">${sub}</div></div><button class="btn sm" data-a="orgItem" data-k="${k}" data-i="${i}">Edit</button></div>`;
+  const names = refs => esc(orgPeople(refs).map(p => p.name).join(', ')) || 'No one assigned';
+  modal({ title:'Edit roles', wide:true, body:`<h3 class="small muted" style="margin:0 0 6px">Leadership (centre of the compass)</h3><div class="list">${o.lead.map((l,i) => row('lead', i, l.role, names(l.m), '⚜️')).join('')}</div>
+    <h3 class="small muted" style="margin:16px 0 6px">Duty teams (around the compass)</h3><div class="list">${o.teams.map((t,i) => row('team', i, t.name, names(t.m), `<span style="color:${t.color}">${esc(t.icon||'⚜️')}</span>`)).join('') || empty('users','No duty teams')}</div>`,
+    foot:`<button type="button" class="btn" data-a="orgItem" data-k="team" data-i="new">${ic('plus','sm')} Add duty team</button><span class="spacer"></span><button type="button" class="btn primary" data-a="closeModal">Done</button>` }); };
+A.orgItem = el => { const o = orgOf(), k = el.dataset.k, isNew = el.dataset.i==='new';
+  const it = isNew ? { name:'', icon:'⚜️', color:ORG_COLORS[o.teams.length % ORG_COLORS.length], desc:'', m:[] } : (k==='lead' ? o.lead : o.teams)[+el.dataset.i];
+  const leaders = S.users.filter(u => u.role!=='scout');
+  const picked = new Set(), others = [];
+  (it.m||[]).forEach(r => { const p = orgPerson(r); if(p?.id) picked.add(p.id); else if(p) others.push(p.name); });
+  modal({ title: k==='lead' ? `Edit ${esc(it.role)}` : isNew ? 'New duty team' : 'Edit duty team', wide:true, form:'orgItem', body:`<input type="hidden" name="k" value="${k}"><input type="hidden" name="i" value="${el.dataset.i}"><div class="form-grid">
+    ${k==='lead' ? field('Role title', inp('role', it.role, 'required'), 'full') : `${field('Team name', inp('name', it.name, 'required'))}${field('Icon (emoji)', inp('icon', it.icon, 'maxlength="4"'))}${field('What they do', inp('desc', it.desc), 'full')}
+    <div class="field full"><label>Colour</label><div class="row">${ORG_COLORS.map(c => `<label style="cursor:pointer"><input type="radio" name="color" value="${c}" ${it.color===c?'checked':''} class="sr"><span class="swatch" style="background:${c}"></span></label>`).join('')}<input type="color" name="colorCustom" value="${it.color}" aria-label="Custom colour" data-c="colorCustom" style="width:44px;height:36px;border:0;background:none"></div></div>`}
+    <div class="field full"><label>Leaders</label><div class="row">${leaders.map(u => `<label class="check"><input type="checkbox" name="m" value="${u.id}" ${picked.has(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('') || '<span class="small muted">No leader accounts yet</span>'}</div></div>
+    ${field('Others without an account (comma separated)', inp('others', others.join(', '), 'placeholder="e.g. Aishath Mubeena, Fathimath Nawar"'), 'full')}</div>`,
+    foot:`${k==='team' && !isNew ? `<button type="button" class="btn danger" data-a="orgTeamDel" data-i="${el.dataset.i}">Delete team</button><span class="spacer"></span>` : ''}<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">${isNew?'Add team':'Save'}</button>` }); };
+F.orgItem = d => { const o = orgOf(); const m = [].concat(d.m||[]).concat(String(d.others||'').split(',').map(x => x.trim()).filter(Boolean).map(x => 'n:'+x));
+  if(d.k==='lead'){ const l = o.lead[+d.i]; if(!d.role?.trim()) return; Object.assign(l, { role:d.role.trim(), m }); audit(`Edited leader role ${l.role}`); }
+  else { if(!d.name?.trim()) return; let t = d.i==='new' ? null : o.teams[+d.i]; if(!t){ t = { id:uid('t') }; o.teams.push(t); }
+    Object.assign(t, { name:d.name.trim(), icon:(d.icon||'').trim(), desc:(d.desc||'').trim(), color:d.color || d.colorCustom || t.color || ORG_COLORS[0], m }); audit(`Saved duty team ${t.name}`); }
+  closeModal(); closeModal(); refresh(); A.orgEdit(); toast('Roles saved'); };
+A.orgTeamDel = el => { const o = orgOf(), t = o.teams[+el.dataset.i]; if(!t) return; confirmBox(`Delete the <b>${esc(t.name)}</b> team?`, () => { o.teams.splice(+el.dataset.i, 1); audit(`Deleted duty team ${t.name}`); closeModal(); closeModal(); refresh(); A.orgEdit(); }); };
 VIEWS.leader = () => { const u = user(R.id); if(!u) return empty('shield','Leader not found'); const ps = S.patrols.filter(p => p.leaders.includes(u.id)); const sc = S.scouts.filter(s => ps.some(p => p.id===s.patrol));
   const own = u.id===ME.id; const canEd = ME.role==='admin' || own;
   const acts = [...(u.activity||[]), ...S.audit.filter(a => a.user===u.id && !/Signed (in|out)/.test(a.action)).slice(0,6).map(a => ({ date:iso(new Date(a.ts)), text:a.action }))].sort((a,b) => a.date < b.date ? 1 : -1).slice(0,10);
