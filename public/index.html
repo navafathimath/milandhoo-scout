@@ -103,7 +103,7 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
 .rstat b{display:block;font-size:1.4rem;font-weight:700;font-family:var(--f-head);line-height:1.2}
 .rstat span{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 .rlist{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
-.rl-h,.rl-r{display:grid;grid-template-columns:36px minmax(0,1.4fr) minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 16px}
+.rl-h,.rl-r{display:grid;grid-template-columns:36px minmax(0,1.6fr) minmax(0,1fr) minmax(0,.9fr) 330px;gap:14px;align-items:center;padding:10px 16px}
 .rl-h{background:var(--surface-2);border-bottom:1px solid var(--line);font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding-top:9px;padding-bottom:9px}
 .rl-h span:last-child{text-align:right}
 .rl-sh{padding:7px 16px;background:var(--surface-2);border-bottom:1px solid var(--line-2);font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}.rl-sh span{font-weight:600}
@@ -118,12 +118,13 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
 .rl-opt button:first-child{border-left:0}.rl-opt button:hover:not(:disabled):not(.on){background:var(--surface-2);color:var(--ink)}
 .rl-opt button.on{color:#fff}.rl-opt button[data-s=P].on{background:var(--fm-P)}.rl-opt button[data-s=L].on{background:var(--fm-L)}.rl-opt button[data-s=A].on{background:var(--fm-A)}.rl-opt button[data-s=E].on{background:var(--fm-E)}
 .rl-opt button:disabled{cursor:default}
+.rl-rk{font-size:.86rem}
 .rl-x{grid-column:2/-1;display:flex;gap:10px;align-items:center;font-size:.8rem;color:var(--ink-2)}.rl-x label{flex:none}.rl-x .inp{height:34px;font-size:.84rem;flex:1}
 .reg-actions.rfoot{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 14px;background:color-mix(in srgb,var(--surface) 92%,transparent);border:1px solid var(--line);box-shadow:0 -8px 24px -18px rgba(0,0,0,.4)}
 .reg-actions.rfoot #reg-left{color:var(--ink-2)}
 @media (max-width:900px){ .rmeta{grid-template-columns:repeat(2,minmax(0,1fr))} .rmeta>div{border-left:0;border-top:1px solid var(--line-2)} .rmeta>div:nth-child(-n+2){border-top:0} .rmeta>div:nth-child(even){border-left:1px solid var(--line-2)} .rmeta>div:last-child{grid-column:1/-1;border-left:0}
   .rstat{grid-template-columns:repeat(3,minmax(0,1fr));top:calc(58px + env(safe-area-inset-top,0px))} .rstat>*:nth-child(4){border-left:0} .rstat>*:nth-child(n+4){border-top:1px solid var(--line-2)} .rstat>*{padding:8px 10px} .rstat b{font-size:1.1rem} .rstat span{font-size:.6rem}
-  .rl-h{display:none} .rl-r{grid-template-columns:34px minmax(0,1fr) auto;gap:6px 10px;padding:10px 12px} .rl-opt{grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr))} .rl-opt button{height:40px} .rl-x{grid-column:1/-1;flex-wrap:wrap} .rl-pt{text-align:right}
+  .rl-h{display:none} .rl-rk{display:none} .rl-r{grid-template-columns:34px minmax(0,1fr) auto;gap:6px 10px;padding:10px 12px} .rl-opt{grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr))} .rl-opt button{height:40px} .rl-x{grid-column:1/-1;flex-wrap:wrap} .rl-pt{text-align:right}
   .rfoot #reg-left{display:none} }
 
 /* scouts list: same formal template as the register */
@@ -1896,7 +1897,7 @@ VIEWS.register = () => {
   <div class="rstat" id="reg-counter">${counterHTML(c)}</div>
   <div class="row" style="margin:0 0 12px">${regPatrolPick(r)}<span class="spacer"></span>${!locked ? `<span class="row" id="mark-all">${markAllHTML(r)}</span>` : ''}</div>
   ${sf ? `<div class="rsf-note"><span>Showing <b>${sf==='U'?'Unmarked':ST_LABEL[sf]}</b> scouts only (${shown.length})</span><button class="btn sm" data-a="regSF" data-k="${sf}">${ic('x','sm')} Show all</button></div>` : ''}
-  <div class="rlist" id="reg-list">${!shown.length && list.length ? empty('users', `No ${sf==='U'?'unmarked':ST_LABEL[sf].toLowerCase()} scouts`) : list.length ? `<div class="rl-h"><span></span><span>Scout</span><span>Patrol</span><span>Status</span></div>${groups.map(([l,ss]) => `<div class="rl-sh">${l} <span>(${ss.length})</span></div>${ss.map(s => regRow(r, s, locked)).join('')}`).join('')}` : empty('users','No scouts in this patrol')}</div>
+  <div class="rlist" id="reg-list">${!shown.length && list.length ? empty('users', `No ${sf==='U'?'unmarked':ST_LABEL[sf].toLowerCase()} scouts`) : list.length ? `<div class="rl-h"><span></span><span>Scout</span><span>Patrol</span><span>Rank</span><span>Status</span></div>${groups.map(([l,ss]) => `<div class="rl-sh">${l} <span>(${ss.length})</span></div>${ss.map(s => regRow(r, s, locked)).join('')}`).join('')}` : empty('users','No scouts in this patrol')}</div>
   ${!locked && r.status==='draft' ? `<div class="reg-actions rfoot"><span class="small" id="reg-left">${regLeftHTML(c)}</span><span class="spacer"></span><button class="btn" data-a="regDraft">Save draft</button><button class="btn primary" data-a="regFinalize" data-id="${r.id}">${ic('lock','sm')} Finalize register</button></div>` : ''}
   ${(r.log||[]).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h3>Change log</h3></div><div class="list">${r.log.slice().reverse().map(l => `<div class="li small"><span class="muted num" style="width:120px">${new Date(l.ts).toLocaleString()}</span><span class="grow">${esc(user(l.user)?.name||'')}: ${esc(l.text)}</span></div>`).join('')}</div></div>` : ''}`;
 };
@@ -1908,7 +1909,7 @@ A.regSF = el => { REG_SF[R.id] = REG_SF[R.id]===el.dataset.k ? '' : el.dataset.k
 function regRow(r, s, locked){ const e = r.entries[s.id] || {}; const p = patrol(s.patrol); const g = genderOf(s.gender); const img = s.photo && imgData(s.photo);
   return `<div class="rl-r" id="rr_${s.id}"><span class="rl-ini ${g==='Girl'?'girl':g==='Boy'?'boy':''}" ${g?`title="${g}"`:''}>${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
   <div class="rl-nm"><b>${esc(sname(s))}${s.medical?` <span title="Has medical notes" style="color:var(--bad);vertical-align:-2px">${ic('heart','sm')}</span>`:''}</b></div>
-  <div class="rl-pt">${p ? `<span class="rl-pill">${pDot(p)}${esc(p.name)}</span>` : ''}</div>
+  <div class="rl-pt">${p ? `<span class="rl-pill">${pDot(p)}${esc(p.name)}</span>` : ''}</div><div class="rl-rk">${esc(s.rank||'—')}</div>
   <div class="rl-opt" role="radiogroup" aria-label="Attendance for ${esc(sname(s))}">${['P','L','A','E'].map(k => `<button class="${e.s===k?'on':''}" data-s="${k}" role="radio" aria-checked="${e.s===k}" ${locked?'disabled':''} data-a="mark" data-sid="${s.id}" data-k="${k}">${ST_LABEL[k]}</button>`).join('')}</div>
   ${e.s==='L' ? `<div class="rl-x"><label for="lt_${s.id}">Arrival time</label><input id="lt_${s.id}" class="inp" type="time" style="width:130px" value="${esc(e.time||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="time"></div>`
     : e.s==='E' ? `<div class="rl-x"><label for="ex_${s.id}">Reason for absence</label><input id="ex_${s.id}" class="inp" placeholder="e.g. family trip, unwell" value="${esc(e.remark||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="remark"></div>` : ''}</div>`; }
