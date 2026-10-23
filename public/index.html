@@ -1028,16 +1028,7 @@ async function buildSeed(){
   // events
   const nextThu = (() => { let x = new Date(today); while(x.getDay()!==4) x = addDays(x,1); return x; })();
   const firstThu = pd(meetingDates[0]);
-  const events = [
-    { id:'e_meet', title:'Weekly troop meeting', type:'meeting', date:iso(firstThu), start:'15:30', end:'17:00', location:'School hall', leaders:['u_leader','u_asst'], patrols:['all'], permission:false, equipment:'Uniform, notebook', recur:'weekly', until:AY.end, remind:true, notes:'' },
-    { id:'e_camp', title:'Patrol camp at Thulhaagiri', type:'camp', date:iso(addDays(nextThu, 15)), endDate:iso(addDays(nextThu, 17)), start:'07:30', end:'16:00', location:'Island campsite', leaders:['u_leader','u_admin'], patrols:['all'], permission:true, equipment:'Sleeping mat, torch, water bottle, mess kit, sunscreen', recur:'none', remind:true, notes:'Ferry departs 07:45 from the school jetty.' },
-    { id:'e_hike', title:'Coastline navigation hike', type:'hike', date:iso(addDays(nextThu, 2)), start:'07:00', end:'11:30', location:'North shore trail', leaders:['u_leader'], patrols:['p_kestrel','p_heron'], permission:true, equipment:'Compass, map, 2 L water, hat', recur:'none', remind:true, notes:'' },
-    { id:'e_service', title:'Reef-friendly beach clean-up', type:'service', date:iso(addDays(nextThu, 9)), start:'16:00', end:'18:00', location:'Public beach', leaders:['u_asst'], patrols:['p_pine'], permission:false, equipment:'Gloves, sacks, water', recur:'none', remind:true, notes:'' },
-    { id:'e_comp', title:'District pioneering competition', type:'competition', date:iso(addDays(nextThu, 30)), start:'08:00', end:'14:00', location:'District scout centre', leaders:['u_leader','u_admin'], patrols:['all'], permission:true, equipment:'Ropes, gloves, patrol flag', recur:'none', remind:true, notes:'' },
-    { id:'e_invest', title:'Investiture ceremony', type:'ceremony', date:iso(addDays(nextThu, 21)), start:'15:30', end:'17:00', location:'School hall', leaders:['u_admin'], patrols:['all'], permission:false, equipment:'Full uniform', recur:'none', remind:true, notes:'Parents invited.' },
-    { id:'e_pastcamp', title:'Patrol overnight camp', type:'camp', date:`${y}-09-26`, endDate:`${y}-09-27`, start:'08:00', end:'12:00', location:'School grounds', leaders:['u_leader','u_asst'], patrols:['all'], permission:true, equipment:'', recur:'none', remind:false, notes:'' },
-    { id:'e_pastclean', title:'Beach clean-up', type:'service', date:iso(addDays(today,-30)), start:'16:00', end:'18:00', location:'Public beach', leaders:['u_asst'], patrols:['all'], permission:false, equipment:'', recur:'none', remind:false, notes:'' },
-  ];
+  const events = [];   /* no sample events: the calendar starts empty */
 
   // albums & photos
   const albums = [], photos = [];
@@ -1059,7 +1050,6 @@ async function buildSeed(){
   const bday = scouts.filter(s => pd(s.dob).getMonth()===today.getMonth());
   const notifications = [
     { id:uid('n'), type:'announce', title:'Uniform inspection next meeting', body:'Full uniform with neckerchief please. Patrol points for best turnout.', ts:now-2*H, read:false, to:'all' },
-    { id:uid('n'), type:'session', title:'Coastline navigation hike on ' + fmtD(events[2].date,'dow'), body:'Permission slips due. 07:00 at the school gate.', ts:now-5*H, read:false, link:{route:'calendar'} },
     { id:uid('n'), type:'attendance', title:'Low attendance: Ali Shaan', body:'Attendance has dropped below 75% over the last 12 sessions.', ts:now-20*H, read:false, link:{route:'scout', id:'s_05'} },
     { id:uid('n'), type:'badge', title:`${scouts[2].first} ${scouts[2].last} completed Navigator`, body:'All requirements signed off. Ready to award.', ts:now-28*H, read:false, link:{route:'scout', id:scouts[2].id} },
     { id:uid('n'), type:'renewal', title:'2 memberships need renewal', body:'Leena Rasheed has expired. One more renews within 30 days.', ts:now-49*H, read:true, link:{route:'scouts'} },
@@ -1138,7 +1128,8 @@ function expandEvents(from, to){
   });
   return out.sort((a,b) => (a.occ + (a.start||'')).localeCompare(b.occ + (b.start||'')));
 }
-function upcoming(n=5, days=60){ return expandEvents(TODAY(), iso(addDays(new Date(), days))).slice(0, n); }
+const isActivity = e => e.type!=='holiday' && e.type!=='special';
+function upcoming(n=5, days=60){ return expandEvents(TODAY(), iso(addDays(new Date(), days))).filter(isActivity).slice(0, n); }
 /* What's next for the dashboard: the earliest upcoming calendar event or session plan (a plan wins a tie on the same day). */
 function nextUp(){ const t = TODAY(), n = new Date(), hm = `${pad(n.getHours())}:${pad(n.getMinutes())}`;
   const done = (date, end) => date===t && end && end <= hm;
@@ -1312,7 +1303,7 @@ const SCHOOL_DAYS = [
   ['sd27_newyear','New Year 2027','holiday','2027-01-01'],
   ['sd27_teachrep','Teachers’ Reporting Day 2027','special','2027-01-13'],
   ['sd27_acad','Beginning of Academic Year 2027','special','2027-01-17'] ];
-const SCHOOL_DAYS_REMOVED = ['sd26_transfer','sd26_transfer_end','sd26_exam2','e_hol'];   // e_hol: the sample 'Mid-term break'
+const SCHOOL_DAYS_REMOVED = ['sd26_transfer','sd26_transfer_end','sd26_exam2','e_hol','e_meet','e_camp','e_hike','e_service','e_comp','e_invest','e_pastcamp','e_pastclean'];   /* removed school days and the original sample events */
 function schoolDays(){ if(S?.events && ['admin','leader'].includes(ME?.role) && S.events.some(e => SCHOOL_DAYS_REMOVED.includes(e.id))){ S.events = S.events.filter(e => !SCHOOL_DAYS_REMOVED.includes(e.id)); save(); }
   if(!S?.settings || S.settings.schoolDays2026 || !['admin','leader'].includes(ME?.role)) return; let n = 0;
   SCHOOL_DAYS.forEach(([id, title, type, date, endDate]) => { if(S.events.some(e => e.id===id)) return; n++;
@@ -1500,7 +1491,7 @@ VIEWS.dashboard = () => {
   const todayReg = regs.find(r => r.date===TODAY());
   const term = currentTerm();
   const awarded = S.scouts.reduce((a,s) => a + s.badges.filter(b => b.date >= term.start && b.date <= term.end).length, 0);
-  const up = upcoming(5, 45); const upCount = expandEvents(TODAY(), iso(addDays(new Date(), 30))).length;
+  const up = upcoming(5, 45); const upCount = expandEvents(TODAY(), iso(addDays(new Date(), 30))).filter(isActivity).length;
   const behind = act.reduce((a,s) => a + sylFor(s).behind, 0);
   const ren = renewalsDue(30);
   const trend = regs.slice(0, 12).reverse().map(r => ({ l:fmtD(r.date,'short'), v:regCounts(r).pct }));
