@@ -171,7 +171,8 @@ button.sl-r{cursor:pointer}button.sl-r:hover{background:var(--surface-2)}button.
 /* Login: full illustration with a centred 65%-transparent card */
 .login2{position:fixed;inset:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:70px 16px 24px;background:#BFE6F7 url(img/login-scene.jpg) center/cover no-repeat}
 .login2-card{width:440px;max-width:100%;margin:auto;position:relative;background:rgba(255,255,255,.35);-webkit-backdrop-filter:blur(6px) saturate(1.2);backdrop-filter:blur(6px) saturate(1.2);border:1px solid rgba(255,255,255,.6);border-top:6px solid #128944;border-radius:24px;padding:46px 32px 26px;box-shadow:0 30px 60px -30px rgba(9,60,100,.6);color:#13283A}
-.login2-logo{position:absolute;left:50%;top:-40px;transform:translateX(-50%);width:76px;height:76px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -8px rgba(0,0,0,.4),0 0 0 4px rgba(255,255,255,.8)}
+.login2-logo img{width:84%;height:84%;object-fit:contain;border-radius:50%}.login2-logo img.own{width:100%;height:100%;object-fit:cover}
+.login2-logo{overflow:hidden;position:absolute;left:50%;top:-40px;transform:translateX(-50%);width:76px;height:76px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -8px rgba(0,0,0,.4),0 0 0 4px rgba(255,255,255,.8)}
 .login2 .muted,.login2 .field label,.login2 .small{color:#1E3A4F}
 .login2 .inp{background:rgba(255,255,255,.88);color:#13283A;border-color:rgba(255,255,255,.9)}
 .login2 .btn.ghost{color:#13283A;font-weight:700}
@@ -182,7 +183,7 @@ button.sl-r{cursor:pointer}button.sl-r:hover{background:var(--surface-2)}button.
 .login2-signs span{background:#B7793F;color:#fff;font-weight:800;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px 5px 9px;border-radius:4px;clip-path:polygon(0 0,90% 0,100% 50%,90% 100%,0 100%)}
 .login2-grp{text-align:center;color:#1E3A4F;font-size:.82rem;font-weight:600;margin-top:12px}
 @media (max-width:700px){ .login2{background-image:url(img/login-scene-sm.jpg);background-position:30% center} .login2-card{padding:44px 20px 22px} }
-@media (orientation:portrait) and (max-width:900px){ .login2{background-image:url(img/login-scene-tall.jpg);background-position:center top;align-items:flex-start;padding-top:max(34vh,250px)} .login2-card{margin:0 auto 16px;padding-top:24px} .login2-logo{display:none} }
+@media (orientation:portrait) and (max-width:900px){ .login2{background-image:url(img/login-scene-tall.jpg);background-position:center top;align-items:flex-start;padding-top:max(24vh,170px)} .login2-card{margin:0 auto 16px} }
 </style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
@@ -1388,7 +1389,7 @@ function closePops(){ ['#bell-pop','#prof-pop'].forEach(s => { const el = $(s); 
 
 /* ---- login ---- */
 function loginView(){
-  return `<div class="login2"><div class="login2-card"><div class="login2-logo">${logoHTML(52)}</div><div id="login-card">${loginForm(takeLoginErr())}</div>
+  return `<div class="login2"><div class="login2-card"><div class="login2-logo"><img src="${S.settings.logo && imgData(S.settings.logo) ? imgData(S.settings.logo) : DEFAULT_LOGO}" alt="${esc(S.settings.groupName)} logo" class="${S.settings.logo && imgData(S.settings.logo) ? 'own' : ''}"></div><div id="login-card">${loginForm(takeLoginErr())}</div>
     <div class="login2-signs"><span>Teamwork</span><span>Discipline</span><span>Service</span><span>Friendship</span></div>
     <div class="login2-grp">${esc(S.settings.groupName)}${S.settings.school ? ' · ' + esc(S.settings.school) : ''}</div></div></div>`;
 }
