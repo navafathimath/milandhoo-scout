@@ -167,6 +167,21 @@ button.sl-r{cursor:pointer}button.sl-r:hover{background:var(--surface-2)}button.
 .ncv-secs{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.ncv-secs .note-chip{font-size:.72rem;padding:3px 8px}
 .nsh-h{font-weight:700;margin-bottom:12px}
 @media (max-width:640px){ .nhero{padding:22px 18px;border-radius:18px} .nrail{grid-auto-columns:170px;gap:10px} .ncv-im{height:110px} .ngrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px} }
+
+/* Login: full illustration with a centred 65%-transparent card */
+.login2{position:fixed;inset:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:70px 16px 24px;background:#BFE6F7 url(img/login-scene.jpg) center/cover no-repeat}
+.login2-card{width:440px;max-width:100%;margin:auto;position:relative;background:rgba(255,255,255,.35);-webkit-backdrop-filter:blur(6px) saturate(1.2);backdrop-filter:blur(6px) saturate(1.2);border:1px solid rgba(255,255,255,.6);border-top:6px solid #128944;border-radius:24px;padding:46px 32px 26px;box-shadow:0 30px 60px -30px rgba(9,60,100,.6);color:#13283A}
+.login2-logo{position:absolute;left:50%;top:-40px;transform:translateX(-50%);width:76px;height:76px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 8px 20px -8px rgba(0,0,0,.4),0 0 0 4px rgba(255,255,255,.8)}
+.login2 .muted,.login2 .field label,.login2 .small{color:#1E3A4F}
+.login2 .inp{background:rgba(255,255,255,.88);color:#13283A;border-color:rgba(255,255,255,.9)}
+.login2 .btn.ghost{color:#13283A;font-weight:700}
+.login2 .demo-acc button{background:rgba(255,255,255,.75);border-color:rgba(255,255,255,.9);color:#13283A}.login2 .demo-acc span{color:#1E3A4F}
+.login2 .eyebrow{color:#1E3A4F}
+.login2 h2{color:#13283A}.login2 .btn.primary{background:#0977B6;color:#fff;border-color:#0977B6}.login2 .alert{background:rgba(255,255,255,.85);color:#9B2C2C}.login2 a,.login2 b{color:#13283A}
+.login2-signs{display:flex;justify-content:center;gap:8px;margin-top:18px;flex-wrap:wrap}
+.login2-signs span{background:#B7793F;color:#fff;font-weight:800;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px 5px 9px;border-radius:4px;clip-path:polygon(0 0,90% 0,100% 50%,90% 100%,0 100%)}
+.login2-grp{text-align:center;color:#1E3A4F;font-size:.82rem;font-weight:600;margin-top:12px}
+@media (max-width:700px){ .login2{background-image:url(img/login-scene-sm.jpg);background-position:30% center} .login2-card{padding:44px 20px 22px} }
 </style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
@@ -1372,18 +1387,13 @@ function closePops(){ ['#bell-pop','#prof-pop'].forEach(s => { const el = $(s); 
 
 /* ---- login ---- */
 function loginView(){
-  const demo = [['admin@trailmark.school','Mariyam Saeed','Group Scout Leader'],['leader@trailmark.school','Ibrahim Rasheed','Scout Leader'],['assistant@trailmark.school','Aishath Shifa','Assistant Leader'],['scout@trailmark.school','Ahmed Zaid','Scout (read-only)']];
-  return `<div class="login">
-  <section class="login-art">
-    <div class="row nw" style="gap:12px;position:relative;z-index:1">${logoHTML(48)}<div><div style="font-family:var(--f-head);font-weight:600;font-size:1.1rem;color:#fff">${esc(S.settings.groupName)}</div><div class="small" style="color:var(--side-ink-2)">${esc(S.settings.school)}</div></div></div>
-    <div style="position:relative;z-index:1;margin:40px 0 0"><div class="eyebrow" style="color:var(--gold-pale)">Milandhoo Scout Portal</div><h1 style="margin-top:8px">Every patrol, badge and campfire in one place</h1><p>Attendance, badge work, syllabus, session plans, the calendar and the year's photos for your troop's leaders.</p></div>
-    <svg class="scene" viewBox="0 0 800 220" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><path d="M0 220V130l90-50 70 40 110-80 120 90 80-50 110 70 90-40 130 60v50z" fill="#0977B6" opacity=".8"/><path d="M0 220v-50l120-40 100 40 140-60 130 70 110-30 200 50v20z" fill="#128944"/><path d="M380 150l-46 70h92z" fill="#FFFFFF" opacity=".9"/><path d="M380 150l-10 70h20z" fill="#9FE0B8"/><circle cx="640" cy="60" r="26" fill="#BFE0F2" opacity=".6"/>${[60,130,210,520,580,700,760].map((x,i)=>`<path d="M${x} ${150+i%3*12}l-16 52h32z" fill="#0E6F3A"/>`).join('')}</svg>
-  </section>
-  <section class="login-form"><div class="login-card" id="login-card">${loginForm(takeLoginErr())}</div></section></div>`;
+  return `<div class="login2"><div class="login2-card"><div class="login2-logo">${logoHTML(52)}</div><div id="login-card">${loginForm(takeLoginErr())}</div>
+    <div class="login2-signs"><span>Teamwork</span><span>Discipline</span><span>Service</span><span>Friendship</span></div>
+    <div class="login2-grp">${esc(S.settings.groupName)}${S.settings.school ? ' · ' + esc(S.settings.school) : ''}</div></div></div>`;
 }
 function loginForm(err=''){
   const demo = [['admin@trailmark.school','Mariyam Saeed','Group Scout Leader'],['leader@trailmark.school','Ibrahim Rasheed','Scout Leader'],['assistant@trailmark.school','Aishath Shifa','Assistant Leader'],['scout@trailmark.school','Ahmed Zaid','Scout (read-only)']];
-  return `<h2 style="font-size:1.5rem">Sign in</h2><p class="muted" style="margin:6px 0 22px">Use your leader account to continue.</p>
+  return `<h2 style="font-size:1.7rem;text-align:center">Sign in</h2><p class="muted" style="margin:6px 0 20px;text-align:center">Use your leader account to continue.</p>
   <form data-f="login" class="stack" novalidate>
     ${field('Email', inp('email','', 'type="email" autocomplete="username" required'))}
     ${field('Password', inp('password','', 'type="password" autocomplete="current-password" required'))}
