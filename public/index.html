@@ -93,8 +93,12 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
 .rst{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;border:1px solid #D08A12;color:#9A6A10;background:#FFF8EA;border-radius:6px;padding:2px 8px}
 .rst.fin{border-color:var(--fm-P);color:#fff;background:var(--fm-P)}
 .rstat{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:12px;overflow:hidden;position:sticky;top:calc(64px + env(safe-area-inset-top,0px));z-index:5}
-.rstat>div{padding:11px 14px;border-left:1px solid var(--line-2);position:relative}.rstat>div:first-child{border-left:0}
-.rstat>div:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--c)}
+.rstat>*{padding:11px 14px;border:0;border-left:1px solid var(--line-2);position:relative;background:none;font:inherit;color:inherit;text-align:left}.rstat>:first-child{border-left:0}
+.rstat>button{cursor:pointer;transition:background .12s,opacity .12s}.rstat>button:hover{background:var(--surface-2)}
+.rstat>button.on{background:color-mix(in srgb,var(--c) 12%,var(--surface))}.rstat>button.on:before{height:5px}.rstat>button.on span{color:var(--ink)}
+.rstat>button.dim{opacity:.55}
+.rsf-note{display:flex;align-items:center;gap:10px;margin:-4px 0 10px;font-size:.85rem;color:var(--ink-2)}
+.rstat>*:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--c)}
 .rs-P{--c:var(--fm-P)}.rs-L{--c:var(--fm-L)}.rs-A{--c:var(--fm-A)}.rs-E{--c:var(--fm-E)}.rs-U{--c:var(--line)}.rs-T{--c:var(--primary)}
 .rstat b{display:block;font-size:1.4rem;font-weight:700;font-family:var(--f-head);line-height:1.2}
 .rstat span{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
@@ -118,7 +122,7 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
 .reg-actions.rfoot{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 14px;background:color-mix(in srgb,var(--surface) 92%,transparent);border:1px solid var(--line);box-shadow:0 -8px 24px -18px rgba(0,0,0,.4)}
 .reg-actions.rfoot #reg-left{color:var(--ink-2)}
 @media (max-width:900px){ .rmeta{grid-template-columns:repeat(2,minmax(0,1fr))} .rmeta>div{border-left:0;border-top:1px solid var(--line-2)} .rmeta>div:nth-child(-n+2){border-top:0} .rmeta>div:nth-child(even){border-left:1px solid var(--line-2)} .rmeta>div:last-child{grid-column:1/-1;border-left:0}
-  .rstat{grid-template-columns:repeat(3,minmax(0,1fr));top:calc(58px + env(safe-area-inset-top,0px))} .rstat>div:nth-child(4){border-left:0} .rstat>div:nth-child(n+4){border-top:1px solid var(--line-2)} .rstat>div{padding:8px 10px} .rstat b{font-size:1.1rem} .rstat span{font-size:.6rem}
+  .rstat{grid-template-columns:repeat(3,minmax(0,1fr));top:calc(58px + env(safe-area-inset-top,0px))} .rstat>*:nth-child(4){border-left:0} .rstat>*:nth-child(n+4){border-top:1px solid var(--line-2)} .rstat>*{padding:8px 10px} .rstat b{font-size:1.1rem} .rstat span{font-size:.6rem}
   .rl-h{display:none} .rl-r{grid-template-columns:34px minmax(0,1fr) auto;gap:6px 10px;padding:10px 12px} .rl-opt{grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr))} .rl-opt button{height:40px} .rl-x{grid-column:1/-1;flex-wrap:wrap} .rl-pt{text-align:right}
   .rfoot #reg-left{display:none} }
 </style>
@@ -1047,7 +1051,7 @@ function attOf(sid, regs = S.registers){ const c = {P:0,L:0,A:0,E:0}; regs.forEa
   const total = c.P+c.L+c.A+c.E; return { ...c, total, pct: pct(c.P+c.L, total) }; }
 function regCounts(r){ const c = {P:0,L:0,A:0,E:0,U:0}; regScouts(r).forEach(s => { const e = r.entries[s.id]; if(e && e.s) c[e.s]++; else c.U++; }); const t = c.P+c.L+c.A+c.E; return { ...c, marked:t, pct: pct(c.P+c.L, t) }; }
 /* Patrol filter on a register: per viewer, so several leaders can each take their own patrol. */
-const REG_PF = {};
+const REG_PF = {}, REG_SF = {};  // per-register patrol filter and status filter (Present/Late/…/Unmarked)
 function regVisible(r){ const pf = REG_PF[r.id]; return regScouts(r).filter(s => !pf || s.patrol===pf); }
 function regCountsOf(r, list){ const c = {P:0,L:0,A:0,E:0,U:0}; list.forEach(s => { const e = r.entries[s.id]; if(e && e.s) c[e.s]++; else c.U++; }); return c; }
 function regScouts(r){ return S.scouts.filter(s => (r.patrol==='all' || s.patrol===r.patrol) && (s.status!=='Inactive' || r.entries[s.id])).sort((a,b) => (a.patrol+a.first).localeCompare(b.patrol+b.first)); }
@@ -1862,7 +1866,8 @@ VIEWS.register = () => {
   const r = S.registers.find(x => x.id===R.id); if(!r) return empty('clipboard','Register not found');
   const list = regVisible(r); const locked = regLocked(r) || !can('attendance.take'); const c = regCountsOf(r, list);
   const ses = r.sessionId && S.sessions.find(s => s.id===r.sessionId);
-  const groups = [['Girl','Girls'],['Boy','Boys'],['','Gender not set']].map(([g,l]) => [l, list.filter(s => genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b)))]).filter(([,ss]) => ss.length);
+  const sf = REG_SF[r.id] || ''; const shown = sf ? list.filter(s => (r.entries[s.id]?.s || 'U')===sf) : list;
+  const groups = [['Girl','Girls'],['Boy','Boys'],['','Gender not set']].map(([g,l]) => [l, shown.filter(s => genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b)))]).filter(([,ss]) => ss.length);
   return `<button class="btn ghost sm" data-a="go" data-r="attendance" style="margin-bottom:10px">${ic('left','sm')} All registers</button>
   ${pageH('Attendance register', fmtD(r.date,'long'), `<button class="btn" data-a="regExport" data-id="${r.id}">${ic('download','sm')} Export</button>${r.status==='draft' && can('attendance.delete') ? `<button class="icon-btn" data-a="regDelete" data-id="${r.id}" aria-label="Delete register">${ic('trash')}</button>` : ''}`)}
   <div class="rmeta"><div><small>Date</small><b>${fmtD(r.date)}</b></div><div><small>Meeting</small><b>${esc(r.type)}</b></div><div><small>Group</small><b>${esc(pName(r.patrol))}</b></div>
@@ -1870,12 +1875,16 @@ VIEWS.register = () => {
   ${r.status==='final' ? `<div class="alert ${ME.role==='admin'?'':'info'}" style="margin-bottom:12px;align-items:center">${ic('lock','sm')}<span style="flex:1">${R.q.unlock ? 'Admin edit mode. Every change is written to the audit log.' : `Finalized ${r.finalizedAt?ago(r.finalizedAt):''}${r.finalizedBy && user(r.finalizedBy) ? ' by '+esc(user(r.finalizedBy).name) : ''}. ${ME.role==='admin' ? 'Only you, as Group Scout Leader, can edit it.' : 'Only the Group Scout Leader can edit it.'}`}</span>${ME.role==='admin' ? `<button class="btn sm" data-a="regUnlock">${R.q.unlock?'Lock again':'Edit register'}</button>` : ''}</div>` : ''}
   <div class="rstat" id="reg-counter">${counterHTML(c)}</div>
   <div class="row" style="margin:0 0 12px">${regPatrolPick(r)}<span class="spacer"></span>${!locked ? `<span class="row" id="mark-all">${markAllHTML(r)}</span>` : ''}</div>
-  <div class="rlist" id="reg-list">${list.length ? `<div class="rl-h"><span></span><span>Scout</span><span>Patrol</span><span>Status</span></div>${groups.map(([l,ss]) => `<div class="rl-sh">${l} <span>(${ss.length})</span></div>${ss.map(s => regRow(r, s, locked)).join('')}`).join('')}` : empty('users','No scouts in this patrol')}</div>
+  ${sf ? `<div class="rsf-note"><span>Showing <b>${sf==='U'?'Unmarked':ST_LABEL[sf]}</b> scouts only (${shown.length})</span><button class="btn sm" data-a="regSF" data-k="${sf}">${ic('x','sm')} Show all</button></div>` : ''}
+  <div class="rlist" id="reg-list">${!shown.length && list.length ? empty('users', `No ${sf==='U'?'unmarked':ST_LABEL[sf].toLowerCase()} scouts`) : list.length ? `<div class="rl-h"><span></span><span>Scout</span><span>Patrol</span><span>Status</span></div>${groups.map(([l,ss]) => `<div class="rl-sh">${l} <span>(${ss.length})</span></div>${ss.map(s => regRow(r, s, locked)).join('')}`).join('')}` : empty('users','No scouts in this patrol')}</div>
   ${!locked && r.status==='draft' ? `<div class="reg-actions rfoot"><span class="small" id="reg-left">${regLeftHTML(c)}</span><span class="spacer"></span><button class="btn" data-a="regDraft">Save draft</button><button class="btn primary" data-a="regFinalize" data-id="${r.id}">${ic('lock','sm')} Finalize register</button></div>` : ''}
   ${(r.log||[]).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h3>Change log</h3></div><div class="list">${r.log.slice().reverse().map(l => `<div class="li small"><span class="muted num" style="width:120px">${new Date(l.ts).toLocaleString()}</span><span class="grow">${esc(user(l.user)?.name||'')}: ${esc(l.text)}</span></div>`).join('')}</div></div>` : ''}`;
 };
 function regLeftHTML(c){ return `${c.U ? `<b>${c.U}</b> scout${c.U===1?'':'s'} not yet recorded` : 'Everyone is recorded'} · Recorded by ${esc(ME.name)}`; }
-function counterHTML(c){ const t = c.P+c.L+c.A+c.E; return ['P','L','A','E'].map(k => `<div class="rs-${k}"><b class="num">${c[k]}</b><span>${ST_LABEL[k]}</span></div>`).join('') + `<div class="rs-U"><b class="num">${c.U}</b><span>Unmarked</span></div><div class="rs-T"><b class="num">${t ? pct(c.P+c.L, t) : 0}%</b><span>Attendance</span></div>`; }
+function counterHTML(c){ const t = c.P+c.L+c.A+c.E, sf = REG_SF[R.id] || '';
+  const box = (k, n, l) => `<button class="rs-${k} ${sf===k?'on':''} ${sf && sf!==k?'dim':''}" data-a="regSF" data-k="${k}" aria-pressed="${sf===k}" title="${sf===k?'Show all scouts':'Show only '+l.toLowerCase()+' scouts'}"><b class="num">${n}</b><span>${l}</span></button>`;
+  return ['P','L','A','E'].map(k => box(k, c[k], ST_LABEL[k])).join('') + box('U', c.U, 'Unmarked') + `<div class="rs-T"><b class="num">${t ? pct(c.P+c.L, t) : 0}%</b><span>Attendance</span></div>`; }
+A.regSF = el => { REG_SF[R.id] = REG_SF[R.id]===el.dataset.k ? '' : el.dataset.k; renderMain(); };
 function regRow(r, s, locked){ const e = r.entries[s.id] || {}; const p = patrol(s.patrol); const g = genderOf(s.gender); const img = s.photo && imgData(s.photo);
   return `<div class="rl-r" id="rr_${s.id}"><span class="rl-ini ${g==='Girl'?'girl':g==='Boy'?'boy':''}" ${g?`title="${g}"`:''}>${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
   <div class="rl-nm"><b>${esc(sname(s))}${s.medical?` <span title="Has medical notes" style="color:var(--bad);vertical-align:-2px">${ic('heart','sm')}</span>`:''}</b></div>
