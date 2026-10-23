@@ -82,6 +82,44 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
 @media (max-width:1100px){ .bgal{grid-template-columns:minmax(0,1fr)} .bgal-side{position:static;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))} }
 @media (max-width:900px){ .bkpi{grid-template-columns:repeat(2,minmax(0,1fr))} .ssh{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px} .ssh-sash{grid-column:1/-1;grid-row:2} }
 @media (max-width:560px){ .bkpi .k{padding:10px} .bkpi .ic{width:36px;height:36px;font-size:.85rem} .bkpi b{font-size:.85rem} .bgc-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px} .bgc{padding:10px} .bgc-h{flex-direction:column;align-items:flex-start;gap:6px} .bgc-h .badge-ic{width:46px;height:46px} .ssh-b .badge-ic{width:32px;height:32px} }
+/* attendance register: formal list (design B) */
+:root{--fm-P:#2F6F4F;--fm-L:#9A6A10;--fm-A:#9B2C2C;--fm-E:#55606B}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){--fm-P:#3F9268;--fm-L:#B88227;--fm-A:#C0504A;--fm-E:#6F7D8A} }
+:root[data-theme="dark"]{--fm-P:#3F9268;--fm-L:#B88227;--fm-A:#C0504A;--fm-E:#6F7D8A}
+.rmeta{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:12px;overflow:hidden}
+.rmeta>div{padding:10px 14px;border-left:1px solid var(--line-2);min-width:0}.rmeta>div:first-child{border-left:0}
+.rmeta small{display:block;font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin-bottom:2px}
+.rmeta b{font-size:.9rem;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rmeta a{color:var(--primary);text-decoration:none}
+.rst{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.06em;border:1px solid #D08A12;color:#9A6A10;background:#FFF8EA;border-radius:6px;padding:2px 8px}
+.rst.fin{border-color:var(--fm-P);color:#fff;background:var(--fm-P)}
+.rstat{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:12px;overflow:hidden;position:sticky;top:calc(64px + env(safe-area-inset-top,0px));z-index:5}
+.rstat>div{padding:11px 14px;border-left:1px solid var(--line-2);position:relative}.rstat>div:first-child{border-left:0}
+.rstat>div:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--c)}
+.rs-P{--c:var(--fm-P)}.rs-L{--c:var(--fm-L)}.rs-A{--c:var(--fm-A)}.rs-E{--c:var(--fm-E)}.rs-U{--c:var(--line)}.rs-T{--c:var(--primary)}
+.rstat b{display:block;font-size:1.4rem;font-weight:700;font-family:var(--f-head);line-height:1.2}
+.rstat span{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.rlist{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.rl-h,.rl-r{display:grid;grid-template-columns:36px minmax(0,1.4fr) minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 16px}
+.rl-h{background:var(--surface-2);border-bottom:1px solid var(--line);font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding-top:9px;padding-bottom:9px}
+.rl-h span:last-child{text-align:right}
+.rl-sh{padding:7px 16px;background:var(--surface-2);border-bottom:1px solid var(--line-2);font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}.rl-sh span{font-weight:600}
+.rl-r{border-bottom:1px solid var(--line-2)}.rl-r:last-child{border-bottom:0}
+.rl-ini{width:34px;height:34px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line-2);color:var(--ink-2);display:grid;place-items:center;font-weight:700;font-size:.72rem;overflow:hidden}
+.rl-ini img{width:100%;height:100%;object-fit:cover}
+.rl-nm{min-width:0}.rl-nm b{display:block;font-weight:600;font-size:.92rem}.rl-nm small{display:flex;gap:4px;align-items:center;color:var(--ink-2);font-size:.75rem}
+.rl-pill{display:inline-flex;align-items:center;gap:5px;font-size:.74rem;font-weight:600;border-radius:6px;padding:3px 8px;background:var(--surface-2);border:1px solid var(--line-2);color:var(--ink-2);max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.rl-opt{display:grid;grid-template-columns:repeat(4,82px);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.rl-opt button{height:36px;border:0;border-left:1px solid var(--line);background:var(--surface);font:inherit;font-size:.78rem;font-weight:600;color:var(--ink-2);cursor:pointer;padding:0 6px}
+.rl-opt button:first-child{border-left:0}.rl-opt button:hover:not(:disabled):not(.on){background:var(--surface-2);color:var(--ink)}
+.rl-opt button.on{color:#fff}.rl-opt button[data-s=P].on{background:var(--fm-P)}.rl-opt button[data-s=L].on{background:var(--fm-L)}.rl-opt button[data-s=A].on{background:var(--fm-A)}.rl-opt button[data-s=E].on{background:var(--fm-E)}
+.rl-opt button:disabled{cursor:default}
+.rl-x{grid-column:2/-1;display:flex;gap:10px;align-items:center;font-size:.8rem;color:var(--ink-2)}.rl-x label{flex:none}.rl-x .inp{height:34px;font-size:.84rem;flex:1}
+.reg-actions.rfoot{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 14px;background:color-mix(in srgb,var(--surface) 92%,transparent);border:1px solid var(--line);box-shadow:0 -8px 24px -18px rgba(0,0,0,.4)}
+.reg-actions.rfoot #reg-left{color:var(--ink-2)}
+@media (max-width:900px){ .rmeta{grid-template-columns:repeat(2,minmax(0,1fr))} .rmeta>div{border-left:0;border-top:1px solid var(--line-2)} .rmeta>div:nth-child(-n+2){border-top:0} .rmeta>div:nth-child(even){border-left:1px solid var(--line-2)} .rmeta>div:last-child{grid-column:1/-1;border-left:0}
+  .rstat{grid-template-columns:repeat(3,minmax(0,1fr));top:calc(58px + env(safe-area-inset-top,0px))} .rstat>div:nth-child(4){border-left:0} .rstat>div:nth-child(n+4){border-top:1px solid var(--line-2)} .rstat>div{padding:8px 10px} .rstat b{font-size:1.1rem} .rstat span{font-size:.6rem}
+  .rl-h{display:none} .rl-r{grid-template-columns:34px minmax(0,1fr) auto;gap:6px 10px;padding:10px 12px} .rl-opt{grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr))} .rl-opt button{height:40px} .rl-x{grid-column:1/-1;flex-wrap:wrap} .rl-pt{text-align:right}
+  .rfoot #reg-left{display:none} }
 </style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
@@ -1823,22 +1861,27 @@ VIEWS.register = () => {
   const r = S.registers.find(x => x.id===R.id); if(!r) return empty('clipboard','Register not found');
   const list = regVisible(r); const locked = regLocked(r) || !can('attendance.take'); const c = regCountsOf(r, list);
   const ses = r.sessionId && S.sessions.find(s => s.id===r.sessionId);
+  const groups = [['Girl','Girls'],['Boy','Boys'],['','Gender not set']].map(([g,l]) => [l, list.filter(s => genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b)))]).filter(([,ss]) => ss.length);
   return `<button class="btn ghost sm" data-a="go" data-r="attendance" style="margin-bottom:10px">${ic('left','sm')} All registers</button>
-  ${pageH(`${esc(r.type)} · ${pName(r.patrol)}`, fmtD(r.date,'long'), `<button class="btn" data-a="regExport" data-id="${r.id}">${ic('download','sm')} Export</button>${r.status==='draft' && can('attendance.delete') ? `<button class="icon-btn" data-a="regDelete" data-id="${r.id}" aria-label="Delete register">${ic('trash')}</button>` : ''}`)}
-  ${ses ? `<p class="small muted" style="margin:-12px 0 14px">Linked session: <a href="#" data-a="go" data-r="session" data-id="${ses.id}">${esc(ses.title)}</a></p>` : ''}
-  ${r.status==='final' ? `<div class="alert ${ME.role==='admin'?'':'info'}" style="margin-bottom:12px;align-items:center">${ic('lock','sm')}<span style="flex:1">${R.q.unlock ? 'Admin edit mode. Every change is written to the audit log.' : `Finalized ${r.finalizedAt?ago(r.finalizedAt):''}. ${ME.role==='admin' ? 'Only you, as Group Scout Leader, can edit it.' : 'Only the Group Scout Leader can edit it.'}`}</span>${ME.role==='admin' ? `<button class="btn sm" data-a="regUnlock">${R.q.unlock?'Lock again':'Edit register'}</button>` : ''}</div>` : ''}
-  <div class="counter" id="reg-counter">${counterHTML(c)}</div>
-  <div class="row" style="margin:6px 0 12px">${regPatrolPick(r)}${!locked ? `<span class="row" id="mark-all">${markAllHTML(r)}</span>` : ''}</div>
-  <div class="card" style="padding:0;overflow:hidden" id="reg-list">${list.map(s => regRow(r, s, locked)).join('') || empty('users','No scouts in this patrol')}</div>
-  ${!locked && r.status==='draft' ? `<div class="row reg-actions" style="justify-content:flex-end;margin-top:14px"><button class="btn lg" data-a="regDraft">${ic('check','sm')} Save draft</button><button class="btn primary lg" data-a="regFinalize" data-id="${r.id}">${ic('lock','sm')} Finalize</button></div>` : ''}
+  ${pageH('Attendance register', fmtD(r.date,'long'), `<button class="btn" data-a="regExport" data-id="${r.id}">${ic('download','sm')} Export</button>${r.status==='draft' && can('attendance.delete') ? `<button class="icon-btn" data-a="regDelete" data-id="${r.id}" aria-label="Delete register">${ic('trash')}</button>` : ''}`)}
+  <div class="rmeta"><div><small>Date</small><b>${fmtD(r.date)}</b></div><div><small>Meeting</small><b>${esc(r.type)}</b></div><div><small>Group</small><b>${esc(pName(r.patrol))}</b></div>
+    <div><small>Session</small>${ses ? `<a href="#" data-a="go" data-r="session" data-id="${ses.id}"><b>${esc(ses.title)}</b></a>` : '<b class="muted">—</b>'}</div><div><small>Status</small><span class="rst ${r.status==='final'?'fin':''}">${r.status==='final'?'FINAL':'DRAFT'}</span></div></div>
+  ${r.status==='final' ? `<div class="alert ${ME.role==='admin'?'':'info'}" style="margin-bottom:12px;align-items:center">${ic('lock','sm')}<span style="flex:1">${R.q.unlock ? 'Admin edit mode. Every change is written to the audit log.' : `Finalized ${r.finalizedAt?ago(r.finalizedAt):''}${r.finalizedBy && user(r.finalizedBy) ? ' by '+esc(user(r.finalizedBy).name) : ''}. ${ME.role==='admin' ? 'Only you, as Group Scout Leader, can edit it.' : 'Only the Group Scout Leader can edit it.'}`}</span>${ME.role==='admin' ? `<button class="btn sm" data-a="regUnlock">${R.q.unlock?'Lock again':'Edit register'}</button>` : ''}</div>` : ''}
+  <div class="rstat" id="reg-counter">${counterHTML(c)}</div>
+  <div class="row" style="margin:0 0 12px">${regPatrolPick(r)}<span class="spacer"></span>${!locked ? `<span class="row" id="mark-all">${markAllHTML(r)}</span>` : ''}</div>
+  <div class="rlist" id="reg-list">${list.length ? `<div class="rl-h"><span></span><span>Scout</span><span>Patrol</span><span>Status</span></div>${groups.map(([l,ss]) => `<div class="rl-sh">${l} <span>(${ss.length})</span></div>${ss.map(s => regRow(r, s, locked)).join('')}`).join('')}` : empty('users','No scouts in this patrol')}</div>
+  ${!locked && r.status==='draft' ? `<div class="reg-actions rfoot"><span class="small" id="reg-left">${regLeftHTML(c)}</span><span class="spacer"></span><button class="btn" data-a="regDraft">Save draft</button><button class="btn primary" data-a="regFinalize" data-id="${r.id}">${ic('lock','sm')} Finalize register</button></div>` : ''}
   ${(r.log||[]).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h3>Change log</h3></div><div class="list">${r.log.slice().reverse().map(l => `<div class="li small"><span class="muted num" style="width:120px">${new Date(l.ts).toLocaleString()}</span><span class="grow">${esc(user(l.user)?.name||'')}: ${esc(l.text)}</span></div>`).join('')}</div></div>` : ''}`;
 };
-function counterHTML(c){ return `<div class="c-p"><b class="num">${c.P}</b>Present</div><div class="c-l"><b class="num">${c.L}</b>Late</div><div class="c-a"><b class="num">${c.A}</b>Absent</div><div class="c-e"><b class="num">${c.E}</b>Excused</div><div class="c-u"><b class="num">${c.U}</b>Unmarked</div>`; }
-function regRow(r, s, locked){ const e = r.entries[s.id] || {}; const p = patrol(s.patrol);
-  return `<div class="reg-row" id="rr_${s.id}"><div class="nm">${av(s,42)}<div style="min-width:0"><b style="display:block">${esc(sname(s))}</b><span class="small muted row nw" style="gap:5px">${pDot(p)}${esc(p?.name||'')}${s.medical?` · <span title="Has medical notes" style="color:var(--bad)">${ic('heart','sm')}</span>`:''}</span></div></div>
-  <div class="toggles" role="radiogroup" aria-label="Attendance for ${esc(sname(s))}">${['P','L','A','E'].map(k => `<button class="tg ${e.s===k?'on':''}" data-s="${k}" role="radio" aria-checked="${e.s===k}" ${locked?'disabled':''} data-a="mark" data-sid="${s.id}" data-k="${k}">${e.s===k?ic('check','sm'):''}${ST_LABEL[k]}</button>`).join('')}</div>
-  ${e.s==='L' ? `<div class="reg-extra"><input class="inp" type="time" style="width:130px" value="${esc(e.time||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="time" aria-label="Arrival time"></div>`
-    : e.s==='E' ? `<div class="reg-extra"><input class="inp" style="flex:1;min-width:160px" placeholder="Reason for excuse" value="${esc(e.remark||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="remark" aria-label="Reason for excuse"></div>` : ''}</div>`; }
+function regLeftHTML(c){ return `${c.U ? `<b>${c.U}</b> scout${c.U===1?'':'s'} not yet recorded` : 'Everyone is recorded'} · Recorded by ${esc(ME.name)}`; }
+function counterHTML(c){ const t = c.P+c.L+c.A+c.E; return ['P','L','A','E'].map(k => `<div class="rs-${k}"><b class="num">${c[k]}</b><span>${ST_LABEL[k]}</span></div>`).join('') + `<div class="rs-U"><b class="num">${c.U}</b><span>Unmarked</span></div><div class="rs-T"><b class="num">${t ? pct(c.P+c.L, t) : 0}%</b><span>Attendance</span></div>`; }
+function regRow(r, s, locked){ const e = r.entries[s.id] || {}; const p = patrol(s.patrol); const g = genderOf(s.gender); const img = s.photo && imgData(s.photo);
+  return `<div class="rl-r" id="rr_${s.id}"><span class="rl-ini">${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
+  <div class="rl-nm"><b>${esc(sname(s))}</b><small>${g || 'Scout'}${s.medical?` · <span title="Has medical notes" style="color:var(--bad)">${ic('heart','sm')}</span>`:''}</small></div>
+  <div class="rl-pt">${p ? `<span class="rl-pill">${pDot(p)}${esc(p.name)}</span>` : ''}</div>
+  <div class="rl-opt" role="radiogroup" aria-label="Attendance for ${esc(sname(s))}">${['P','L','A','E'].map(k => `<button class="${e.s===k?'on':''}" data-s="${k}" role="radio" aria-checked="${e.s===k}" ${locked?'disabled':''} data-a="mark" data-sid="${s.id}" data-k="${k}">${ST_LABEL[k]}</button>`).join('')}</div>
+  ${e.s==='L' ? `<div class="rl-x"><label for="lt_${s.id}">Arrival time</label><input id="lt_${s.id}" class="inp" type="time" style="width:130px" value="${esc(e.time||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="time"></div>`
+    : e.s==='E' ? `<div class="rl-x"><label for="ex_${s.id}">Reason for absence</label><input id="ex_${s.id}" class="inp" placeholder="e.g. family trip, unwell" value="${esc(e.remark||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="remark"></div>` : ''}</div>`; }
 /* Remember each attendance change so cloud saves can merge it into what other leaders saved at the same time. */
 function regOp(r, sid){ if(Cloud.on) Cloud.regOps.push({ rid:r.id, sid, e: r.entries[sid] ? JSON.parse(JSON.stringify(r.entries[sid])) : null }); }
 function curReg(){ return S.registers.find(x => x.id===R.id); }
@@ -1846,15 +1889,15 @@ function regChanged(r, s, before, after){ if(r.status==='final'){ r.log = r.log 
 A.mark = el => { const r = curReg(); if(regLocked(r)) return; const s = scout(el.dataset.sid); const k = el.dataset.k; const e = r.entries[s.id] = r.entries[s.id] || {}; const before = e.s;
   e.s = e.s===k && r.status!=='final' ? undefined : k; if(e.s==='L' && !e.time){ const n = new Date(); e.time = `${pad(n.getHours())}:${pad(n.getMinutes())}`; }
   if(!e.s) delete r.entries[s.id]; if(before!==e.s) regChanged(r, s, before, e.s);
-  $('#rr_'+s.id).outerHTML = regRow(r, s, false); regOp(r, s.id); $('#reg-counter').innerHTML = counterHTML(regCountsOf(r, regVisible(r))); const ma = $('#mark-all'); if(ma) ma.innerHTML = markAllHTML(r); save(); };
+  $('#rr_'+s.id).outerHTML = regRow(r, s, false); regOp(r, s.id); const cc = regCountsOf(r, regVisible(r)); $('#reg-counter').innerHTML = counterHTML(cc); const rl = $('#reg-left'); if(rl) rl.innerHTML = regLeftHTML(cc); const ma = $('#mark-all'); if(ma) ma.innerHTML = markAllHTML(r); save(); };
 C.regExtra = el => { const r = curReg(); const e = r.entries[el.dataset.sid]; if(!e) return; const before = e[el.dataset.k]; e[el.dataset.k] = el.value; regOp(r, el.dataset.sid); if(r.status==='final' && before!==el.value){ r.log = r.log||[]; r.log.push({ ts:Date.now(), user:ME.id, text:`${sname(scout(el.dataset.sid))}: ${el.dataset.k} changed` }); audit(`Edited finalized register ${fmtD(r.date)}: ${el.dataset.k} for ${sname(scout(el.dataset.sid))}`); } save(); };
 /* One button: "Mark all present" while anyone is unmarked, "Untick all" once everyone is marked (drafts only). */
 function regPatrolPick(r){ const ids = [...new Set(regScouts(r).map(s => s.patrol))]; if(r.patrol!=='all' || ids.length < 2) return '';
   const pf = REG_PF[r.id] || ''; return `<select class="inp" style="width:auto;min-width:170px" data-c="regPatrol" aria-label="Show patrol">${opts([['','All patrols'], ...S.patrols.filter(p => ids.includes(p.id)).map(p => [p.id, `${p.name} (${regScouts(r).filter(s => s.patrol===p.id).length})`])], pf)}</select>`; }
 C.regPatrol = el => { REG_PF[R.id] = el.value; renderMain(); };
 function markAllHTML(r){ const all = regVisible(r); const done = all.length && all.every(s => r.entries[s.id]?.s); const pf = REG_PF[r.id]; const who = pf ? pName(pf) : 'all';
-  return done && r.status!=='final' ? `<button class="btn" data-a="untickAll">${ic('x','sm')} Untick ${pf ? esc(who) : 'all'}</button><span class="small muted">Clears the marks ${pf ? 'for this patrol' : 'on this register'}.</span>`
-    : `<button class="btn" data-a="markAll">${ic('check','sm')} Mark ${pf ? esc(who) : 'all'} present</button><span class="small muted">Then change the exceptions.</span>`; }
+  return done && r.status!=='final' ? `<button class="btn" data-a="untickAll">${ic('refresh','sm')} Clear ${pf ? esc(who) : 'all'}</button>`
+    : `<button class="btn" data-a="markAll">${ic('check','sm')} Mark ${pf ? esc(who) : 'all'} present</button>`; }
 A.markAll = () => { const r = curReg(); regVisible(r).forEach(s => { if(!r.entries[s.id]?.s){ r.entries[s.id] = { s:'P' }; regChanged(r, s, undefined, 'P'); regOp(r, s.id); } }); refresh(); toast('Everyone unmarked is now Present'); };
 A.untickAll = () => { const r = curReg(); if(regLocked(r) || r.status==='final') return;
   const pf = REG_PF[r.id]; confirmBox(`Untick every scout ${pf ? 'in '+esc(pName(pf)) : 'on this register'}? Late times and reasons are cleared too.`, () => { regVisible(r).forEach(s => { delete r.entries[s.id]; regOp(r, s.id); }); refresh(); toast('Marks cleared'); }, 'Untick'); };
