@@ -13,42 +13,31 @@
 <link rel="icon" href="icons/favicon.png" type="image/png">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}/* leader hierarchy: compass dial */
-.org{container-type:inline-size}
-.org-stage{--R:min(48cqi,190px)}
-.org-dial{position:relative;width:calc(var(--R)*2);height:calc(var(--R)*2);margin:34px auto}
-.org-dial svg{position:absolute;inset:0;width:100%;height:100%}
-.org-dial .face{fill:var(--surface);stroke:var(--line);stroke-width:2}.org-dial .inner{fill:none;stroke:var(--line-2);stroke-width:1.5}
-.org-dial line{stroke:var(--line);stroke-width:1.5}.org-dial line.mj{stroke:var(--primary);stroke-width:3}
-.org-dial text{font-family:"Roboto Slab",serif;font-weight:700;font-size:17px;fill:var(--ink-2);text-anchor:middle;opacity:.7}.org-dial text.n{fill:var(--primary);opacity:1}
-.org-logo{position:absolute;left:50%;top:50%;width:64%;height:64%;transform:translate(-50%,-50%);object-fit:contain;border-radius:50%;opacity:.13;pointer-events:none}
-.org-med{position:absolute;left:calc(50% + var(--sx)*var(--R)*.98);top:calc(50% + var(--sy)*var(--R)*.98);transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:var(--c);display:grid;place-items:center;font-size:1.25rem;border:3px solid var(--surface);box-shadow:0 0 0 2px var(--c),0 8px 18px -8px var(--c);z-index:2}
-.org-med small{position:absolute;bottom:-7px;right:-7px;background:var(--surface);color:var(--c);font-size:.64rem;font-weight:800;border-radius:99px;padding:1px 6px;box-shadow:0 0 0 1.5px var(--c)}
-.org-stack{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;width:min(236px,calc(var(--R)*1.3));z-index:1}
-.org-node{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:7px 10px 7px 7px;width:100%;box-shadow:0 10px 22px -16px rgba(0,0,0,.4);min-width:0}
-.org-node>div{min-width:0}.org-node b{display:block;font-size:.88rem;line-height:1.25;overflow-wrap:anywhere}
-.org-r{font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
-.org-node.gl{background:linear-gradient(135deg,var(--primary),#0A5E8F);color:#fff;border:0}.org-node.gl .org-r{color:#BFE3F7}.org-node.gl .org-link{color:#fff}
-.org-node.lt{border-left:5px solid var(--ok)}.org-node.lt .org-r{color:var(--ok)}
-.org-node.li{border-left:5px solid #E0A030}.org-node.li .org-r{color:#B7791F}
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}/* leader hierarchy: tree */
+.org{container-type:inline-size;margin-top:6px}
+.org-lead{display:flex;flex-direction:column;align-items:center}
+.org-node{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 16px 10px 10px;width:min(320px,100%);box-shadow:0 10px 22px -18px rgba(0,0,0,.45)}
+.org-node>div{min-width:0}.org-node b{display:block;font-size:1rem;line-height:1.3;overflow-wrap:anywhere}
+.org-r{font-size:.62rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.org-node.gl{background:linear-gradient(135deg,var(--primary),#0A5E8F);color:#fff;border:0;box-shadow:0 12px 26px -12px var(--primary)}.org-node.gl .org-r{color:#BFE3F7}.org-node.gl .org-link{color:#fff}
+.org-node.lt{border-top:4px solid var(--ok)}.org-node.lt .org-r{color:var(--ok)}
+.org-node.li{border-top:4px solid #E0A030}.org-node.li .org-r{color:#B7791F}
 .org-avs{display:flex;flex:none}.org-avs .av+.av{margin-left:-12px}.org-avs .av{border:2px solid var(--surface)}
-.org-vl{width:2px;height:10px;background:var(--line)}
+.org-vl{width:2px;height:22px;background:var(--line);flex:none}
 .org-link{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left}.org-link:hover{text-decoration:underline}
-.org-teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.org-team{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:14px;padding:10px 12px;box-shadow:0 12px 26px -20px rgba(0,0,0,.45)}
-.org-team h4{margin:0 0 2px;font-size:.9rem;color:var(--c);display:flex;gap:6px;align-items:flex-start}
-.org-ti{flex:none}
-.org-du{color:var(--ink-2);font-size:.72rem;margin-bottom:4px}
-.org-m{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:.84rem;font-weight:600;border-top:1px solid var(--line-2)}
-.org-stage .org-node{padding:5px 8px 5px 5px;gap:7px}.org-stage .org-node b{font-size:.8rem}.org-stage .org-r{font-size:.54rem}
+.org-teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;position:relative}
+.org-team{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:16px;padding:12px 14px 6px;box-shadow:0 12px 26px -20px rgba(0,0,0,.45);position:relative}
+.org-team h4{margin:0 0 2px;font-family:"Roboto Slab",serif;font-size:1rem;color:var(--c);display:flex;gap:8px;align-items:flex-start}
+.org-ti{flex:none;font-family:initial}
+.org-du{color:var(--ink-2);font-size:.8rem;margin-bottom:6px}
+.org-m{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.92rem;font-weight:600;border-top:1px solid var(--line-2)}
 .org-ei{width:34px;height:34px;border-radius:10px;background:var(--wash);display:grid;place-items:center;font-size:1.1rem;flex:none}
-@container (min-width:1000px){
-  .org-stage{--R:260px;position:relative;height:calc(var(--R)*2 + 280px)}
-  .org-dial{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0}
-  .org-teams{display:block;position:absolute;inset:0;pointer-events:none}
-  .org-team{position:absolute;width:220px;left:calc(50% + var(--cx));top:calc(50% + var(--cy));transform:translate(-50%,-50%);pointer-events:auto}
-  .org-stage .org-node{padding:7px 10px 7px 7px;gap:9px}.org-stage .org-node b{font-size:.93rem}.org-stage .org-r{font-size:.6rem}
+@container (min-width:900px){
+  .org-teams{grid-template-columns:repeat(var(--n),minmax(0,1fr));margin-top:22px}
+  .org-teams:before{content:"";position:absolute;top:-22px;height:2px;left:calc((100% - (var(--n) - 1)*14px)/var(--n)/2 - 1px);right:calc((100% - (var(--n) - 1)*14px)/var(--n)/2 - 1px);background:var(--line)}
+  .org-team:before{content:"";position:absolute;left:calc(50% - 1px);top:-26px;width:2px;height:22px;background:var(--line)}
 }
+@container (max-width:899px){ .org-lead{margin-bottom:16px} .org-lead .org-vl:last-child{display:none} }
 </style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
@@ -1681,31 +1670,15 @@ function orgPerson(ref){ if(String(ref).startsWith('n:')){ const n = ref.slice(2
 function orgPeople(refs){ return (refs||[]).map(orgPerson).filter(Boolean); }
 function orgName(p){ return p.id ? `<button class="org-link" data-a="go" data-r="leader" data-id="${p.id}">${esc(p.name)}</button>` : esc(p.name); }
 
-function orgDial(){ const o = orgOf(), n = o.teams.length;
-  const logo = S.settings.logo && imgData(S.settings.logo) ? imgData(S.settings.logo) : DEFAULT_LOGO;
-  const ticks = []; for(let i=0;i<72;i++){ const a = i*5*Math.PI/180, l = i%18===0 ? 22 : i%2 ? 8 : 14, r = 294;
-    ticks.push(`<line x1="${(300+r*Math.sin(a)).toFixed(1)}" y1="${(300-r*Math.cos(a)).toFixed(1)}" x2="${(300+(r-l)*Math.sin(a)).toFixed(1)}" y2="${(300-(r-l)*Math.cos(a)).toFixed(1)}" class="${i%18===0?'mj':''}"/>`); }
-  const nesw = [['N',0],['E',90],['S',180],['W',270]].map(([l,d]) => { const a = d*Math.PI/180; return `<text x="${(300+252*Math.sin(a)).toFixed(1)}" y="${(306-252*Math.cos(a)).toFixed(1)}" class="${l==='N'?'n':''}">${l}</text>`; }).join('');
-  const R = 260;  // dial radius on wide screens; cards sit outside it
-  const cards = o.teams.map((t,i) => { const a = i*2*Math.PI/Math.max(n,1), sx = Math.sin(a), cy = -Math.cos(a); let x, y;
-    if(Math.abs(sx) < .3){ x = R*.6+150; y = cy*(R+10); } else { x = Math.sign(sx)*Math.max(Math.abs(sx)*(R+140), R*.6+150); y = cy*(R+50); }
-    const ms = orgPeople(t.m);
-    return { t, sx, cy, ms, card:`<div class="org-team" style="--c:${t.color};--cx:${x.toFixed(0)}px;--cy:${y.toFixed(0)}px"><h4>${t.icon?`<span class="org-ti">${esc(t.icon)}</span>`:''}${esc(t.name)}</h4>${t.desc?`<div class="org-du">${esc(t.desc)}</div>`:''}
-      ${ms.map(p => `<div class="org-m">${av(p,28)}${orgName(p)}</div>`).join('') || '<div class="org-m muted small">No one assigned yet</div>'}</div>` }; });
-  return `<div class="org"><div class="org-stage">
-    <div class="org-dial">
-      <svg viewBox="0 0 600 600" aria-hidden="true"><circle cx="300" cy="300" r="294" class="face"/><circle cx="300" cy="300" r="254" class="inner"/>${ticks.join('')}${nesw}</svg>
-      <img class="org-logo" src="${logo}" alt="">
-      ${cards.map(c => `<span class="org-med" style="--c:${c.t.color};--sx:${c.sx.toFixed(3)};--sy:${c.cy.toFixed(3)}" title="${esc(c.t.name)}">${esc(c.t.icon||'⚜️')}<small>${c.ms.length}</small></span>`).join('')}
-      <div class="org-stack">${o.lead.map((l,i) => { const ps = orgPeople(l.m);
-        return `${i?'<span class="org-vl"></span>':''}<div class="org-node ${['gl','lt','li'][i]||'li'}"><span class="org-avs">${ps.slice(0,3).map(p => av(p, i?34:42)).join('') || av({name:'?'}, i?34:42)}</span><div><span class="org-r">${esc(l.role)}</span><b>${ps.map(orgName).join(' · ') || '<span class="muted">Not set</span>'}</b></div></div>`; }).join('')}</div>
-    </div>
-    <div class="org-teams">${cards.map(c => c.card).join('')}</div>
-  </div></div>`; }
-
+function orgTree(){ const o = orgOf(), n = o.teams.length;
+  return `<div class="org"><div class="org-lead">${o.lead.map((l,i) => { const ps = orgPeople(l.m);
+      return `${i?'<span class="org-vl"></span>':''}<div class="org-node ${['gl','lt','li'][i]||'li'}"><span class="org-avs">${ps.slice(0,3).map(p => av(p, i?40:48)).join('') || av({name:'?'}, i?40:48)}</span><div><span class="org-r">${esc(l.role)}</span><b>${ps.map(orgName).join(' · ') || '<span class="muted">Not set</span>'}</b></div></div>`; }).join('')}${n?'<span class="org-vl"></span>':''}</div>
+    ${n ? `<div class="org-teams" style="--n:${n}">${o.teams.map(t => { const ms = orgPeople(t.m);
+      return `<div class="org-team" style="--c:${t.color}"><h4>${t.icon?`<span class="org-ti">${esc(t.icon)}</span>`:''}${esc(t.name)}</h4>${t.desc?`<div class="org-du">${esc(t.desc)}</div>`:''}
+      ${ms.map(p => `<div class="org-m">${av(p,32)}${orgName(p)}</div>`).join('') || '<div class="org-m muted small">No one assigned yet</div>'}</div>`; }).join('')}</div>` : ''}</div>`; }
 VIEWS.leaders = () => { const list = S.users.filter(u => u.role!=='scout'); const lv = R.q.lv || 'org';
   return `${pageH('Group', 'Leaders', `<div class="seg"><button class="${lv==='org'?'on':''}" data-a="go" data-r="leaders" data-q-lv="org">Hierarchy</button><button class="${lv==='list'?'on':''}" data-a="go" data-r="leaders" data-q-lv="list">List</button></div>${ME.role==='admin' ? (lv==='org' ? `<button class="btn primary" data-a="orgEdit">${ic('edit','sm')} Edit roles</button>` : `<button class="btn primary" data-a="addUser">${ic('plus','sm')} Add user</button>`) : ''}`)}
-  ${lv==='org' ? orgDial() : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">${list.map(u => { const ps = S.patrols.filter(p => p.leaders.includes(u.id));
+  ${lv==='org' ? orgTree() : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">${list.map(u => { const ps = S.patrols.filter(p => p.leaders.includes(u.id));
     return `<button class="card" style="text-align:left;cursor:pointer" data-a="go" data-r="leader" data-id="${u.id}"><div class="row nw">${av(u,56)}<div style="min-width:0"><h3>${esc(u.name)}</h3><div class="small muted">${ROLES[u.role]}${u.disabled?' · disabled':''}${u.sample?' · sample profile, cannot sign in':''}</div></div></div>
     <div class="row" style="margin-top:12px;gap:6px">${ps.map(p => `<span class="chip">${pDot(p)} ${esc(p.name)}</span>`).join('') || '<span class="small muted">No patrols assigned</span>'}</div>
     <div class="small muted" style="margin-top:10px">${u.qualifications.length} qualifications · ${S.scouts.filter(s => ps.some(p=>p.id===s.patrol)).length} scouts</div></button>`; }).join('')}</div>
