@@ -755,6 +755,15 @@ summary::-webkit-details-marker{display:none}
   .rrow{grid-template-columns:44px minmax(0,1fr) auto;gap:10px}
   .rrow>.chip{grid-column:2/-1;justify-self:start}
 }
+/* scout import preview and bulk activity */
+.imp-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:6px}
+.imp-sum>div{padding:10px 12px;border-left:1px solid var(--line-2)}.imp-sum>div:first-child{border-left:0}.imp-sum b{display:block;font-size:1.25rem;font-family:var(--f-head)}.imp-sum b.w{color:var(--warn)}.imp-sum span{font-size:.74rem;color:var(--ink-2)}
+.imp-list{max-height:220px;overflow:auto;border:1px solid var(--line-2);border-radius:10px;margin-top:10px}
+.imp-list>div{padding:8px 12px;border-top:1px solid var(--line-2);font-size:.84rem}.imp-list>div:first-child{border-top:0}.imp-list>div>b{display:block}.imp-list span{color:var(--ink-2)}.imp-list s{opacity:.6}
+.ba-h{display:flex;align-items:center;margin:16px 0 8px}
+.ba-list{max-height:300px;overflow:auto;border:1px solid var(--line-2);border-radius:10px}
+.ba-row{display:flex;align-items:center;gap:10px;padding:7px 12px;border-top:1px solid var(--line-2);margin:0}.ba-row:first-child{border-top:0}.ba-row[hidden]{display:none}
+@media (max-width:560px){ .imp-sum{grid-template-columns:repeat(2,minmax(0,1fr))} .imp-sum>div:nth-child(3){border-left:0} .imp-sum>div:nth-child(n+3){border-top:1px solid var(--line-2)} .ba-row .small{display:none} }
 /* show-password eye, clickable logo */
 .pw-wrap{position:relative;display:block}.pw-wrap .inp{width:100%;padding-right:46px}
 .pw-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--ink-2);cursor:pointer}
@@ -1811,7 +1820,7 @@ A.arRubricPDF = () => withPDF(async () => {
 VIEWS.scouts = () => {
   const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
   const list = filterScouts(f); const nG = S.scouts.filter(s => genderOf(s.gender)==='Girl').length, nB = S.scouts.filter(s => genderOf(s.gender)==='Boy').length;
-  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
+  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import / update</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkActivity">${ic('tent','sm')} Add activity</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
   return `${pageH('Members', 'Scouts', acts)}${scoutTabs('scouts')}${scoutSummary()}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
     <div class="field" style="flex:2;min-width:180px"><label for="f_ss">Search</label><input class="inp" id="f_ss" type="search" placeholder="Name or scout ID" value="${esc(f.s)}" data-i="scoutFilter" data-k="s"></div>
@@ -1906,13 +1915,15 @@ A.deleteScout = el => { const s = scout(el.dataset.id); confirmBox(`Delete <b>${
 function parseCSV(t){ const rows = []; let row = [], cur = '', q = false; for(let i=0;i<t.length;i++){ const c = t[i];
   if(q){ if(c==='"' && t[i+1]==='"'){ cur+='"'; i++; } else if(c==='"') q = false; else cur += c; }
   else if(c==='"') q = true; else if(c===','){ row.push(cur); cur=''; } else if(c==='\n' || c==='\r'){ if(c==='\r' && t[i+1]==='\n') i++; row.push(cur); rows.push(row); row=[]; cur=''; } else cur += c; }
-  if(cur || row.length){ row.push(cur); rows.push(row); } return rows.filter(r => r.some(x => x.trim())); }
-const SCOUT_COLS = ['first','last','gender','dob','grade','patrol','rank','joined','status','guardian_name','guardian_phone','guardian_email','emergency_name','emergency_phone','medical'];
-A.importScouts = () => modal({ title:'Import scouts', body:`<div class="stack"><p class="muted">Upload a CSV or Excel file with a header row. Recognised columns:</p><p class="small num" style="background:var(--surface-2);padding:10px;border-radius:8px;word-break:break-word">${SCOUT_COLS.join(', ')}</p>
-  <p class="small muted">Gender: Girl or Boy (F or M also work). Patrol matches by name. Dates as YYYY-MM-DD or DD/MM/YYYY. Missing values get sensible defaults.</p>
-  <div class="row"><button class="btn sm" data-a="importTemplate">${ic('download','sm')} Download template</button></div>
+  if(cur || row.length){ row.push(cur); rows.push(row); } while(rows.length && !rows[0].some(x => x.trim())) rows.shift(); return rows; }   /* blank rows kept so row numbers match the sheet */
+const SCOUT_COLS = ['scout_id','first','last','gender','dob','grade','patrol','rank','joined','status','guardian_name','guardian_phone','guardian_email','emergency_name','emergency_phone','medical'];
+A.importScouts = () => modal({ title:'Import or update scouts', wide:true, body:`<div class="stack">
+  <div class="alert info" style="align-items:flex-start">${ic('edit','sm')}<span><b>To update scouts you already have</b> (grade, patrol, rank, status…): download the current list below, change the cells in Excel, save, and upload the same file here. Rows are matched by <b>scout_id</b>, or by first + last name. <b>Empty cells keep the current value.</b></span></div>
+  <div class="row"><button class="btn sm primary" data-a="exportScoutsDo" data-fmt="xlsx">${ic('download','sm')} Download current scouts (Excel)</button><button class="btn sm" data-a="importTemplate">${ic('download','sm')} Blank template for new scouts</button></div>
+  <p class="muted" style="margin:0">Upload a CSV or Excel file with a header row. Recognised columns:</p><p class="small num" style="background:var(--surface-2);padding:10px;border-radius:8px;word-break:break-word">${SCOUT_COLS.join(', ')}</p>
+  <p class="small muted">Gender: Girl or Boy (F or M also work). Grade: 10 or Grade 10. Patrol matches by name (a new name creates a patrol). Rank: ${STAGES.join(', ')}. Status: ${MEMBER_ST.join(', ')}. Dates as YYYY-MM-DD or DD/MM/YYYY.</p>
   <label class="drop" for="imp-file" style="cursor:pointer">${ic('upload','lg')}<div style="font-weight:600;margin-top:6px">Choose a .csv or .xlsx file</div><input id="imp-file" type="file" accept=".csv,.xlsx,.xls" class="sr" data-c="importFile"></label><div id="imp-prev"></div></div>` });
-A.importTemplate = () => saveFile('milandhoo-scout-scouts-template.csv', csvOf([SCOUT_COLS, ['Hamid','Naseer','Boy','2014-05-12','Grade 7','Pine','Membership','2026-10-16','Active','Naseer Ali','+960 777 0000','naseer@mail.mv','Aisha Ali','+960 999 0000','']]));
+A.importTemplate = () => saveFile('milandhoo-scout-scouts-template.csv', csvOf([SCOUT_COLS, ['','Hamid','Naseer','Boy','2014-05-12','Grade 7','Pine','Membership','2026-10-16','Active','Naseer Ali','+960 777 0000','naseer@mail.mv','Aisha Ali','+960 999 0000','']]));
 let IMPORT_ROWS = [];
 /* Dates from spreadsheets: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YY or an Excel day number. */
 function normDate(v){ v = String(v||'').trim(); if(!v) return ''; let m;
@@ -1923,17 +1934,56 @@ function normDate(v){ v = String(v||'').trim(); if(!v) return ''; let m;
 C.importFile = async el => { const file = el.files[0]; if(!file) return; let rows;
   try { if(/\.xlsx?$/i.test(file.name)){ const X = await getXLSX(); const wb = X.read(await file.arrayBuffer()); rows = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:true, defval:'' }).map(r => r.map(v => String(v ?? ''))); } else rows = parseCSV(await file.text()); }
   catch(e){ $('#imp-prev').innerHTML = `<div class="alert">${ic('alert','sm')}<span>That file could not be read. Save it as CSV (UTF-8) and try again.</span></div>`; return; }
-  const head = rows.shift().map(h => h.trim().toLowerCase().replace(/[\s/]+/g,'_'));
-  IMPORT_ROWS = rows.map(r => Object.fromEntries(head.map((h,i) => [h, (r[i]||'').trim()]))).filter(r => r.first && r.last);
-  $('#imp-prev').innerHTML = IMPORT_ROWS.length ? `<div class="alert info">${ic('check','sm')}<span>Found <b>${IMPORT_ROWS.length}</b> scouts: ${IMPORT_ROWS.slice(0,4).map(r=>esc(r.first+' '+r.last)).join(', ')}${IMPORT_ROWS.length>4?'…':''}</span></div><button class="btn primary" style="margin-top:10px;width:100%" data-a="importDo">Import ${IMPORT_ROWS.length} scouts</button>` : `<div class="alert">${ic('alert','sm')}<span>No rows with both a first and last name were found. Check the header row.</span></div>`; };
+  const head = (rows.shift()||[]).map(h => h.trim().toLowerCase().replace(/[\s/]+/g,'_'));
+  IMPORT_ROWS = rows.map((r, n) => ({ ...Object.fromEntries(head.map((h,i) => [h==='id'||h==='scoutid'?'scout_id':h, (r[i]||'').trim()])), _row:n+2 })).filter(r => r.scout_id || (r.first && r.last));
+  importPreview(); };
+/* Work out, without changing anything, which rows update an existing scout, which add a new one and which are skipped. */
+const normGrade = v => { v = String(v||'').trim(); const m = v.match(/^(?:gr(?:ade)?\.?\s*)?(\d{1,2})$/i); return m ? 'Grade ' + (+m[1]) : v; };
+const pickOf = (list, v) => list.find(x => x.toLowerCase()===String(v||'').trim().toLowerCase());
+function importPlan(){ const key = s => `${s.first} ${s.last}`.trim().replace(/\s+/g,' ').toLowerCase();
+  const plan = { upd:[], add:[], skip:[], bad:[] };
+  IMPORT_ROWS.forEach(r => { let s = null, why = ''; const i = r._row - 2;
+    if(r.scout_id) s = S.scouts.find(x => String(x.sid||'').toLowerCase()===r.scout_id.toLowerCase());
+    if(!s && r.first && r.last){ const hits = S.scouts.filter(x => key(x)===key(r)); if(hits.length===1) s = hits[0]; else if(hits.length > 1) why = 'more than one scout has this name; add the scout_id'; }
+    if(r.rank && !pickOf(STAGES, r.rank)) plan.bad.push(`Row ${i+2}: rank “${r.rank}” is not one of ${STAGES.join(', ')}`);
+    if(r.status && !pickOf(MEMBER_ST, r.status)) plan.bad.push(`Row ${i+2}: status “${r.status}” is not one of ${MEMBER_ST.join(', ')}`);
+    if(s){ const ch = importChanges(s, r); plan.upd.push({ s, r, ch }); }
+    else if(why || !(r.first && r.last)) plan.skip.push(`Row ${i+2}: ${why || `no scout has scout_id ${r.scout_id}`}`);
+    else plan.add.push(r); });
+  return plan; }
+function importChanges(s, r){ const ch = [], set = (k, l, cur, v) => { if(v!=='' && v!=null && String(v)!==String(cur??'')) ch.push({ k, l, from:cur, to:v }); };
+  if(r.scout_id){ set('first','First name', s.first, r.first); set('last','Last name', s.last, r.last); }
+  set('gender','Gender', genderOf(s.gender), r.gender ? genderOf(r.gender) : ''); set('dob','Date of birth', s.dob, normDate(r.dob));
+  set('grade','Grade', s.grade, normGrade(r.grade)); set('section','Section', s.section, r.section);
+  if(r.patrol){ const p = S.patrols.find(x => x.name.toLowerCase()===r.patrol.toLowerCase()); set('patrol','Patrol', pName(s.patrol), p ? p.name : r.patrol); }
+  set('rank','Rank', s.rank, pickOf(STAGES, r.rank)||''); set('status','Status', s.status, pickOf(MEMBER_ST, r.status)||''); set('joined','Joined', s.joined, normDate(r.joined));
+  if(can('contacts.view')){ const g = s.guardian||{}, e = s.emergency||{};
+    set('g.name','Guardian', g.name, r.guardian_name); set('g.phone','Guardian phone', g.phone, r.guardian_phone); set('g.email','Guardian email', g.email, r.guardian_email);
+    set('e.name','Emergency contact', e.name, r.emergency_name); set('e.phone','Emergency phone', e.phone, r.emergency_phone); }
+  if(can('medical.view')) set('medical','Medical', s.medical, r.medical);
+  return ch; }
+function importPreview(){ const el = $('#imp-prev'); if(!el) return;
+  if(!IMPORT_ROWS.length) return el.innerHTML = `<div class="alert">${ic('alert','sm')}<span>No usable rows. Each row needs a scout_id, or a first and last name. Check the header row.</span></div>`;
+  const P = importPlan(), changed = P.upd.filter(x => x.ch.length), same = P.upd.length - changed.length;
+  el.innerHTML = `<div class="imp-sum"><div><b>${changed.length}</b><span>scouts to update</span></div><div><b>${P.add.length}</b><span>new scouts</span></div><div><b>${same}</b><span>already up to date</span></div><div><b class="${P.skip.length?'w':''}">${P.skip.length}</b><span>rows skipped</span></div></div>
+    ${changed.length ? `<div class="imp-list">${changed.slice(0,40).map(x => `<div><b>${esc(sname(x.s))}</b><span>${x.ch.map(c => `${c.l}: <s>${esc(c.from||'—')}</s> → <b>${esc(c.to)}</b>`).join(' · ')}</span></div>`).join('')}${changed.length>40?`<div class="muted small">…and ${changed.length-40} more</div>`:''}</div>` : ''}
+    ${[...P.skip, ...P.bad].length ? `<div class="alert" style="margin-top:10px;align-items:flex-start">${ic('alert','sm')}<span>${[...P.skip, ...P.bad].slice(0,8).map(esc).join('<br>')}${[...P.skip, ...P.bad].length>8?'<br>…':''}${P.bad.length?'<br>Cells with these values are left unchanged.':''}</span></div>` : ''}
+    ${P.add.length ? `<label class="check" style="margin-top:10px"><input type="checkbox" id="imp-add" checked> Add the ${P.add.length} new scout${P.add.length>1?'s':''} (${P.add.slice(0,3).map(r => esc(r.first+' '+r.last)).join(', ')}${P.add.length>3?'…':''})</label>` : ''}
+    ${changed.length || P.add.length ? `<button class="btn primary" style="margin-top:10px;width:100%" data-a="importDo">Apply: update ${changed.length}${P.add.length?` · add ${P.add.length}`:''}</button>` : '<p class="small muted" style="margin-top:10px">Nothing to change.</p>'}`; }
 A.importDo = () => { const y = academicYear().y; const made = [];
   const patrolFor = name => { name = String(name||'').trim(); const hit = name && S.patrols.find(x => x.name.toLowerCase()===name.toLowerCase()); if(hit) return hit;
     if(!name && S.patrols.length) return S.patrols[0];
     const p = { id:uid('p'), name:name||'New scouts', icon:'flag', color:COLORS[S.patrols.length % COLORS.length], motto:'', pl:null, apl:null, leaders:[], points:0 }; S.patrols.push(p); made.push(p.name); return p; };
-  IMPORT_ROWS.forEach(r => { const p = patrolFor(r.patrol);
-  S.scouts.push({ id:uid('s'), sid:`TM-${y}-${String(S.scouts.length+1).padStart(3,'0')}`, first:r.first, last:r.last, gender:genderOf(r.gender), dob:normDate(r.dob)||`${y-12}-01-01`, grade:r.grade||'Grade 6', section:r.section||'A', patrol:p.id, rank:STAGES.includes(r.rank)?r.rank:'Membership', joined:normDate(r.joined)||TODAY(), status:MEMBER_ST.includes(r.status)?r.status:'Pending', renewal:iso(addDays(new Date(),365)), fee:'Due', photo:null, photoConsent:false,
+  const P = importPlan(), addNew = !$('#imp-add') || $('#imp-add').checked; let nu = 0;
+  P.upd.forEach(({ s, ch }) => { if(!ch.length) return; nu++; ch.forEach(c => {
+    if(c.k==='patrol') s.patrol = patrolFor(c.to).id; else if(c.k.startsWith('g.')){ s.guardian = s.guardian||{}; s.guardian[c.k.slice(2)] = c.to; }
+    else if(c.k.startsWith('e.')){ s.emergency = s.emergency||{}; s.emergency[c.k.slice(2)] = c.to; } else s[c.k] = c.to; }); });
+  const adds = addNew ? P.add : [];
+  adds.forEach(r => { const p = patrolFor(r.patrol);
+  S.scouts.push({ id:uid('s'), sid:`TM-${y}-${String(S.scouts.length+1).padStart(3,'0')}`, first:r.first, last:r.last, gender:genderOf(r.gender), dob:normDate(r.dob)||`${y-12}-01-01`, grade:normGrade(r.grade)||'Grade 6', section:r.section||'A', patrol:p.id, rank:pickOf(STAGES, r.rank)||'Membership', joined:normDate(r.joined)||TODAY(), status:pickOf(MEMBER_ST, r.status)||'Pending', renewal:iso(addDays(new Date(),365)), fee:'Due', photo:null, photoConsent:false,
     guardian:{ name:r.guardian_name, phone:r.guardian_phone, email:r.guardian_email, relation:'Guardian' }, emergency:{ name:r.emergency_name, phone:r.emergency_phone }, medical:r.medical||'', activities:[], syllabus:{}, badgeProgress:{}, badges:[] }); });
-  audit(`Imported ${IMPORT_ROWS.length} scouts${made.length?` and created patrols ${made.join(', ')}`:''}`); toast(`Imported ${IMPORT_ROWS.length} scouts${made.length?` · new patrols: ${made.join(', ')}`:''}`); IMPORT_ROWS = []; closeModal(); refresh(); };
+  const msg = [nu && `updated ${nu} scout${nu>1?'s':''}`, adds.length && `added ${adds.length} new scout${adds.length>1?'s':''}`, made.length && `created patrols ${made.join(', ')}`].filter(Boolean).join(', ') || 'nothing changed';
+  audit('Import: ' + msg); toast(msg.charAt(0).toUpperCase() + msg.slice(1)); IMPORT_ROWS = []; closeModal(); refresh(); };
 A.exportScouts = () => modal({ title:'Export scouts', body:`<p class="muted" style="margin-bottom:14px">Exports all ${S.scouts.length} scouts with membership, patrol, rank and attendance. The PDF is a printable list split into girls and boys. In Excel and CSV, contact and medical columns are included only for roles allowed to see them.</p><div class="row"><button class="btn primary" data-a="exportScoutsDo" data-fmt="xlsx">${ic('download','sm')} Excel (.xlsx)</button><button class="btn" data-a="exportScoutsDo" data-fmt="csv">${ic('download','sm')} CSV</button><button class="btn" data-a="exportScoutsPDF">${ic('file','sm')} PDF</button></div>` });
 /* Printable list of every scout, grouped into Girls, Boys and not set. */
 A.exportScoutsPDF = () => withPDF(async () => { closeModal(); const all = [...S.scouts].sort((a,b) => sname(a).localeCompare(sname(b)));
@@ -2010,6 +2060,26 @@ function profActivity(s){ const list = [...(s.activities||[])].sort((a,b) => a.d
   return `<div class="card"><div class="card-h"><h2>Participation & activities</h2>${can('scout.edit')?`<button class="btn sm" data-a="addActivity" data-id="${s.id}">${ic('plus','sm')} Add</button>`:''}</div>
   <div class="list">${list.map((x,i) => `<div class="li"><span class="kpi"><span class="ic">${ic({camp:'tent',hike:'mountain',service:'leaf',competition:'trophy',event:'star'}[x.type]||'star')}</span></span><div class="grow"><b class="ttl" style="display:block">${esc(x.title)}</b><span class="small muted">${ACT_TYPES[x.type]||x.type} · ${fmtD(x.date)} · ${esc(x.role)}</span></div>${x.cert?chip(ic('file','sm')+' Certificate','gold'):''}</div>`).join('') || empty('tent','No activities recorded')}</div></div>`; }
 A.addActivity = el => modal({ title:'Add activity', form:'activity', body:`<input type="hidden" name="id" value="${el.dataset.id}"><div class="form-grid">${field('Activity', inp('title','','required'), 'full')}${field('Type', sel('type', Object.entries(ACT_TYPES), 'camp'))}${field('Date', inp('date', TODAY(), 'type="date"'))}${field('Role', inp('role','Participant'))}<label class="check" style="align-self:end"><input type="checkbox" name="cert"> Certificate issued</label></div>`, foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Add activity</button>` });
+/* One activity (camp, hike, service…) recorded for many scouts at once. */
+A.bulkActivity = () => { const list = activeScouts().sort((a,b) => pName(a.patrol).localeCompare(pName(b.patrol)) || sname(a).localeCompare(sname(b)));
+  modal({ title:'Add activity for several scouts', wide:true, form:'bulkActivity', body:`<div class="form-grid">${field('Activity', inp('title','','required placeholder="e.g. District camp 2026"'), 'full')}${field('Type', sel('type', Object.entries(ACT_TYPES), 'camp'))}${field('Date', inp('date', TODAY(), 'type="date"'))}${field('Role', inp('role','Participant'))}<label class="check" style="align-self:end"><input type="checkbox" name="cert"> Certificate issued</label></div>
+    <div class="ba-h"><b>Scouts who took part</b><span class="spacer"></span><span class="small muted" id="ba-n">0 selected</span></div>
+    <div class="row" style="gap:8px;margin-bottom:8px"><input class="inp" style="flex:1;min-width:160px" placeholder="Find a scout" data-i="baFind" aria-label="Find a scout"><select class="inp" style="width:auto" data-c="baPatrol" aria-label="Patrol">${opts([['','All patrols'], ...S.patrols.map(p => [p.id, p.name])], '')}</select>
+    <select class="inp" style="width:auto" data-c="baReg" aria-label="Tick from a register">${opts([['','Tick who attended a register…'], ...regsSorted().slice(0,30).map(r => [r.id, `${fmtD(r.date)} · ${r.type}`])], '')}</select></div>
+    <div class="row" style="gap:8px;margin-bottom:8px"><button type="button" class="btn sm" data-a="baAll">Select all shown</button><button type="button" class="btn sm ghost" data-a="baNone">Clear</button></div>
+    <div class="ba-list">${list.map(s => `<label class="check ba-row" data-p="${s.patrol}" data-n="${esc(sname(s).toLowerCase())}"><input type="checkbox" name="ids" value="${s.id}" data-c="baCount"> ${av(s,26)} <span class="grow">${esc(sname(s))}</span><span class="small muted">${esc(pName(s.patrol))} · ${esc(s.grade||'')}</span></label>`).join('') || empty('users','No active scouts')}</div><div id="ba-err"></div>`,
+    foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Add to selected scouts</button>` }); };
+const baRows = () => [...document.querySelectorAll('.ba-row')], baCount = () => { const n = baRows().filter(x => x.querySelector('input').checked).length; const el = $('#ba-n'); if(el) el.textContent = `${n} selected`; };
+const baFilter = () => { const q = ($('[data-i=baFind]')?.value||'').trim().toLowerCase(), p = $('[data-c=baPatrol]')?.value||''; baRows().forEach(x => x.hidden = (q && !x.dataset.n.includes(q)) || (p && x.dataset.p!==p)); };
+I.baFind = () => baFilter(); C.baPatrol = () => baFilter(); C.baCount = () => baCount();
+C.baReg = el => { const r = S.registers.find(x => x.id===el.value); if(!r) return; let n = 0;
+  baRows().forEach(x => { const i = x.querySelector('input'), e = r.entries?.[i.value]; if(e && (e.s==='P' || e.s==='L')){ i.checked = true; n++; } }); baCount(); toast(`Ticked ${n} scouts who attended`); };
+A.baAll = () => { baRows().filter(x => !x.hidden).forEach(x => x.querySelector('input').checked = true); baCount(); };
+A.baNone = () => { baRows().forEach(x => x.querySelector('input').checked = false); baCount(); };
+F.bulkActivity = d => { const ids = [].concat(d.ids ?? []); if(!d.title?.trim()) return;
+  if(!ids.length) return $('#ba-err').innerHTML = `<div class="alert" style="margin-top:10px">${ic('alert','sm')}<span>Tick at least one scout.</span></div>`;
+  ids.forEach(id => { const s = scout(id); if(!s) return; s.activities = s.activities || []; s.activities.push({ type:d.type, title:d.title.trim(), date:d.date, role:d.role||'Participant', cert:!!d.cert }); });
+  audit(`Added activity “${d.title.trim()}” for ${ids.length} scouts`); closeModal(); refresh(); toast(`Added to ${ids.length} scout${ids.length>1?'s':''}`); };
 F.activity = d => { if(!d.title) return; const s = scout(d.id); s.activities.push({ type:d.type, title:d.title, date:d.date, role:d.role, cert:!!d.cert }); closeModal(); refresh(); toast('Activity added'); };
 function profContacts(s){ const g = s.guardian||{}, e = s.emergency||{}; const phone = v => v ? `<span class="row nw" style="gap:6px"><span class="num">${esc(v)}</span><button class="btn sm ghost" data-a="copy" data-v="${esc(v)}" aria-label="Copy number">${ic('copy','sm')}</button></span>` : '—';
   return `<div class="alert info" style="margin-bottom:14px">${ic('lock','sm')}<span>Restricted. Contacts and medical notes are shown only to roles allowed to see them (Settings → Roles & permissions). Scouts never see this tab.</span></div>
