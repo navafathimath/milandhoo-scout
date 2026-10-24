@@ -1775,13 +1775,15 @@ const AR_BULK = [['disc','Discipline'],['beh','Behaviour'],['lead','Leadership']
 A.arBulk = el => { const y = arYear(), L = arList(y).sort((a,b) => sname(a.s).localeCompare(sname(b.s))), cat = el?.dataset?.k || 'disc', isM = cat==='marks';
   const cur = (x, k) => { const v = x.d[k]; return k==='beh' && (v==null || v==='') ? '4' : k==='ach' || k==='camp' ? String(v||'0') : v==null ? '' : String(v); };
   const info = { disc:'Leader rating for each scout.', beh:'From the discipline record file.', lead:'“From patrol role” gives Patrol Leaders 2 and Assistants 1 automatically.', ach:'The troop’s award in uniform activities.', camp:'National or international camps attended in any grade.', marks:'Term averages in %. For BTEC students, enter points instead.' }[cat];
-  modal({ title:`Enter scores · ${y}`, wide:true, form:'arBulkSave', body:`<input type="hidden" name="cat" value="${cat}">
+  const body = `<input type="hidden" name="cat" value="${cat}">
     <div class="seg ar-seg">${AR_BULK.map(([k,l]) => `<button type="button" class="${k===cat?'on':''}" data-a="arBulkCat" data-k="${k}">${l}</button>`).join('')}</div>
     <p class="small muted" style="margin:10px 0">${info} ${isM ? '' : 'Tick scouts, choose a score and click Apply.'}</p>
     ${L.length ? `<div class="ar-bk-bar"><select class="inp" data-c="arRankF" aria-label="Filter by rank">${opts([['','All ranks'], ...STAGES.map(x => [x, x])], '')}</select><span class="small muted" id="ar-bk-n">${L.length} shown</span></div>` : ''}
     ${!L.length ? empty('users','No scouts to show') : isM ? `<div class="ar-mt"><div class="ar-mh"><span>Scout</span><span>Term 1 %</span><span>Term 2 %</span><span>BTEC pts</span></div>${L.map(x => `<div class="ar-fr" data-rank="${esc(x.s.rank||'')}"><span>${esc(sname(x.s))}<small>${esc(x.s.grade||'')}</small></span><input class="inp" type="number" name="t1_${x.s.id}" value="${esc(x.d.t1??'')}" min="0" max="100"><input class="inp" type="number" name="t2_${x.s.id}" value="${esc(x.d.t2??'')}" min="0" max="100"><input class="inp" type="number" name="bt_${x.s.id}" value="${esc(x.d.btec??'')}" min="0" max="31"></div>`).join('')}</div>`
     : `<div class="ar-bk"><div class="ar-bk-all"><label class="check" style="margin:0"><input type="checkbox" data-c="arTickAll" aria-label="Tick all shown"> All</label><span id="ar-bk-t">0 ticked</span><select class="inp" id="ar-bk-v" aria-label="Score to give">${opts([['__','Choose a score…'], ...AR_OPTS[cat]], '__')}</select><button type="button" class="btn sm primary" data-a="arApply">Apply to ticked</button></div>
-      ${L.map(x => `<div class="ar-bk-r ar-fr" data-rank="${esc(x.s.rank||'')}"><input type="checkbox" class="ar-tk" data-c="arTick" aria-label="Tick ${esc(sname(x.s))}"><span class="ar-who">${av(x.s,28)}<span><b>${esc(sname(x.s))}</b><small>${esc(x.s.grade||'')} · ${esc(x.s.rank||'')}${cat==='lead' && arLeadAuto(x.s) ? ` · ${arLeadAuto(x.s)===2 ? 'Patrol Leader' : 'Assistant PL'}` : ''}</small></span></span><select class="inp" name="v_${x.s.id}">${opts(AR_OPTS[cat], cur(x, cat))}</select></div>`).join('')}</div>`}`,
+      ${L.map(x => `<div class="ar-bk-r ar-fr" data-rank="${esc(x.s.rank||'')}"><input type="checkbox" class="ar-tk" data-c="arTick" aria-label="Tick ${esc(sname(x.s))}"><span class="ar-who">${av(x.s,28)}<span><b>${esc(sname(x.s))}</b><small>${esc(x.s.grade||'')} · ${esc(x.s.rank||'')}${cat==='lead' && arLeadAuto(x.s) ? ` · ${arLeadAuto(x.s)===2 ? 'Patrol Leader' : 'Assistant PL'}` : ''}</small></span></span><select class="inp" name="v_${x.s.id}">${opts(AR_OPTS[cat], cur(x, cat))}</select></div>`).join('')}</div>`}`;
+  if(el?.inPlace) return body;
+  modal({ title:`Enter scores · ${y}`, wide:true, form:'arBulkSave', body,
     foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save</button>` }); };
 function arBulkApply(d){ const y = arYear(), m = arData(y), cat = d.cat;
   Object.keys(d).forEach(k => { let id, key;
@@ -1789,7 +1791,8 @@ function arBulkApply(d){ const y = arYear(), m = arData(y), cat = d.cat;
     else if(k.startsWith('v_')){ key = cat; id = k.slice(2); }
     if(!key || !scout(id)) return; m[id] = m[id] || {}; m[id][key] = d[k]; }); }
 const arFormData = el => { const f = el.closest('form'), d = {}; new FormData(f).forEach((v,k) => d[k] = v); return d; };
-A.arBulkCat = el => { arBulkApply(arFormData(el)); save(); const k = el.dataset.k; closeModal(); A.arBulk({ dataset:{ k } }); };
+A.arBulkCat = el => { arBulkApply(arFormData(el)); save(); const b = el.closest('.modal').querySelector('.modal-b');
+  b.innerHTML = A.arBulk({ dataset:{ k:el.dataset.k }, inPlace:true }); b.scrollTop = 0; };
 const arRows = () => [...document.querySelectorAll('.modal .ar-fr')];
 const arTicked = () => arRows().filter(x => !x.hidden && x.querySelector('.ar-tk')?.checked);
 const arTickN = () => { const t = $('#ar-bk-t'); if(t) t.textContent = `${arTicked().length} ticked`; };
