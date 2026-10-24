@@ -756,6 +756,10 @@ summary::-webkit-details-marker{display:none}
   .rrow>.chip{grid-column:2/-1;justify-self:start}
 }
 /* Best All-Round Student */
+.ar-rub th,.ar-rub td{vertical-align:top}.ar-rub td small{display:block;color:var(--ink-2);font-size:.74rem}
+.ar-rc{display:flex;gap:8px;align-items:center;font-weight:600;white-space:nowrap}.ar-rc i{width:10px;height:10px;border-radius:3px;flex:none}
+.ar-rt td{font-weight:700;background:var(--surface-2)}
+@media (max-width:560px){ .ar-rc{white-space:normal;min-width:120px} .ar-rub th,.ar-rub td{padding:8px 10px;font-size:.82rem} }
 .ar-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:14px;overflow:hidden}
 .ar-kpi>div{padding:12px 16px;border-left:1px solid var(--line-2);min-width:0}.ar-kpi>div:first-child{border-left:0}
 .ar-kpi small{display:block;font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
@@ -1672,7 +1676,7 @@ VIEWS.allround = () => { const y = arYear(), L = arList(y), ed = can('scout.edit
   const years = [...new Set([String(new Date().getFullYear()), ...S.registers.map(r => r.date.slice(0,4)), ...Object.keys(S.settings.allround||{})])].sort().reverse();
   const avg = L.length ? (L.reduce((a,x) => a + x.total, 0)/L.length).toFixed(1) : '—', inc = L.filter(x => x.missing.length).length;
   const status = (x, i) => x.missing.length ? `<span class="ar-st warn">${x.missing.includes('mark') ? 'Marks missing' : 'Incomplete'}</span>` : AR_ACH[x.v.ach] ? `<span class="ar-st gold">${AR_ACH[x.v.ach]}</span>` : i===0 ? '<span class="ar-st gold">Leading</span>' : i<5 ? '<span class="ar-st">Shortlisted</span>' : '<span class="muted">—</span>';
-  return `${pageH('Annual prize giving · Uniform activities', 'Best All-Round Student', `<select class="inp" style="width:auto" data-c="arYear" aria-label="Year">${opts(years.map(v=>[v,'Year '+v]), y)}</select>${ed?`<button class="btn" data-a="arMarks">${ic('edit','sm')} Enter term marks</button>`:''}${can('export')?`<button class="btn primary" data-a="arPDF">${ic('download','sm')} Export rubric (PDF)</button>`:''}`)}${scoutTabs('allround')}
+  return `${pageH('Annual prize giving · Uniform activities', 'Best All-Round Student', `<select class="inp" style="width:auto" data-c="arYear" aria-label="Year">${opts(years.map(v=>[v,'Year '+v]), y)}</select>${ed?`<button class="btn" data-a="arMarks">${ic('edit','sm')} Enter term marks</button>`:''}<button class="btn" data-a="arRubric">${ic('file','sm')} Rubrics</button>${can('export')?`<button class="btn primary" data-a="arPDF">${ic('download','sm')} Export results (PDF)</button>`:''}`)}${scoutTabs('allround')}
   <div class="ar-kpi"><div><small>Eligible scouts</small><b>${L.length}</b><span>Grade 10 and above</span></div><div><small>Highest score</small><b>${L[0] ? L[0].total : '—'} <em>/ 28</em></b><span>${L[0] ? esc(sname(L[0].s)) : ''}</span></div><div><small>Average score</small><b>${avg}</b><span>out of 28</span></div><div><small>Incomplete records</small><b class="${inc?'w':''}">${inc}</b><span>discipline, attendance or marks</span></div></div>
   <div class="card ar-card"><div class="ar-h"><h2>Score composition</h2><span class="spacer"></span><div class="ar-lg">${AR_CATS.map(([k,l,c]) => `<span><i style="background:var(--ar-${k},${c})"></i>${l}</span>`).join('')}</div></div>
     ${L.length ? `<div class="ar-r ar-scale"><span></span><span>Candidate</span><span class="ar-ticks"><span>0</span><span>7</span><span>14</span><span>21</span><span>28</span></span><span style="text-align:right">Total</span><span style="text-align:center">Status</span></div>
@@ -1714,16 +1718,44 @@ A.arPDF = () => withPDF(async () => { const y = arYear(), L = arList(y);
   pdfTable(ctx, ['#','Scout','Grade','Disc.','Att.','Behav.','Marks','Lead.','Achiev.','Camp','Total'],
     L.map((x,i) => [i+1, sname(x.s), String(x.s.grade||'').replace('Grade ','Gr '), ...AR_CATS.map(([k]) => x.v[k]==null ? '—' : x.v[k]), `${x.total}/28`]),
     [22,140,38,38,36,42,40,40,48,38,49]);
-  pdfH(ctx, 'Scoring rubric');
-  pdfTable(ctx, ['Category','Scoring'], [
-    ['Discipline','Excellent 4 · Very good 3 · Good 2 · Satisfactory 1 · Poor 0'],
-    ['Attendance','100% = 4 · 95–99% = 3 · 90–94% = 2 · 85–89% = 1 · below 85% = 0'],
-    ['Records of behaviour','No records 4 · 1 record 2 · more than 1 record 0'],
-    ['Final marks','65–100% = 4 · 50–64% = 3 · 40–49% = 2 · below 40% = 1 (BTEC: 20–31 = 4 · 15–19 = 3 · 12–14 = 2 · below 12 = 1)'],
-    ['Responsibility & leadership','Head post 4 · Second head 3 · Leader 2 · Assistant leader 1'],
-    ['Achievements','All-rounder 4 · Best camper 3 · Best five 2'],
-    ['Camping','International camp 4 · National camp 2'] ], [140,391]);
+  pdfH(ctx, 'Scoring rubric'); arRubricPDF(ctx);
   await pdfSave(ctx, `best-all-rounder-${y}.pdf`); });
+const AR_RUBRIC = [
+  ['disc', 'Discipline', ['Excellent','Very good','Good','Satisfactory','Poor']],
+  ['att', 'Attendance', ['100%','95–99%','90–94%','85–89%','Below 85%']],
+  ['beh', 'Records of behaviour', ['No records filed','','1 record','','More than 1 record']],
+  ['mark', 'Final marks', ['65–100%\nBTEC 20–31','50–64%\nBTEC 15–19','40–49%\nBTEC 12–14','Below 40%\nBTEC below 12','']],
+  ['lead', 'Responsibility & leadership', ['Head post','Second head','Leader','Assistant leader','']],
+  ['ach', 'Achievement in the activity', ['All-rounder','Best camper','Best five','','']],
+  ['camp', 'Camping', ['International camp','','National camp','','']] ];
+const arCol = k => AR_CATS.find(c => c[0]===k)[2];
+A.arRubric = () => modal({ title:'Best All-Round Student · Scoring rubric', wide:true,
+  body:`<p class="small muted" style="margin-top:0">Annual prize giving · Uniform activities. Seven categories, up to 4 points each, for a total of 28. Open to scouts in Grade 10 and above.</p>
+  <div class="tbl-wrap"><table class="tbl ar-rub"><thead><tr><th>Category</th>${[4,3,2,1,0].map(n => `<th>${n} point${n===1?'':'s'}</th>`).join('')}</tr></thead>
+  <tbody>${AR_RUBRIC.map(([k,l,c]) => `<tr><td><span class="ar-rc"><i style="background:var(--ar-${k},${arCol(k)})"></i>${l}</span></td>${c.map(t => t ? `<td>${t.split('\n').map((x,i) => i ? `<small>${x}</small>` : x).join('')}</td>` : '<td class="muted">—</td>').join('')}</tr>`).join('')}
+  <tr class="ar-rt"><td>Maximum total</td><td colspan="5">28 points</td></tr></tbody></table></div>
+  <p class="small muted">Final marks use the average of the Term 1 and Term 2 results; BTEC students are scored on points. Camping counts national or international camps attended in any grade.</p>`,
+  foot:`<button type="button" class="btn" data-a="closeModal">Close</button>${can('export')?`<button type="button" class="btn primary" data-a="arRubricPDF">${ic('download','sm')} Download PDF</button>`:''}` });
+function arRubricPDF(ctx){ const { doc } = ctx, H = doc.internal.pageSize.getHeight(), x0 = 32, W = [131,80,80,80,80,80], tw = 531; let y = ctx.y;
+  const hex = c => [1,3,5].map(i => parseInt(c.slice(i,i+2),16));
+  const head = () => { doc.setFillColor(228,240,248); doc.rect(x0, y, tw, 22, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(10,92,143);
+    let x = x0; ['Category','4 points','3 points','2 points','1 point','0 points'].forEach((t,i) => { doc.text(t, x+6, y+14); x += W[i]; }); y += 22; };
+  head();
+  AR_RUBRIC.forEach(([k,l,c], ri) => { doc.setFontSize(9);
+    const cells = [doc.splitTextToSize(l, W[0]-18), ...c.map((t,i) => t ? t.split('\n').flatMap(x => doc.splitTextToSize(x, W[i+1]-12)) : ['—'])];
+    const rh = Math.max(...cells.map(x => x.length))*11 + 12; if(y + rh > H - 50){ doc.addPage(); y = 40; head(); }
+    if(ri % 2){ doc.setFillColor(244,249,252); doc.rect(x0, y, tw, rh, 'F'); }
+    doc.setFillColor(...hex(arCol(k))); doc.rect(x0, y, 4, rh, 'F');
+    let x = x0; cells.forEach((ls, i) => { doc.setFont('helvetica', i ? 'normal' : 'bold'); doc.setTextColor(...(c[i-1]==='' ? [150,160,170] : [19,40,58]));
+      ls.forEach((t, j) => doc.text(t, x + (i ? 6 : 12), y + 15 + j*11)); x += W[i]; });
+    doc.setDrawColor(220,230,238); doc.line(x0, y+rh, x0+tw, y+rh); y += rh; });
+  doc.setFillColor(10,92,143); doc.rect(x0, y, tw, 22, 'F'); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255); doc.text('Maximum total', x0+12, y+14); doc.text('28 points', x0+W[0]+6, y+14); y += 22;
+  ctx.y = y + 14; }
+A.arRubricPDF = () => withPDF(async () => {
+  const ctx = await pdfDoc('Best All-Round Student · Scoring rubric', 'Annual prize giving  ·  Uniform activities  ·  Grade 10 and above');
+  arRubricPDF(ctx); const { doc } = ctx; doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(78,101,119);
+  doc.splitTextToSize('Final marks use the average of the Term 1 and Term 2 results; BTEC students are scored on points. Camping counts national or international camps attended in any grade.', 531).forEach((t,i) => doc.text(t, 32, ctx.y + i*12));
+  await pdfSave(ctx, 'best-all-rounder-rubric.pdf'); });
 /* ================= Scouts list, profiles, leaders ================= */
 VIEWS.scouts = () => {
   const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
