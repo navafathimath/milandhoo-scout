@@ -755,6 +755,11 @@ summary::-webkit-details-marker{display:none}
   .rrow{grid-template-columns:44px minmax(0,1fr) auto;gap:10px}
   .rrow>.chip{grid-column:2/-1;justify-self:start}
 }
+/* show-password eye, clickable logo */
+.pw-wrap{position:relative;display:block}.pw-wrap .inp{width:100%;padding-right:46px}
+.pw-eye{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:36px;height:36px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--ink-2);cursor:pointer}
+.pw-eye:hover{background:var(--surface-2);color:var(--ink)}.login3 .pw-eye{color:#7A8D9B}.login3 .pw-eye:hover{background:#E6EEF4;color:#13283A}
+a.side-brand,a.logo-m{text-decoration:none;color:inherit;cursor:pointer}
 /* Settings: roles & permissions */
 .perm-t td,.perm-t th{text-align:center}.perm-t td:first-child,.perm-t th:first-child{text-align:left}
 .perm-t .perm-g td{text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);background:var(--surface-2)}
@@ -1269,7 +1274,8 @@ const pDot = p => p ? `<span class="dot" style="background:${p.color}"></span>` 
 const pName = id => id==='all' ? 'Whole troop' : (patrol(id)?.name || '—');
 function opts(list, val){ return list.map(o => { const [v,l] = Array.isArray(o) ? o : [o,o]; return `<option value="${esc(v)}" ${String(v)===String(val)?'selected':''}>${esc(l)}</option>`; }).join(''); }
 function field(label, inner, cls=''){ return `<div class="field ${cls}"><label>${label}</label>${inner}</div>`; }
-const inp = (name, val='', attrs='') => `<input class="inp" id="f_${name}" name="${name}" value="${esc(val)}" ${attrs}>`;
+const inp = (name, val='', attrs='') => { const el = `<input class="inp" id="f_${name}" name="${name}" value="${esc(val)}" ${attrs}>`;
+  return /type="password"/.test(attrs) ? `<span class="pw-wrap">${el}<button type="button" class="pw-eye" data-a="pwEye" aria-label="Show password" title="Show password">${ic('eye','sm')}</button></span>` : el; };
 const sel = (name, list, val, attrs='') => `<select class="inp" id="f_${name}" name="${name}" ${attrs}>${opts(list, val)}</select>`;
 const ta = (name, val='', attrs='') => `<textarea class="inp" id="f_${name}" name="${name}" ${attrs}>${esc(val)}</textarea>`;
 function pageH(eyebrow, title, actions=''){ return `<div class="page-h"><div class="t"><div class="eyebrow">${eyebrow}</div><h1>${title}</h1></div><div class="row">${actions}</div></div>`; }
@@ -1460,7 +1466,7 @@ function renderApp(){ twoTerms(); schoolDays();
   const bn = isScout() ? [['me','Me','users'],['calendar','Calendar','calendar'],['gallery','Photos','image'],['notifications','Alerts','bell']] : [['dashboard','Home','compass'],['attendance','Attendance','clipboard'],['scouts','Scouts','users'],['calendar','Calendar','calendar']];
   $('#app').innerHTML = `<div class="shell ${collapsed?'collapsed':''}" id="shell">
   <aside class="side" aria-label="Main navigation">
-    <div class="side-brand">${logoHTML(40)}<div class="txt"><div class="name">${esc(S.settings.groupName.replace(/ School Scout Troop$/,''))}</div><div class="sub">${esc(S.settings.year)} · Scout portal</div></div></div>
+    <a class="side-brand" href="${routeHref(isScout()?'me':'dashboard')}" data-a="go" data-r="${isScout()?'me':'dashboard'}" title="Home">${logoHTML(40)}<div class="txt"><div class="name">${esc(S.settings.groupName.replace(/ School Scout Troop$/,''))}</div><div class="sub">${esc(S.settings.year)} · Scout portal</div></div></a>
     <nav>${nav.map(n => n.sec ? `<div class="nav-sec">${n.sec}</div>` : `<a class="nav-item" href="${routeHref(n.id)}" data-a="go" data-r="${n.id}" data-nav="${n.id}" title="${n.label}">${ic(n.icon)}<span class="nav-label">${n.label}</span>${n.count?`<span class="cnt" data-unread></span>`:''}</a>`).join('')}</nav>
     <div class="side-foot"><button class="nav-item collapse-btn" data-a="collapse" title="Collapse or expand the sidebar" aria-label="Collapse or expand the sidebar">${ic('collapse')}</button></div>
   </aside>
@@ -1468,7 +1474,7 @@ function renderApp(){ twoTerms(); schoolDays();
   <div class="main-wrap">
     <header class="top">
       <button class="icon-btn mob-only" data-a="openDrawer" aria-label="Open menu">${ic('menu')}</button>
-      <span class="logo-m">${logoHTML(34)}</span>
+      <a class="logo-m" href="${routeHref(isScout()?'me':'dashboard')}" data-a="go" data-r="${isScout()?'me':'dashboard'}" aria-label="Home">${logoHTML(34)}</a>
       ${isScout() ? '<div class="spacer"></div>' : `<div class="search" id="search"><span class="sr"><label for="gsearch">Search</label></span>${ic('search')}<input id="gsearch" type="search" placeholder="Search scouts, leaders, badges, sessions, events" autocomplete="off" data-i="search"><div class="search-res hide" id="search-res"></div></div>`}
       <div class="top-right">
         ${isScout()?'':`<button class="icon-btn search-toggle" data-a="openSearch" aria-label="Search">${ic('search')}</button>`}
@@ -1565,13 +1571,15 @@ A.profMenu = () => { const p = $('#prof-pop'); if(p.innerHTML){ p.innerHTML = ''
   p.innerHTML = `<div class="pop"><div class="row nw" style="padding:10px 12px;gap:10px">${av(isScout()?myScout():ME, 40)}<div style="min-width:0"><b>${esc(ME.name)}</b><div class="small muted">${esc(ME.email)}</div></div></div><hr style="border:0;border-top:1px solid var(--line);margin:4px 0">
   ${isScout() ? `<button class="pop-item" data-a="go" data-r="me">${ic('users')} My profile</button>` : `<button class="pop-item" data-a="go" data-r="leader" data-id="${ME.id}">${ic('users')} My leader profile</button>`}
   <button class="pop-item" data-a="changePw">${ic('lock')} Change password</button>
-  <button class="pop-item" data-a="theme">${ic('moon')} Toggle dark mode</button>
   ${can('settings.view')?`<button class="pop-item" data-a="go" data-r="settings">${ic('settings')} Settings</button>`:''}
   <button class="pop-item" data-a="logout">${ic('logout')} Sign out</button></div>`; };
 A.logout = () => { audit('Signed out'); save(); ME = null; Store.del('kv','session'); renderApp(); };
-A.changePw = () => { closePops(); modal({ title:'Change password', form:'changePw', body:`<div class="stack">${field('Current password', inp('cur','','type="password" required autocomplete="current-password"'))}${field('New password (8+ characters)', inp('pw','','type="password" required autocomplete="new-password"'))}<div id="cpw-err"></div></div>`, foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Update password</button>` }); };
+A.pwEye = el => { const i = el.parentNode.querySelector('input'); const show = i.type==='password'; i.type = show ? 'text' : 'password';
+  el.innerHTML = ic(show ? 'eyeoff' : 'eye', 'sm'); el.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); el.title = el.getAttribute('aria-label'); i.focus(); };
+A.changePw = () => { closePops(); modal({ title:'Change password', form:'changePw', body:`<div class="stack">${field('Current password', inp('cur','','type="password" required autocomplete="current-password"'))}${field('New password (8+ characters)', inp('pw','','type="password" required autocomplete="new-password"'))}${field('Confirm new password', inp('pw2','','type="password" required autocomplete="new-password"'))}<div id="cpw-err"></div></div>`, foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Update password</button>` }); };
 F.changePw = async d => { if(ME.pw !== await sha(d.cur)) return $('#cpw-err').innerHTML = `<div class="alert">${ic('alert','sm')}<span>Your current password is not right.</span></div>`;
   if(String(d.pw).length < 8) return $('#cpw-err').innerHTML = `<div class="alert">${ic('alert','sm')}<span>Use at least 8 characters.</span></div>`;
+  if(d.pw !== d.pw2) return $('#cpw-err').innerHTML = `<div class="alert">${ic('alert','sm')}<span>The two new passwords do not match.</span></div>`;
   ME.pw = await sha(d.pw); audit('Changed password'); save(); closeModal(); toast('Password updated'); };
 
 /* ---- global search ---- */
@@ -2156,7 +2164,7 @@ F.user = async d => { const err = m => $('#uf-err').innerHTML = `<div class="ale
 function dropUser(id){ S.users = S.users.filter(u => u.id!==id);
   S.patrols.forEach(p => p.leaders = (p.leaders||[]).filter(x => x!==id)); [...S.sessions, ...S.events].forEach(x => { if(Array.isArray(x.leaders)) x.leaders = x.leaders.filter(l => l!==id); });
   const o = S.settings.org; if(o) [...o.lead, ...o.teams].forEach(t => t.m = (t.m||[]).filter(m => m!==id)); }
-A.deleteUser = el => { const u = user(el.dataset.id); if(!u || u.role==='admin') return;
+A.deleteUser = el => { const u = user(el.dataset.id); if(!u || u.id===ME.id) return;
   confirmBox(`Delete the account for <b>${esc(u.name)}</b>? They will no longer be able to sign in. Their past attendance marks and records stay.`, () => { dropUser(u.id); audit(`Deleted account ${u.name}`); save(); go('leaders', { q:{ lv:'list' } }); toast('Account deleted'); }, 'Delete account'); };
 A.resetUserPw = el => { const u = user(el.dataset.id); const tmp = 'Trail-' + Math.floor(1000+Math.random()*9000);
   confirmBox(`Reset the password for <b>${esc(u.name)}</b>? Their new temporary password will be <b class="num">${tmp}</b>. Share it with them privately.`, async () => { u.pw = await sha(tmp); audit(`Reset password for ${u.name}`); save(); closeModal(); toast('Password reset'); }, 'Reset password'); };
@@ -2828,9 +2836,16 @@ const Cloud = {
     snaps.forEach((s, i) => { if(s && s.exists){ const j = s.data().json; this.sent[keys[i]] = j; st[keys[i]] = JSON.parse(j); } });
     S = this.assemble(st);
     ME = this.findMe();
+    /* only one admin: once the admin sign-in has moved to ADMIN_EMAIL, an old admin email is turned away and its stray record removed */
+    const realAdmin = S.users.find(x => x.role==='admin' && (x.email||'').toLowerCase()===ADMIN_EMAIL);
+    if(role==='admin' && realAdmin && email!==ADMIN_EMAIL){
+      const n = S.users.length; S.users = S.users.filter(x => x===realAdmin || !(x.role==='admin' && (x.email||'').toLowerCase()===email));
+      if(S.users.length!==n){ try { await this.db.doc('portal/users').set({ json:this.ser('users'), by:email, ts:Date.now() }); } catch(e){} }
+      LOGIN_ERR = `${esc(u.email)} is no longer the admin sign-in. Sign in with ${ADMIN_EMAIL}.`; ME = null; await this.auth.signOut(); return; }
     if(!ME){ ME = { id:uid('u'), name:u.displayName || u.email.split('@')[0], email:u.email, role, phone:'', photo:null, title:ROLES[role], qualifications:[], activity:[] }; S.users.push(ME); }
     ME.role = role;
     if(role==='admin') this.migrate();
+    if(role==='admin' && email===ADMIN_EMAIL) S.users.filter(x => x.role==='admin' && x!==ME).forEach(x => dropUser(x.id));
     if(role!=='scout') tidySessions();
     const askMove = role==='admin' && email !== ADMIN_EMAIL && !S.users.some(x => (x.email||'').toLowerCase()===ADMIN_EMAIL && x.id!==ME.id);
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
@@ -2971,6 +2986,7 @@ const Cloud = {
       $('#login-card').innerHTML = `<h2>Check your email</h2><p class="muted" style="margin:6px 0 20px">If an account exists for <b>${esc(em)}</b>, a password reset link is on its way. Check your spam folder if it does not arrive in a few minutes.</p><button class="btn primary lg" style="width:100%" data-a="backLogin">Back to sign in</button>`; };
     F.changePw = async d => { const err = m => $('#cpw-err').innerHTML = `<div class="alert">${ic('alert','sm')}<span>${m}</span></div>`;
       if(String(d.pw).length < 8) return err('Use at least 8 characters.');
+      if(d.pw !== d.pw2) return err('The two new passwords do not match.');
       try { const u = this.auth.currentUser; await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, d.cur)); await u.updatePassword(d.pw); audit('Changed password'); save(); closeModal(); toast('Password updated'); }
       catch(e){ err(/wrong-password|invalid-credential/.test(e.code) ? 'Your current password is not right.' : e.message); } };
     A.logout = async () => { if(ME && this.role!=='scout'){ audit('Signed out'); this.flush(); } this.stop(); await this.auth.signOut(); };
@@ -2999,7 +3015,7 @@ const Cloud = {
     A.adminMove = () => modal({ title:'Move the admin sign-in', form:'adminMove', body:`<p class="muted" style="margin-top:0">The admin account will sign in with <b>${ADMIN_EMAIL}</b> from now on. <b>${esc(ME.email)}</b> will stop working as the admin sign-in.</p>
       <div class="stack">${field('New admin email', inp('email', ADMIN_EMAIL, 'type="email" readonly'))}${field('Password for the new email (8+ characters)', inp('newpw', '', 'type="text" minlength="8" required autocomplete="new-password"'))}</div><div id="uf-err"></div>`,
       foot:`<button type="button" class="btn" data-a="closeModal">Later</button><button class="btn primary">Move admin sign-in</button>` });
-    F.adminMove = d => F.user({ id:ME.id, name:ME.name, email:ADMIN_EMAIL, phone:ME.phone||'', role:'admin', newpw:d.newpw });
+    F.adminMove = d => F.user({ id:ME.id, name:'ADMIN', email:ADMIN_EMAIL, phone:ME.phone||'', role:'admin', newpw:d.newpw });
   },
 };
 /* ================= Settings, audit, guide ================= */
