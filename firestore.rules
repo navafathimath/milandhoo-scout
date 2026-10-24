@@ -2,7 +2,7 @@ rules_version = '2';
 
 // TrailMark security rules.
 // Only people listed in portal/access can read anything. Roles come from that list:
-//   admin      Group Scout Leader: everything, and the only role that can change access
+//   admin      Admin account:      everything, and the only role that can change access (hidden from other leaders)
 //   leader     Scout Leader:       read and write portal data and photos
 //   assistant  Assistant Leader:   read and write portal data and photos
 //   scout      Scout:              read-only, and never sees contacts or medical notes

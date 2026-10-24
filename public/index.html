@@ -755,6 +755,10 @@ summary::-webkit-details-marker{display:none}
   .rrow{grid-template-columns:44px minmax(0,1fr) auto;gap:10px}
   .rrow>.chip{grid-column:2/-1;justify-self:start}
 }
+/* Settings: roles & permissions */
+.perm-t td,.perm-t th{text-align:center}.perm-t td:first-child,.perm-t th:first-child{text-align:left}
+.perm-t .perm-g td{text-align:left;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);background:var(--surface-2)}
+.perm-t td .ic,.perm-t td svg{color:var(--ok)}.perm-t input{width:18px;height:18px;accent-color:var(--primary)}
 /* Best All-Round Student */
 .ar-rub th,.ar-rub td{vertical-align:top}.ar-rub td small{display:block;color:var(--ink-2);font-size:.74rem}
 .ar-rc{display:flex;gap:8px;align-items:center;font-weight:600;white-space:nowrap}.ar-rc i{width:10px;height:10px;border-radius:3px;flex:none}
@@ -945,7 +949,7 @@ function emblemSVG(size=40){
 function logoHTML(size=40){ return S && S.settings.logo && imgData(S.settings.logo) ? `<img class="logo" src="${imgData(S.settings.logo)}" width="${size}" height="${size}" style="border-radius:50%;object-fit:cover;width:${size}px;height:${size}px" alt="${esc(S.settings.groupName)} logo">` : emblemSVG(size); }
 /* ================= Constants & seed data ================= */
 const STAGES = ['Membership','Tenderfoot','Second Class','First Class'];
-const ROLES = { admin:'Group Scout Leader', leader:'Scout Leader', assistant:'Assistant Leader', scout:'Scout' };
+const ROLES = { admin:'Admin', leader:'Scout Leader', assistant:'Assistant Leader', scout:'Scout' };
 const MEMBER_ST = ['Active','Inactive','Pending','Expired'];
 const ST_LABEL = { P:'Present', L:'Late', A:'Absent', E:'Excused' };
 const EVENT_TYPES = {
@@ -972,7 +976,7 @@ async function buildSeed(){
   const AY = academicYear(today), y = AY.y;
   const pick = a => a[Math.floor(r()*a.length)];
   const users = [
-    { id:'u_admin', name:'Mariyam Saeed', email:'admin@trailmark.school', role:'admin', phone:'+960 777 1201', photo:null, title:'Group Scout Leader',
+    { id:'u_admin', name:'Mariyam Saeed', email:'admin@trailmark.school', role:'admin', phone:'+960 777 1201', photo:null, title:'Admin',
       qualifications:['Wood Badge (Scouts)','Advanced First Aid','Child Safeguarding Level 2'], activity:[{date:`${y}-08-10`, text:'Opened the scout year and briefed new leaders'},{date:`${y-1}-12-14`, text:'Led district camp contingent (34 scouts)'}] },
     { id:'u_leader', name:'Ibrahim Rasheed', email:'leader@trailmark.school', role:'leader', phone:'+960 777 3450', photo:null, title:'Scout Leader',
       qualifications:['Basic Unit Leader Training','Standard First Aid','Water Safety Supervisor'], activity:[{date:`${y}-09-20`, text:'Ran the navigation day for Kestrel and Heron'},{date:`${y-1}-03-08`, text:'Organised beach clean-up with 22 scouts'}] },
@@ -1170,11 +1174,24 @@ const hashRoute = () => { const [r, id] = decodeURIComponent(location.hash.repla
 const routeHref = (r, id) => '#/' + r + (id ? '/' + encodeURIComponent(id) : '');
 function startRoute(){ const h = hashRoute(); if(h && VIEWS[h.route]){ R.route = h.route; R.id = h.id; return true; } return false; }
 const PERMS = {
-  leader:['scout.add','scout.edit','scout.delete','attendance.take','attendance.finalize','attendance.delete','patrol.edit','badge.award','badge.signoff','badge.catalog','syllabus.signoff','syllabus.edit','session.edit','session.delete','event.edit','event.delete','photo.upload','photo.delete','photo.download','contacts.view','medical.view','export','import'],
+  leader:['settings.view','scout.add','scout.edit','scout.delete','attendance.take','attendance.finalize','attendance.delete','patrol.edit','badge.award','badge.signoff','badge.catalog','syllabus.signoff','syllabus.edit','session.edit','session.delete','event.edit','event.delete','photo.upload','photo.delete','photo.download','contacts.view','medical.view','export','import'],
   assistant:['attendance.take','badge.signoff','syllabus.signoff','medical.view','photo.download'],
   scout:[],
 };
-const can = p => ME && (ME.role==='admin' || (PERMS[ME.role]||[]).includes(p));
+const PERM_LIST = [
+  ['Scouts', [['scout.add','Add scouts'],['scout.edit','Edit scout records'],['scout.delete','Delete scouts'],['contacts.view','See parent and emergency contacts'],['medical.view','See medical notes']]],
+  ['Attendance', [['attendance.take','Take attendance'],['attendance.finalize','Finalize registers'],['attendance.delete','Delete registers']]],
+  ['Patrols & badges', [['patrol.edit','Manage patrols'],['badge.award','Award badges'],['badge.signoff','Sign off badge work'],['badge.catalog','Edit the badge catalogue']]],
+  ['Syllabus', [['syllabus.signoff','Sign off syllabus items'],['syllabus.edit','Edit the syllabus']]],
+  ['Sessions & calendar', [['session.edit','Plan sessions'],['session.delete','Delete sessions'],['event.edit','Add and edit events'],['event.delete','Delete events']]],
+  ['Photos', [['photo.upload','Upload photos'],['photo.delete','Delete photos'],['photo.download','Download photos']]],
+  ['Reports & settings', [['export','Export reports and lists'],['import','Import scouts'],['settings.view','Open Settings (group, year, session types)']]] ];
+const PERM_ROLES = ['leader','assistant'];
+const permsOf = r => (S?.settings?.perms && S.settings.perms[r]) || PERMS[r] || [];
+const can = p => ME && (ME.role==='admin' || permsOf(ME.role).includes(p));
+/* the admin account is hidden from everyone else and is never offered as a leader to pick */
+const leaderUsers = () => S.users.filter(u => u.role!=='scout' && u.role!=='admin');
+const seesUser = u => u && (u.role!=='admin' || ME?.role==='admin');
 const isScout = () => ME && ME.role==='scout';
 const user = id => S.users.find(u => u.id===id);
 const scout = id => S.scouts.find(s => s.id===id);
@@ -1368,12 +1385,12 @@ const NAV = [
   { id:'calendar', label:'Calendar', icon:'calendar' },
   { sec:'Group' },
   { id:'leaders', label:'Leaders', icon:'shield' },
-  { id:'settings', label:'Settings', icon:'settings', admin:true },
+  { id:'settings', label:'Settings', icon:'settings', perm:'settings.view' },
 ];
 const SCOUT_NAV = [
   { id:'me', label:'My profile', icon:'users' }, { id:'calendar', label:'Calendar', icon:'calendar' },
   { id:'notes', label:'Scout Notes', icon:'book' } ];
-const navList = () => isScout() ? SCOUT_NAV : NAV.filter(n => !n.admin || ME.role==='admin');
+const navList = () => isScout() ? SCOUT_NAV : NAV.filter(n => (!n.admin || ME.role==='admin') && (!n.perm || can(n.perm)));
 const ROUTE_PARENT = { scout:'scouts', register:'attendance', session:'sessions', album:'gallery', leader:'leaders', badge:'badges', me:'me', note:'notes', allround:'scouts' };
 
 let collapsed = false;
@@ -1471,7 +1488,7 @@ function loginView(){ const own = S.settings.logo && imgData(S.settings.logo);
   </div></div>`;
 }
 function loginForm(err=''){
-  const demo = [['admin@trailmark.school','Mariyam Saeed','Group Scout Leader'],['leader@trailmark.school','Ibrahim Rasheed','Scout Leader'],['assistant@trailmark.school','Aishath Shifa','Assistant Leader'],['scout@trailmark.school','Ahmed Zaid','Scout (read-only)']];
+  const demo = [['admin@trailmark.school','Mariyam Saeed','Admin'],['leader@trailmark.school','Ibrahim Rasheed','Scout Leader'],['assistant@trailmark.school','Aishath Shifa','Assistant Leader'],['scout@trailmark.school','Ahmed Zaid','Scout (read-only)']];
   return `
   <form data-f="login" class="stack" novalidate>
     ${field('Email', inp('email','', 'type="email" autocomplete="username" required'))}
@@ -1523,7 +1540,7 @@ A.profMenu = () => { const p = $('#prof-pop'); if(p.innerHTML){ p.innerHTML = ''
   ${isScout() ? `<button class="pop-item" data-a="go" data-r="me">${ic('users')} My profile</button>` : `<button class="pop-item" data-a="go" data-r="leader" data-id="${ME.id}">${ic('users')} My leader profile</button>`}
   <button class="pop-item" data-a="changePw">${ic('lock')} Change password</button>
   <button class="pop-item" data-a="theme">${ic('moon')} Toggle dark mode</button>
-  ${ME.role==='admin'?`<button class="pop-item" data-a="go" data-r="settings">${ic('settings')} Settings</button>`:''}
+  ${can('settings.view')?`<button class="pop-item" data-a="go" data-r="settings">${ic('settings')} Settings</button>`:''}
   <button class="pop-item" data-a="logout">${ic('logout')} Sign out</button></div>`; };
 A.logout = () => { audit('Signed out'); save(); ME = null; Store.del('kv','session'); renderApp(); };
 A.changePw = () => { closePops(); modal({ title:'Change password', form:'changePw', body:`<div class="stack">${field('Current password', inp('cur','','type="password" required autocomplete="current-password"'))}${field('New password (8+ characters)', inp('pw','','type="password" required autocomplete="new-password"'))}<div id="cpw-err"></div></div>`, foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Update password</button>` }); };
@@ -1538,7 +1555,7 @@ I.search = el => {
   const m = s => String(s).toLowerCase().includes(q);
   const groups = [
     ['Scouts', S.scouts.filter(s => m(sname(s)) || m(s.sid)).slice(0,6).map(s => [av(s,28), sname(s), `${s.sid} · ${pName(s.patrol)}`, 'scout', s.id])],
-    ['Leaders', S.users.filter(u => u.role!=='scout' && (m(u.name)||m(u.email))).map(u => [av(u,28), u.name, ROLES[u.role], 'leader', u.id])],
+    ['Leaders', S.users.filter(u => u.role!=='scout' && seesUser(u) && (m(u.name)||m(u.email))).map(u => [av(u,28), u.name, ROLES[u.role], 'leader', u.id])],
     ['Badges', S.badges.filter(b => m(b.name)).map(b => [`${bArt(b, '', 'width:28px;height:28px;border-width:1px', 'sm')}`, b.name, catLabel(b.category), 'badge', b.id])],
     ['Sessions', S.sessions.filter(s => !s.template && (m(s.title)||m(s.objectives))).slice(0,5).map(s => [`<span class="kpi"><span class="ic" style="width:28px;height:28px">${ic('fire','sm')}</span></span>`, s.title, fmtD(s.date), 'session', s.id])],
     ['Events', S.events.filter(e => m(e.title)||m(e.location)).slice(0,5).map(e => [`<span class="ev-dot" style="background:${EVENT_TYPES[e.type].color};width:14px;height:14px;margin:0 7px"></span>`, e.title, `${EVENT_TYPES[e.type].label} · ${e.recur!=='none'?'Repeats '+e.recur:fmtD(e.date)}`, 'calendar', e.id])],
@@ -1901,7 +1918,7 @@ A.exportScoutsDo = el => { const head = ['scout_id','first','last','gender','dob
 /* ---- profile ---- */
 VIEWS.me = () => { R.id = ME.scoutId; return VIEWS.scout(); };
 VIEWS.scout = () => {
-  const s = scout(R.id); if(!s) return isScout() ? empty('users','Your scout record is not linked yet','Ask your Group Scout Leader to link your account to your scout profile in Leaders → Scout accounts.') : empty('users','Scout not found');
+  const s = scout(R.id); if(!s) return isScout() ? empty('users','Your scout record is not linked yet','Ask the admin to link your account to your scout profile in Leaders → Scout accounts.') : empty('users','Scout not found');
   const p = patrol(s.patrol); const tab = R.tab || 'overview'; const ro = isScout();
   const tabs = [['overview','Overview'],['badges','Badges'],['attendance','Attendance'],['syllabus','Syllabus'],['activity','Activities'], ...(!ro && (can('contacts.view')||can('medical.view')) ? [['contacts','Contacts & medical']] : [])];
   const a = attOf(s.id); const sy = sylFor(s);
@@ -1961,7 +1978,7 @@ function profActivity(s){ const list = [...(s.activities||[])].sort((a,b) => a.d
 A.addActivity = el => modal({ title:'Add activity', form:'activity', body:`<input type="hidden" name="id" value="${el.dataset.id}"><div class="form-grid">${field('Activity', inp('title','','required'), 'full')}${field('Type', sel('type', Object.entries(ACT_TYPES), 'camp'))}${field('Date', inp('date', TODAY(), 'type="date"'))}${field('Role', inp('role','Participant'))}<label class="check" style="align-self:end"><input type="checkbox" name="cert"> Certificate issued</label></div>`, foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Add activity</button>` });
 F.activity = d => { if(!d.title) return; const s = scout(d.id); s.activities.push({ type:d.type, title:d.title, date:d.date, role:d.role, cert:!!d.cert }); closeModal(); refresh(); toast('Activity added'); };
 function profContacts(s){ const g = s.guardian||{}, e = s.emergency||{}; const phone = v => v ? `<span class="row nw" style="gap:6px"><span class="num">${esc(v)}</span><button class="btn sm ghost" data-a="copy" data-v="${esc(v)}" aria-label="Copy number">${ic('copy','sm')}</button></span>` : '—';
-  return `<div class="alert info" style="margin-bottom:14px">${ic('lock','sm')}<span>Restricted. Only Group Scout Leaders and Scout Leaders see contacts. Assistant Leaders see medical notes only. Scouts never see this tab.</span></div>
+  return `<div class="alert info" style="margin-bottom:14px">${ic('lock','sm')}<span>Restricted. Contacts and medical notes are shown only to roles allowed to see them (Settings → Roles & permissions). Scouts never see this tab.</span></div>
   <div class="grid g3">${can('contacts.view') ? `<div class="card"><div class="card-h"><h3>Parent / guardian</h3></div><dl class="facts" style="grid-template-columns:1fr;margin:0"><div><dt>Name</dt><dd>${esc(g.name||'—')} <span class="muted">${esc(g.relation||'')}</span></dd></div><div><dt>Phone</dt><dd>${phone(g.phone)}</dd></div><div><dt>Email</dt><dd style="word-break:break-all">${esc(g.email||'—')}</dd></div></dl></div>
   <div class="card"><div class="card-h"><h3>Emergency contact</h3></div><dl class="facts" style="grid-template-columns:1fr;margin:0"><div><dt>Name</dt><dd>${esc(e.name||'—')} <span class="muted">${esc(e.relation||'')}</span></dd></div><div><dt>Phone</dt><dd>${phone(e.phone)}</dd></div></dl></div>` : ''}
   ${can('medical.view') ? `<div class="card"><div class="card-h"><h3>Medical & allergies</h3>${ic('heart')}</div>${s.medical ? `<div class="alert">${ic('alert','sm')}<span>${esc(s.medical)}</span></div>` : '<p class="muted">No medical or allergy notes.</p>'}</div>` : ''}</div>`; }
@@ -2041,7 +2058,7 @@ function orgDefault(){ return { lead:[
     { id:uid('t'), name:'Activity planner', icon:'🧭', color:'#B5483F', desc:'Plans sessions and outings', m:['n:Mohamed Afrah','n:Fathimath Nisreen'] } ] }; }
 function orgOf(){ if(!S.settings.org) S.settings.org = orgDefault(); return S.settings.org; }
 /* a member is a leader account id, or 'n:Name' for someone without an account (matched to an account by name when one exists) */
-function orgPerson(ref){ if(String(ref).startsWith('n:')){ const n = ref.slice(2).trim(); return S.users.find(u => u.role!=='scout' && u.name.trim().toLowerCase()===n.toLowerCase()) || { name:n }; } return user(ref) || null; }
+function orgPerson(ref){ if(String(ref).startsWith('n:')){ const n = ref.slice(2).trim(); return leaderUsers().find(u => u.name.trim().toLowerCase()===n.toLowerCase()) || { name:n }; } const u = user(ref); return u && u.role!=='admin' ? u : null; }
 function orgPeople(refs){ return (refs||[]).map(orgPerson).filter(Boolean); }
 function orgName(p){ return p.id ? `<button class="org-link" data-a="go" data-r="leader" data-id="${p.id}">${esc(p.name)}</button>` : esc(p.name); }
 
@@ -2051,10 +2068,10 @@ function orgTree(){ const o = orgOf(), n = o.teams.length;
     ${n ? `<div class="org-teams" style="--n:${n}">${o.teams.map(t => { const ms = orgPeople(t.m);
       return `<div class="org-team" style="--c:${t.color}"><h4>${t.icon?`<span class="org-ti">${esc(t.icon)}</span>`:''}${esc(t.name)}</h4>${t.desc?`<div class="org-du">${esc(t.desc)}</div>`:''}
       ${ms.map(p => `<div class="org-m">${av(p,32)}${orgName(p)}</div>`).join('') || '<div class="org-m muted small">No one assigned yet</div>'}</div>`; }).join('')}</div>` : ''}</div>`; }
-VIEWS.leaders = () => { const list = S.users.filter(u => u.role!=='scout'); const lv = R.q.lv || 'org';
+VIEWS.leaders = () => { const list = S.users.filter(u => u.role!=='scout' && seesUser(u)); const lv = R.q.lv || 'org';
   return `${pageH('Group', 'Leaders', `<div class="seg"><button class="${lv==='org'?'on':''}" data-a="go" data-r="leaders" data-q-lv="org">Hierarchy</button><button class="${lv==='list'?'on':''}" data-a="go" data-r="leaders" data-q-lv="list">List</button></div>${ME.role==='admin' ? (lv==='org' ? `<button class="btn primary" data-a="orgEdit">${ic('edit','sm')} Edit roles</button>` : `<button class="btn primary" data-a="addUser">${ic('plus','sm')} Add user</button>`) : ''}`)}
   ${lv==='org' ? orgTree() : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">${list.map(u => { const ps = S.patrols.filter(p => p.leaders.includes(u.id));
-    return `<button class="card" style="text-align:left;cursor:pointer" data-a="go" data-r="leader" data-id="${u.id}"><div class="row nw">${av(u,56)}<div style="min-width:0"><h3>${esc(u.name)}</h3><div class="small muted">${ROLES[u.role]}${u.disabled?' · disabled':''}${u.sample?' · sample profile, cannot sign in':''}</div></div></div>
+    return `<button class="card" style="text-align:left;cursor:pointer" data-a="go" data-r="leader" data-id="${u.id}"><div class="row nw">${av(u,56)}<div style="min-width:0"><h3>${esc(u.name)}</h3><div class="small muted">${ROLES[u.role]}${u.role==='admin'?' · hidden from other leaders':''}${u.disabled?' · disabled':''}${u.sample?' · sample profile, cannot sign in':''}</div></div></div>
     <div class="row" style="margin-top:12px;gap:6px">${ps.map(p => `<span class="chip">${pDot(p)} ${esc(p.name)}</span>`).join('') || '<span class="small muted">No patrols assigned</span>'}</div>
     <div class="small muted" style="margin-top:10px">${u.qualifications.length} qualifications · ${S.scouts.filter(s => ps.some(p=>p.id===s.patrol)).length} scouts</div></button>`; }).join('')}</div>
   ${ME.role==='admin' ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Scout accounts</h2><span class="small muted">Read-only access for scouts</span></div><div class="list">${S.users.filter(u=>u.role==='scout').map(u => `<div class="li">${av(scout(u.scoutId)||u,36)}<div class="grow"><b>${esc(u.name)}</b><div class="small muted">${esc(u.email)}</div></div><button class="btn sm" data-a="editUser" data-id="${u.id}">Manage</button></div>`).join('') || empty('users','No scout accounts')}</div></div>` : ''}`}`; };
@@ -2065,7 +2082,7 @@ A.orgEdit = () => { const o = orgOf(); const row = (k, i, title, sub, ic2) => `<
     foot:`<button type="button" class="btn" data-a="orgItem" data-k="team" data-i="new">${ic('plus','sm')} Add duty team</button><span class="spacer"></span><button type="button" class="btn primary" data-a="closeModal">Done</button>` }); };
 A.orgItem = el => { const o = orgOf(), k = el.dataset.k, isNew = el.dataset.i==='new';
   const it = isNew ? { name:'', icon:'⚜️', color:ORG_COLORS[o.teams.length % ORG_COLORS.length], desc:'', m:[] } : (k==='lead' ? o.lead : o.teams)[+el.dataset.i];
-  const leaders = S.users.filter(u => u.role!=='scout');
+  const leaders = leaderUsers();
   const picked = new Set(), others = [];
   (it.m||[]).forEach(r => { const p = orgPerson(r); if(p?.id) picked.add(p.id); else if(p) others.push(p.name); });
   modal({ title: k==='lead' ? `Edit ${esc(it.role)}` : isNew ? 'New duty team' : 'Edit duty team', wide:true, form:'orgItem', body:`<input type="hidden" name="k" value="${k}"><input type="hidden" name="i" value="${el.dataset.i}"><div class="form-grid">
@@ -2080,7 +2097,7 @@ F.orgItem = d => { const o = orgOf(); const m = [].concat(d.m||[]).concat(String
     Object.assign(t, { name:d.name.trim(), icon:(d.icon||'').trim(), desc:(d.desc||'').trim(), color:d.color || d.colorCustom || t.color || ORG_COLORS[0], m }); audit(`Saved duty team ${t.name}`); }
   closeModal(); closeModal(); refresh(); A.orgEdit(); toast('Roles saved'); };
 A.orgTeamDel = el => { const o = orgOf(), t = o.teams[+el.dataset.i]; if(!t) return; confirmBox(`Delete the <b>${esc(t.name)}</b> team?`, () => { o.teams.splice(+el.dataset.i, 1); audit(`Deleted duty team ${t.name}`); closeModal(); closeModal(); refresh(); A.orgEdit(); }); };
-VIEWS.leader = () => { const u = user(R.id); if(!u) return empty('shield','Leader not found'); const ps = S.patrols.filter(p => p.leaders.includes(u.id)); const sc = S.scouts.filter(s => ps.some(p => p.id===s.patrol));
+VIEWS.leader = () => { const u = user(R.id); if(!seesUser(u)) return empty('shield','Leader not found'); const ps = S.patrols.filter(p => p.leaders.includes(u.id)); const sc = S.scouts.filter(s => ps.some(p => p.id===s.patrol));
   const own = u.id===ME.id; const canEd = ME.role==='admin' || own;
   const acts = [...(u.activity||[]), ...S.audit.filter(a => a.user===u.id && !/Signed (in|out)/.test(a.action)).slice(0,6).map(a => ({ date:iso(new Date(a.ts)), text:a.action }))].sort((a,b) => a.date < b.date ? 1 : -1).slice(0,10);
   return `<button class="btn ghost sm" data-a="go" data-r="leaders" style="margin-bottom:10px">${ic('left','sm')} All leaders</button>
@@ -2091,23 +2108,30 @@ VIEWS.leader = () => { const u = user(R.id); if(!u) return empty('shield','Leade
   <div class="card"><div class="card-h"><h2>Assigned patrols & scouts</h2></div>${ps.map(p => `<div style="margin-bottom:12px"><div class="row" style="gap:8px;margin-bottom:6px"><span class="emblem" style="background:${p.color};width:30px;height:30px;border-radius:8px">${ic(p.icon,'sm')}</span><b>${esc(p.name)}</b></div><div class="row" style="gap:4px">${sc.filter(s=>s.patrol===p.id).map(s => `<button class="chip" style="border:0;cursor:pointer" data-a="go" data-r="scout" data-id="${s.id}">${esc(s.first)}</button>`).join('')}</div></div>`).join('') || empty('flag','No patrols assigned')}</div>
   <div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Activity history</h2></div><div class="list">${acts.map(a => `<div class="li"><span class="small muted num" style="width:90px">${fmtD(a.date)}</span><span class="grow">${esc(a.text)}</span></div>`).join('') || empty('history','No activity yet')}</div></div></div>`; };
 function userForm(u){ u = u || { name:'', email:'', role:'leader', phone:'', qualifications:[] }; const adm = ME.role==='admin';
-  return `<div class="form-grid">${field('Full name', inp('name', u.name, 'required'))}${field('Email (sign-in)', inp('email', u.email, `type="email" required ${adm && !(Cloud.on && u.id)?'':'readonly'}`))}
-  ${adm ? field('Role', sel('role', Object.entries(ROLES), u.role)) : ''}${field('Phone', inp('phone', u.phone, 'type="tel"'))}
+  return `<div class="form-grid">${field('Full name', inp('name', u.name, 'required'))}${field('Email (sign-in)', inp('email', u.email, `type="email" required ${adm?'':'readonly'}`))}
+  ${adm ? (u.role==='admin' ? field('Role', `<input type="hidden" name="role" value="admin"><input class="inp" value="Admin" readonly>`) : field('Role', sel('role', Object.entries(ROLES).filter(([k]) => k!=='admin'), u.role))) : ''}${field('Phone', inp('phone', u.phone, 'type="tel"'))}
   ${u.role!=='scout' || !u.id ? `${field('Qualifications & training (one per line)', ta('quals', (u.qualifications||[]).join('\n')), 'full')}` : ''}
-  ${adm ? `<div class="field full"><label>Linked scout (for scout accounts)</label><select class="inp" name="scoutId">${opts([['','—'], ...S.scouts.map(s=>[s.id, sname(s)])], u.scoutId)}</select></div>` : ''}
-  ${adm ? `<div class="field full"><label>Assigned patrols</label><div class="row">${S.patrols.map(p => `<label class="check"><input type="checkbox" name="patrols" value="${p.id}" ${p.leaders.includes(u.id)?'checked':''}> ${esc(p.name)}</label>`).join('')}</div></div>` : ''}
-  ${!u.id ? field('Temporary password (8+ characters)', inp('pw','','type="text" required minlength="8"'), 'full') : ''}
+  ${adm && u.role!=='admin' ? `<div class="field full"><label>Linked scout (for scout accounts)</label><select class="inp" name="scoutId">${opts([['','—'], ...S.scouts.map(s=>[s.id, sname(s)])], u.scoutId)}</select></div>` : ''}
+  ${adm && u.role!=='admin' ? `<div class="field full"><label>Assigned patrols</label><div class="row">${S.patrols.map(p => `<label class="check"><input type="checkbox" name="patrols" value="${p.id}" ${p.leaders.includes(u.id)?'checked':''}> ${esc(p.name)}</label>`).join('')}</div></div>` : ''}
+  ${!u.id ? field('Temporary password (8+ characters)', inp('pw','','type="text" required minlength="8"'), 'full') : adm ? field('New password (only needed when you change the email)', inp('newpw','','type="text" minlength="8" autocomplete="new-password"'), 'full') : ''}
   ${adm && u.id && u.id!==ME.id ? `<label class="check full"><input type="checkbox" name="disabled" ${u.disabled?'checked':''}> Disable sign-in for this account</label>` : ''}</div><div id="uf-err"></div>`; }
 A.addUser = () => modal({ title:'Add user', wide:true, form:'user', body:userForm(), foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Create account</button>` });
-A.editUser = el => { const u = user(el.dataset.id); modal({ title:'Edit ' + esc(u.name), wide:true, form:'user', body:`<input type="hidden" name="id" value="${u.id}">` + userForm(u), foot:`${ME.role==='admin'&&u.id!==ME.id?`<button type="button" class="btn danger" data-a="resetUserPw" data-id="${u.id}">Reset password</button><span class="spacer"></span>`:''}<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save</button>` }); };
+A.editUser = el => { const u = user(el.dataset.id); modal({ title:'Edit ' + esc(u.name), wide:true, form:'user', body:`<input type="hidden" name="id" value="${u.id}">` + userForm(u), foot:`${ME.role==='admin'&&u.id!==ME.id?`<button type="button" class="btn danger" data-a="deleteUser" data-id="${u.id}">Delete account</button><button type="button" class="btn" data-a="resetUserPw" data-id="${u.id}">Reset password</button><span class="spacer"></span>`:''}<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save</button>` }); };
 F.user = async d => { const err = m => $('#uf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>${m}</span></div>`;
   if(!d.name?.trim() || !d.email?.trim()) return err('Name and email are required.');
   const dup = S.users.find(x => x.email.toLowerCase()===d.email.trim().toLowerCase() && x.id!==d.id); if(dup) return err('Another account already uses that email.');
   let u = d.id && user(d.id); const isNew = !u;
+  if(d.role==='admin' && u?.role!=='admin') return err('The Admin role belongs to the admin account only.');
   if(isNew){ if(String(d.pw||'').length < 8) return err('Set a temporary password of at least 8 characters.'); u = { id:uid('u'), photo:null, activity:[], pw:await sha(d.pw) }; S.users.push(u); }
   Object.assign(u, { name:d.name.trim(), email:d.email.trim(), phone:d.phone||'' }); if(d.quals !== undefined) u.qualifications = String(d.quals).split('\n').map(x=>x.trim()).filter(Boolean); u.qualifications = u.qualifications || [];
-  if(ME.role==='admin'){ u.role = d.role || u.role; u.scoutId = d.scoutId || null; u.disabled = !!d.disabled; const sel = [].concat(d.patrols||[]); S.patrols.forEach(p => { p.leaders = p.leaders.filter(x => x!==u.id); if(sel.includes(p.id)) p.leaders.push(u.id); }); }
+  if(!isNew && !Cloud.on && String(d.newpw||'').length >= 8) u.pw = await sha(d.newpw);
+  if(ME.role==='admin' && u.role!=='admin'){ u.role = d.role || u.role; u.scoutId = d.scoutId || null; u.disabled = !!d.disabled; const sel = [].concat(d.patrols||[]); S.patrols.forEach(p => { p.leaders = p.leaders.filter(x => x!==u.id); if(sel.includes(p.id)) p.leaders.push(u.id); }); }
   u.title = ROLES[u.role]; audit(`${isNew?'Created':'Updated'} account ${u.name} (${ROLES[u.role]})`); closeModal(); toast(isNew?'Account created':'Saved'); if(u.id===ME.id) renderApp(); else refresh(); };
+function dropUser(id){ S.users = S.users.filter(u => u.id!==id);
+  S.patrols.forEach(p => p.leaders = (p.leaders||[]).filter(x => x!==id)); [...S.sessions, ...S.events].forEach(x => { if(Array.isArray(x.leaders)) x.leaders = x.leaders.filter(l => l!==id); });
+  const o = S.settings.org; if(o) [...o.lead, ...o.teams].forEach(t => t.m = (t.m||[]).filter(m => m!==id)); }
+A.deleteUser = el => { const u = user(el.dataset.id); if(!u || u.role==='admin') return;
+  confirmBox(`Delete the account for <b>${esc(u.name)}</b>? They will no longer be able to sign in. Their past attendance marks and records stay.`, () => { dropUser(u.id); audit(`Deleted account ${u.name}`); save(); go('leaders', { q:{ lv:'list' } }); toast('Account deleted'); }, 'Delete account'); };
 A.resetUserPw = el => { const u = user(el.dataset.id); const tmp = 'Trail-' + Math.floor(1000+Math.random()*9000);
   confirmBox(`Reset the password for <b>${esc(u.name)}</b>? Their new temporary password will be <b class="num">${tmp}</b>. Share it with them privately.`, async () => { u.pw = await sha(tmp); audit(`Reset password for ${u.name}`); save(); closeModal(); toast('Password reset'); }, 'Reset password'); };
 /* ================= Attendance register ================= */
@@ -2285,7 +2309,7 @@ A.patrolForm = el => { const p = el?.dataset?.id ? patrol(el.dataset.id) : { nam
     <div class="field full"><label>Colour</label><div class="row">${presets.map(c => `<label style="cursor:pointer"><input type="radio" name="color" value="${c}" ${p.color===c?'checked':''} class="sr"><span class="swatch" style="background:${c}"></span></label>`).join('')}<input type="color" name="colorCustom" value="${p.color}" aria-label="Custom colour" data-c="colorCustom" style="width:44px;height:36px;border:0;background:none"></div></div>
     <div class="field full"><label>Emblem / flag</label><div class="row">${PATROL_ICONS.map(i => `<label style="cursor:pointer"><input type="radio" name="icon" value="${i}" ${p.icon===i?'checked':''} class="sr"><span class="icon-pick">${ic(i)}</span></label>`).join('')}</div></div>
     ${p.id ? `${field('Patrol Leader', sel('pl', [['','—'], ...ms.map(s=>[s.id, sname(s)])], p.pl))}${field('Assistant Patrol Leader', sel('apl', [['','—'], ...ms.map(s=>[s.id, sname(s)])], p.apl))}` : ''}
-    <div class="field full"><label>Leaders responsible</label><div class="row">${S.users.filter(u=>u.role!=='scout').map(u => `<label class="check"><input type="checkbox" name="leaders" value="${u.id}" ${p.leaders.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div></div>`,
+    <div class="field full"><label>Leaders responsible</label><div class="row">${leaderUsers().map(u => `<label class="check"><input type="checkbox" name="leaders" value="${u.id}" ${p.leaders.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div></div>`,
     foot:`${p.id && ME.role==='admin' ? `<button type="button" class="btn danger" data-a="patrolDelete" data-id="${p.id}">Delete patrol</button><span class="spacer"></span>` : ''}<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">${p.id?'Save':'Create patrol'}</button>` }); };
 F.patrol = d => { if(!d.name?.trim()) return; let p = d.id && patrol(d.id); const isNew = !p; if(isNew){ p = { id:uid('p'), points:0, pl:null, apl:null }; S.patrols.push(p); }
   const custom = d.color || d.colorCustom;
@@ -2510,7 +2534,7 @@ function sessionForm(s){ s = s || { title:'', date:TODAY(), time:'15:30', end:'1
   <div class="field full"><label>Linked badges</label><input class="inp" type="search" placeholder="Search badges" data-i="bcheckFind" aria-label="Search badges" style="margin-bottom:6px"><div class="bcheck-list">${badgesAZ().map(b => `<label class="check" data-name="${esc(b.name.toLowerCase())}"><input type="checkbox" name="badges" value="${b.id}" ${s.badges.includes(b.id)?'checked':''}>${bArt(b,'','width:28px;height:28px','sm')} ${esc(b.name)}</label>`).join('')}</div></div>
   <div class="field full"><label>Activity timeline</label><div id="tl-rows" class="stack" style="gap:8px">${s.timeline.map(tlRow).join('')}</div><button type="button" class="btn sm" style="margin-top:6px;align-self:flex-start" data-a="tlAdd">${ic('plus','sm')} Add block</button></div>
   ${field('Materials checklist (one per line)', ta('materials', s.materials.map(m=>m.t).join('\n')), 'full')}
-  <div class="field full"><label>Leaders responsible</label><div class="row">${S.users.filter(u=>u.role!=='scout').map(u => `<label class="check"><input type="checkbox" name="leaders" value="${u.id}" ${s.leaders.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div>
+  <div class="field full"><label>Leaders responsible</label><div class="row">${leaderUsers().map(u => `<label class="check"><input type="checkbox" name="leaders" value="${u.id}" ${s.leaders.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div>
   ${field('Risk notes', ta('risk', s.risk), 'full')}
   <label class="check full"><input type="checkbox" name="template" ${s.template?'checked':''}> Save as a reusable template</label></div>`; }
 const tlRow = t => `<div class="row nw tl-row" style="gap:6px"><input class="inp" type="time" name="tl_time" value="${esc(t.time)}" style="width:110px;flex:none" aria-label="Time"><select class="inp" name="tl_label" style="width:120px;flex:none" aria-label="Block">${opts(['Opening','Game','Skills','Activity','Break','Closing'], t.label)}</select><input class="inp" name="tl_detail" value="${esc(t.detail)}" placeholder="What happens" style="flex:1;min-width:0" aria-label="Detail"><button type="button" class="icon-btn" data-a="tlDel" aria-label="Remove block">${ic('x','sm')}</button></div>`;
@@ -2595,7 +2619,7 @@ A.eventForm = el => { closeModal(); const e = el?.dataset?.id ? S.events.find(x 
     <div class="ev-scout" style="display:contents">${field('Start time', inp('start', e.start, 'type="time"'))}${field('End time', inp('end', e.end, 'type="time"'))}</div>
     ${field('Repeats', sel('recur', [['none','Does not repeat'],['weekly','Weekly'],['fortnightly','Every 2 weeks'],['monthly','Monthly']], e.recur))}${field('Repeat until', inp('until', e.until||'', 'type="date"'))}
     <div class="ev-scout" style="display:contents"><div class="field full"><label>Participating patrols</label><div class="row"><label class="check"><input type="checkbox" name="patrols" value="all" ${e.patrols.includes('all')?'checked':''}> Whole troop</label>${S.patrols.map(p => `<label class="check"><input type="checkbox" name="patrols" value="${p.id}" ${e.patrols.includes(p.id)?'checked':''}> ${esc(p.name)}</label>`).join('')}</div></div>
-    <div class="field full"><label>Leaders</label><div class="row">${S.users.filter(u=>u.role!=='scout').map(u => `<label class="check"><input type="checkbox" name="leaders" value="${u.id}" ${e.leaders.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div>
+    <div class="field full"><label>Leaders</label><div class="row">${leaderUsers().map(u => `<label class="check"><input type="checkbox" name="leaders" value="${u.id}" ${e.leaders.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div>
     ${field('Equipment list (comma separated)', inp('equipment', e.equipment), 'full')}${field('Notes', ta('notes', e.notes), 'full')}
     <label class="check"><input type="checkbox" name="permission" ${e.permission?'checked':''}> Permission slip required</label><label class="check"><input type="checkbox" name="remind" ${e.remind?'checked':''}> Remind leaders 2 days before</label></div></div>`, onMount: m => C.evType(m.querySelector('[name=type]')),
     foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save event</button>` }); };
@@ -2770,7 +2794,7 @@ const Cloud = {
     catch(e){ LOGIN_ERR = 'Your account could not open the portal. Check that the Firestore security rules from the setup guide are published.'; await this.auth.signOut(); return; }
     if(!acc.exists) return this.setupView(u);
     this.members = acc.data().members || {}; const role = this.members[email];
-    if(!role){ LOGIN_ERR = `${esc(u.email)} is not on the portal yet. Ask your Group Scout Leader to add you in Leaders → Add user.`; await this.auth.signOut(); return; }
+    if(!role){ LOGIN_ERR = `${esc(u.email)} is not on the portal yet. Ask the admin to add you in Leaders → Add user.`; await this.auth.signOut(); return; }
     this.role = role;
     const keys = this.keys(); const st = { resets:{} };
     const snaps = await Promise.all(keys.map(k => this.db.doc('portal/' + k).get().catch(() => null)));
@@ -2779,11 +2803,17 @@ const Cloud = {
     ME = this.findMe();
     if(!ME){ ME = { id:uid('u'), name:u.displayName || u.email.split('@')[0], email:u.email, role, phone:'', photo:null, title:ROLES[role], qualifications:[], activity:[] }; S.users.push(ME); }
     ME.role = role;
+    if(role==='admin') this.migrate();
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
     this.subscribe();
     if(role!=='scout'){ genReminders(); audit('Signed in'); }
     save(); if(!startRoute()) R.route = isScout() ? 'me' : 'dashboard'; renderApp();
   },
+  /* one-time clean-up: drop the sample leader and scout accounts, and make the admin account a separate, hidden "ADMIN" profile */
+  migrate(){ if(S.settings.migAccounts1) return;
+    S.users.filter(u => u.role!=='admin' && (['u_leader','u_asst','u_scout'].includes(u.id) || ['Ibrahim Rasheed','Aishath Shifa','Ahmed Zaid'].includes(u.name))).forEach(u => dropUser(u.id));
+    S.users.filter(u => u.role==='admin').forEach(u => { Object.assign(u, { name:'ADMIN', phone:'7887447', title:'Admin', scoutId:null }); const id = u.id; dropUser(id); S.users.push(u); });
+    S.settings.migAccounts1 = true; },
   findMe(){ const e = (this.auth.currentUser?.email || '').toLowerCase(); return S.users.find(x => (x.email||'').toLowerCase()===e); },
   assemble(st){
     const out = { resets:{} };
@@ -2841,7 +2871,7 @@ const Cloud = {
     const m = {}; S.users.filter(u => !u.disabled && !u.sample && u.email).forEach(u => m[u.email.trim().toLowerCase()] = u.role);
     m[this.auth.currentUser.email.toLowerCase()] = 'admin';
     if(JSON.stringify(Object.entries(m).sort()) === JSON.stringify(Object.entries(this.members).sort())) return;
-    this.members = m; this.db.doc('portal/access').set({ members:m }).catch(e => toast('Could not update sign-in access: ' + e.message));
+    this.members = m; this.accessP = this.db.doc('portal/access').set({ members:m }).catch(e => toast('Could not update sign-in access: ' + e.message));
   },
   afterReplace(){ this.regReplace = true; const me = this.findMe(); if(me) ME = me; else { ME.id = ME.id || uid('u'); S.users.push(ME); } ME.role = this.role; this.priv = {}; save(); },
 
@@ -2882,7 +2912,7 @@ const Cloud = {
   setupView(u){
     $('#app').innerHTML = `<div style="min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px 16px"><form class="card" data-f="cloudSetup" style="width:100%;max-width:520px" novalidate>
       <div class="row nw" style="gap:12px;margin-bottom:14px">${emblemSVG(48)}<div><div class="eyebrow">First-time setup</div><h1 style="font-size:1.4rem">Set up the Milandhoo Scout Portal</h1></div></div>
-      <p class="muted" style="margin-bottom:16px">You are signed in as <b>${esc(u.email)}</b>. Nobody has set up this portal yet, so you will become its Group Scout Leader (admin).</p>
+      <p class="muted" style="margin-bottom:16px">You are signed in as <b>${esc(u.email)}</b>. Nobody has set up this portal yet, so you will become its admin.</p>
       <div class="stack">${field('Your name', inp('name', u.displayName || '', 'required'))}${field('Scout group name', inp('group', 'School Scout Troop', 'required'))}${field('School', inp('school', ''))}
       <div class="field"><label>Start with</label><label class="check"><input type="radio" name="mode" value="sample" checked> Sample troop: 20 example scouts, registers and photos, to explore first</label><label class="check"><input type="radio" name="mode" value="empty"> An empty portal: keep the badge catalogue, syllabus and session templates only</label></div>
       <div id="setup-err"></div><button class="btn primary lg">Create portal</button><button type="button" class="btn ghost" data-a="logout">Sign out</button></div></form></div>`;
@@ -2917,15 +2947,24 @@ const Cloud = {
     A.resetUserPw = async el => { const u = user(el.dataset.id); try { await this.auth.sendPasswordResetEmail(u.email); toast(`Password reset link emailed to ${u.email}`); audit(`Sent password reset email to ${u.name}`); save(); } catch(e){ toast('Could not send the reset email: ' + e.message); } };
     const origUser = F.user;
     F.user = async (d, f) => {
+      const old = d.id && user(d.id), ne = String(d.email||'').trim(), moved = old && ne && ne.toLowerCase()!==String(old.email||'').toLowerCase();
+      if(moved){ const err = m => $('#uf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>${m}</span></div>`;
+        if(S.users.some(x => x.id!==old.id && (x.email||'').toLowerCase()===ne.toLowerCase())) return err('Another account already uses that email.');
+        if(String(d.newpw||'').length < 8) return err('You changed the email, so set a new password of at least 8 characters for it.');
+        try { const sec = firebase.apps.find(a => a.name==='tm-secondary') || firebase.initializeApp(window.TRAILMARK_FIREBASE, 'tm-secondary');
+          await sec.auth().createUserWithEmailAndPassword(ne, d.newpw); await sec.auth().signOut(); }
+        catch(e){ if(e.code !== 'auth/email-already-in-use') return err('Could not create the sign-in for the new email: ' + esc(this.authMsg(e))); toast('That email already has a sign-in, so its existing password stays.'); } }
       if(!d.id){ if(String(d.pw||'').length < 8) return origUser(d, f);
         try { const sec = firebase.apps.find(a => a.name==='tm-secondary') || firebase.initializeApp(window.TRAILMARK_FIREBASE, 'tm-secondary');
           await sec.auth().createUserWithEmailAndPassword(String(d.email).trim(), d.pw); await sec.auth().signOut(); }
         catch(e){ if(e.code !== 'auth/email-already-in-use'){ $('#uf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>Could not create the sign-in account: ${esc(this.authMsg(e))}</span></div>`; return; } } }
-      await origUser(d, f); this.flush(); };
+      await origUser(d, f); this.flush();
+      if(moved && old.id===ME.id){ try { await this.accessP; await this.db.waitForPendingWrites(); } catch(e){}
+        LOGIN_ERR = `Your sign-in email is now ${esc(ne)}. Sign in with it and the new password.`; this.stop(); await this.auth.signOut(); } };
   },
 };
 /* ================= Settings, audit, guide ================= */
-VIEWS.settings = () => { if(ME.role!=='admin') return empty('lock','Only the Group Scout Leader can change settings'); const st = S.settings;
+VIEWS.settings = () => { if(!can('settings.view')) return empty('lock','Your role cannot open Settings'); const st = S.settings, adm = ME.role==='admin';
   return `${pageH('Administration', 'Settings')}
   <div class="grid g2">
   <form class="card" data-f="setGroup"><div class="card-h"><h2>Group & branding</h2></div><div class="stack">
@@ -2940,10 +2979,21 @@ VIEWS.settings = () => { if(ME.role!=='admin') return empty('lock','Only the Gro
     <div class="row" style="justify-content:flex-end"><button class="btn primary">Save</button></div></div></form>
   <form class="card" data-f="setTypes"><div class="card-h"><h2>Session types</h2></div><div class="stack">${field('One per line (used when creating registers)', ta('types', st.sessionTypes.join('\n')))}<div class="row" style="justify-content:flex-end"><button class="btn primary">Save</button></div></div></form>
   <div class="card"><div class="card-h"><h2>Programme & people</h2></div><div class="list">
-    ${[['medal','Badge catalogue', `${S.badges.length} badges`, 'badges'],['map','Syllabus structure', `${S.syllabus.length} items across ${STAGES.length} stages`, 'syllabus'],['users','User management', `${S.users.length} accounts`, 'leaders'],['flag','Patrols', `${S.patrols.length} patrols`, 'patrols'],['history','Audit log', `${S.audit.length} entries`, 'audit']].map(([i,t,s,r]) => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="go" data-r="${r}"><span class="kpi"><span class="ic">${ic(i)}</span></span><span class="grow"><b>${t}</b><span class="small muted" style="display:block">${s}</span></span>${ic('right','sm')}</button>`).join('')}</div></div>
-  <div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Data</h2></div><p class="small muted" style="margin-bottom:12px">${Cloud.on ? 'Data is stored in your Firebase project and shared live with every leader. Download a backup now and then as an extra copy. A backup includes uploaded photos.' : 'This portal stores its data in this browser. Save a backup regularly and restore it on another device. A backup includes uploaded photos.'}</p>
-    <div class="row"><button class="btn" data-a="backup">${ic('download','sm')} Download backup</button><label class="btn" for="restore-file" style="cursor:pointer">${ic('upload','sm')} Restore backup</label><input id="restore-file" type="file" accept=".json,.txt,application/json" class="sr" data-c="restore"><span class="spacer"></span><button class="btn danger" data-a="clearScouts">${ic('trash','sm')} Remove all scouts</button></div></div>
+    ${[['medal','Badge catalogue', `${S.badges.length} badges`, 'badges'],['map','Syllabus structure', `${S.syllabus.length} items across ${STAGES.length} stages`, 'syllabus'],['users','User management', `${S.users.length} accounts`, 'leaders'],['flag','Patrols', `${S.patrols.length} patrols`, 'patrols'],['history','Audit log', `${S.audit.length} entries`, 'audit']].filter(x => adm || x[3]!=='audit').map(([i,t,s,r]) => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;width:100%;text-align:left;cursor:pointer" data-a="go" data-r="${r}"><span class="kpi"><span class="ic">${ic(i)}</span></span><span class="grow"><b>${t}</b><span class="small muted" style="display:block">${s}</span></span>${ic('right','sm')}</button>`).join('')}</div></div>
+  ${permCard(adm)}
+  ${adm ? `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Data</h2></div><p class="small muted" style="margin-bottom:12px">${Cloud.on ? 'Data is stored in your Firebase project and shared live with every leader. Download a backup now and then as an extra copy. A backup includes uploaded photos.' : 'This portal stores its data in this browser. Save a backup regularly and restore it on another device. A backup includes uploaded photos.'}</p>
+    <div class="row"><button class="btn" data-a="backup">${ic('download','sm')} Download backup</button><label class="btn" for="restore-file" style="cursor:pointer">${ic('upload','sm')} Restore backup</label><input id="restore-file" type="file" accept=".json,.txt,application/json" class="sr" data-c="restore"><span class="spacer"></span><button class="btn danger" data-a="clearScouts">${ic('trash','sm')} Remove all scouts</button></div></div>` : ''}
   </div>`; };
+function permCard(adm){ const on = r => new Set(permsOf(r));
+  const L = PERM_ROLES.map(r => [r, on(r)]);
+  return `<form class="card" style="grid-column:1/-1" data-f="perms"><div class="card-h"><h2>Roles & permissions</h2><span class="spacer"></span>${adm ? `<button type="button" class="btn sm" data-a="permsReset">Restore defaults</button><button class="btn sm primary">Save</button>` : '<span class="small muted">Only the admin can change these</span>'}</div>
+  <p class="small muted" style="margin:0 0 10px">The <b>Admin</b> account can do everything, manages accounts and data, and is hidden from other leaders. <b>Scouts</b> are always read-only and see only their own profile, the calendar and Scout Notes.</p>
+  <div class="tbl-wrap"><table class="tbl perm-t"><thead><tr><th>Permission</th><th>Admin</th>${PERM_ROLES.map(r => `<th>${ROLES[r]}</th>`).join('')}</tr></thead><tbody>
+  ${PERM_LIST.map(([g, items]) => `<tr class="perm-g"><td colspan="${2+PERM_ROLES.length}">${g}</td></tr>${items.map(([k,l]) => `<tr><td>${l}</td><td>${ic('check','sm')}</td>${L.map(([r, s]) => `<td><input type="checkbox" name="${r}" value="${k}" ${s.has(k)?'checked':''} ${adm?'':'disabled'} aria-label="${esc(ROLES[r]+': '+l)}"></td>`).join('')}</tr>`).join('')}`).join('')}
+  </tbody></table></div></form>`; }
+F.perms = d => { if(ME.role!=='admin') return; S.settings.perms = Object.fromEntries(PERM_ROLES.map(r => [r, [].concat(d[r] ?? [])]));
+  audit('Updated roles & permissions'); save(); renderApp(); toast('Permissions saved'); };
+A.permsReset = () => confirmBox('Restore the default permissions for every role?', () => { delete S.settings.perms; audit('Restored default permissions'); save(); renderApp(); toast('Defaults restored'); }, 'Restore defaults');
 C.logoFile = async el => { const f = el.files[0]; if(!f) return; try { const url = await readFile(f); const im = await loadImg(url); const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d'); const k = Math.max(512/im.width, 512/im.height); x.fillStyle = '#fff'; x.fillRect(0,0,512,512); x.drawImage(im, (512-im.width*k)/2, (512-im.height*k)/2, im.width*k, im.height*k);
   dropImg(S.settings.logo); S.settings.logo = putImg(c.toDataURL('image/jpeg', .9)); audit('Uploaded a new group logo'); save(); renderApp(); toast('Logo updated'); } catch(e){ toast('That image could not be read'); } };
 A.logoRemove = () => { dropImg(S.settings.logo); S.settings.logo = null; audit('Removed the group logo'); save(); renderApp(); };
@@ -2971,7 +3021,7 @@ F.clearScouts = d => { if(String(d.confirm).trim().toUpperCase()!=='DELETE') ret
   audit(`Removed all ${n} scouts and their attendance${d.patrols?' and all patrols':''}`); closeModal(); save(); renderApp(); toast(`Removed ${n} scouts`); };
 A.resetDemo = () => confirmBox('Erase everything and reload the sample troop? Download a backup first if you want to keep your data.', async () => { await Store.clear('img'); for(const k in IMG) delete IMG[k]; S = await buildSeed(); ME = S.users.find(u => u.id===ME.id) || S.users[0]; if(Cloud.on) Cloud.afterReplace(); genReminders(); if(!Cloud.on) await Store.set('kv','state', S); R.route = 'dashboard'; renderApp(); toast('Sample data restored'); }, 'Reset');
 
-VIEWS.audit = () => { if(ME.role!=='admin') return empty('lock','Only the Group Scout Leader can view the audit log'); const uf = R.q.u || ''; const q = (R.q.s||'').toLowerCase();
+VIEWS.audit = () => { if(ME.role!=='admin') return empty('lock','Only the admin can view the audit log'); const uf = R.q.u || ''; const q = (R.q.s||'').toLowerCase();
   const list = S.audit.filter(a => (!uf || a.user===uf) && (!q || a.action.toLowerCase().includes(q)));
   return `${pageH('Administration', 'Audit log', can('export')?`<button class="btn" data-a="auditExport">${ic('download','sm')} Export CSV</button>`:'')}
   <div class="row" style="margin-bottom:14px"><select class="inp" style="width:auto" data-c="auditU" aria-label="Filter by person">${opts([['','Everyone'], ...S.users.map(u=>[u.id,u.name])], uf)}</select><input class="inp" type="search" style="flex:1;min-width:180px" placeholder="Search actions" value="${esc(R.q.s||'')}" data-c="auditS" aria-label="Search actions"></div>
@@ -3048,7 +3098,7 @@ VIEWS.guide = () => { const sec = (icon, t, items) => `<div class="card"><div cl
   ${sec('calendar','Calendar', ['Switch between month, week, day and agenda. Phones open in agenda view.','Tap a type chip to hide or show that kind of event.','Weekly meetings repeat automatically and skip holidays. Delete one date of a repeating event without losing the rest.','Leaders get a reminder notification two days before each event with reminders turned on.','<b>iCal</b> exports everything for Google Calendar, Outlook or Apple Calendar.'])}
   ${sec('image','Photos', ['<b>Upload photos</b> accepts several at once. On a phone you can take them with the camera.','Photos are compressed automatically and grouped into albums by academic year.','Tag scouts in each photo. If a tagged scout has no photo consent, the photo is marked private automatically.','Private photos are visible to leaders only. <b>Year in highlights</b> plays the year as a slideshow.'])}
   ${sec('bell','Notifications', ['The bell shows unread alerts: upcoming events, badge completions, low attendance, renewals, birthdays, new photos, tasks and announcements.','Open a notification to jump to the related scout, register or album.','The Group Scout Leader can send announcements to everyone, leaders only, or a single patrol.'])}
-  ${sec('shield','Roles at a glance', ['<b>Group Scout Leader</b>: everything, including settings, users, the audit log and editing finalized registers.','<b>Scout Leader</b>: scouts, attendance, patrols, badges, sessions, calendar and photos.','<b>Assistant Leader</b>: attendance, badge and syllabus sign-offs. No deletions or settings.','<b>Scout</b>: their own profile, badges, attendance, upcoming events and public photos.'])}
+  ${sec('shield','Roles at a glance', ['<b>Admin</b>: everything, including accounts, roles & permissions, data backups, the audit log and editing finalized registers. The admin account is hidden from other leaders.','<b>Scout Leader</b>: scouts, attendance, patrols, badges, sessions, calendar and photos.','<b>Assistant Leader</b>: attendance, badge and syllabus sign-offs. No deletions or settings.','<b>Scout</b>: their own profile, badges, attendance, upcoming events and public photos.'])}
   </div>
   <div class="card" style="margin-top:16px"><div class="card-h"><h2>About this version</h2></div>${Cloud.on ? `<p class="small muted">This is the online edition of Milandhoo Scout Portal. Data lives in your group's Firebase project and updates live for every signed-in leader. Accounts, roles and password-reset emails are handled by Firebase Authentication. Contacts and medical notes are stored separately and only leader accounts can read them.</p>` : `<p class="small muted">This is the browser edition of Milandhoo Scout Portal: it runs entirely on this device and keeps data in this browser's storage, so use <b>Settings → Download backup</b> to move data or keep a copy. Sign-in, roles and password resets work inside the portal, but reset codes appear on screen instead of being emailed, and there is no shared server, so each device has its own copy of the data.</p>`}</div>`; };
 
