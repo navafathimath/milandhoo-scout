@@ -755,6 +755,36 @@ summary::-webkit-details-marker{display:none}
   .rrow{grid-template-columns:44px minmax(0,1fr) auto;gap:10px}
   .rrow>.chip{grid-column:2/-1;justify-self:start}
 }
+/* Best All-Round Student */
+.ar-kpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:14px;overflow:hidden}
+.ar-kpi>div{padding:12px 16px;border-left:1px solid var(--line-2);min-width:0}.ar-kpi>div:first-child{border-left:0}
+.ar-kpi small{display:block;font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.ar-kpi b{display:block;font-size:1.35rem;font-family:var(--f-head);line-height:1.3}.ar-kpi b em{font-style:normal;font-size:.8rem;color:var(--ink-2);font-family:var(--f-ui)}.ar-kpi b.w{color:var(--warn)}
+.ar-kpi span{font-size:.74rem;color:var(--ink-2);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ar-card{padding:0;overflow:hidden}.ar-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 18px}.ar-h h2{margin:0;font-size:1.05rem}
+.ar-lg{display:flex;gap:12px;flex-wrap:wrap;font-size:.74rem;color:var(--ink-2);font-weight:600}.ar-lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.ar-r{display:grid;grid-template-columns:34px minmax(0,230px) minmax(0,1fr) 70px 120px;gap:14px;align-items:center;padding:11px 18px;border:0;border-top:1px solid var(--line-2);background:none;width:100%;text-align:left;font:inherit;color:inherit}
+button.ar-r{cursor:pointer}button.ar-r:hover{background:var(--surface-2)}
+.ar-scale{font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);padding-top:8px;padding-bottom:8px}
+.ar-ticks{display:flex;justify-content:space-between}
+.ar-rk{font-weight:800;color:var(--ink-2);text-align:center}.ar-r.win .ar-rk{color:#B8860B;font-size:1.05rem}
+.ar-who{display:flex;gap:10px;align-items:center;min-width:0}.ar-who b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ar-who small{display:block;color:var(--ink-2);font-size:.74rem}
+.ar-stk{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--line-2)}.ar-stk i{display:block;height:100%;border-right:2px solid var(--surface)}
+.ar-tot{font-family:var(--f-head);font-size:1.2rem;text-align:right;font-weight:700}.ar-tot small{font-family:var(--f-ui);font-size:.7rem;color:var(--ink-2);font-weight:600}
+.ar-stc{text-align:center}.ar-st{display:inline-block;font-size:.7rem;font-weight:700;border-radius:6px;padding:3px 9px;background:color-mix(in srgb,var(--primary) 12%,transparent);color:var(--primary)}
+.ar-st.gold{background:color-mix(in srgb,#C9A227 18%,transparent);color:#8A6510}.ar-st.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:#9A6B12}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){--ar-disc:#6E93BC} :root:not([data-theme="light"]) .ar-st.gold{color:#E3C25A} :root:not([data-theme="light"]) .ar-st.warn{color:#E8B04A} }
+:root[data-theme="dark"]{--ar-disc:#6E93BC}:root[data-theme="dark"] .ar-st.gold{color:#E3C25A}:root[data-theme="dark"] .ar-st.warn{color:#E8B04A}
+.ar-sh{display:flex;gap:14px;align-items:center;margin-bottom:8px}.ar-sh b{font-family:var(--f-head);font-size:1.15rem}
+.ar-big{margin-left:auto;text-align:center;font-family:var(--f-head);font-size:2rem;font-weight:700;line-height:1}.ar-big small{display:block;font-family:var(--f-ui);font-size:.72rem;color:var(--ink-2);font-weight:600}
+.ar-ln{display:grid;grid-template-columns:200px minmax(0,1fr) 40px;gap:14px;align-items:center;padding:11px 0;border-top:1px solid var(--line-2)}
+.ar-ln b{font-weight:600}.ar-ln small{display:block;color:var(--ink-2);font-size:.76rem}.ar-ln .inp{height:38px}
+.ar-pts{justify-self:end;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-weight:800;color:#fff;background:var(--c)}
+.ar-mt>div{display:grid;grid-template-columns:minmax(0,1fr) 100px 100px 100px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line-2)}
+.ar-mt span small{display:block;color:var(--ink-2);font-size:.74rem}.ar-mh{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}.ar-mt .inp{height:36px}
+@media (max-width:900px){ .ar-kpi{grid-template-columns:repeat(2,minmax(0,1fr))} .ar-kpi>div:nth-child(3){border-left:0} .ar-kpi>div:nth-child(n+3){border-top:1px solid var(--line-2)}
+  .ar-r{grid-template-columns:26px minmax(0,1fr) auto;gap:6px 10px} .ar-scale{display:none} .ar-stk{grid-column:1/-1;grid-row:2;height:14px} .ar-stc{display:none}
+  .ar-ln{grid-template-columns:minmax(0,1fr) 40px} .ar-ln>div:nth-child(2){grid-column:1/-1;grid-row:2} .ar-mt>div{grid-template-columns:minmax(0,1fr) 70px 70px 70px} }
 </style>
 <div id="app"></div><div id="modal-root"></div><div id="toasts" aria-live="polite"></div>
 <script>
@@ -1328,6 +1358,7 @@ const NAV = [
   { id:'scouts', label:'Scouts', icon:'users' },
   { id:'patrols', label:'Patrols', icon:'flag' },
   { id:'badges', label:'Badge work', icon:'medal' },
+  { id:'allround', label:'Best All-Rounder', icon:'trophy' },
   { id:'syllabus', label:'Syllabus', icon:'map' },
   { id:'notes', label:'Scout Notes', icon:'book' },
   { id:'sessions', label:'Session planning', icon:'fire' },
@@ -1608,6 +1639,91 @@ VIEWS.dashboard = () => {
   </div>`;
 };
 function patrolAtt(pid){ const ids = S.scouts.filter(s => s.patrol===pid).map(s => s.id); let pp = 0, t = 0; S.registers.forEach(r => ids.forEach(id => { const e = r.entries[id]; if(e && e.s){ t++; if(e.s==='P'||e.s==='L') pp++; } })); return pct(pp, t); }
+/* ================= Best All-Round Student (Annual Prize Giving rubric, uniform activities) ================= */
+const AR_CATS = [
+  ['disc', 'Discipline', '#0B3A5C'], ['att', 'Attendance', '#1F6FA8'], ['beh', 'Behaviour', '#4D97C8'], ['mark', 'Final marks', '#2E8B6A'],
+  ['lead', 'Leadership', '#7DB89C'], ['ach', 'Achievement', '#C9A227'], ['camp', 'Camping', '#B07A4A'] ];
+const AR_OPTS = {
+  disc: [['4','Excellent'],['3','Very good'],['2','Good'],['1','Satisfactory'],['0','Poor']],
+  beh:  [['4','No records filed'],['2','1 record'],['0','More than 1 record']],
+  lead: [['','From patrol role'],['4','Head post'],['3','Second head'],['2','Leader'],['1','Assistant leader'],['0','None']],
+  ach:  [['0','None'],['4','All-rounder'],['3','Best camper'],['2','Best five']],
+  camp: [['0','None'],['4','International camp'],['2','National camp']] };
+const AR_ACH = { '4':'All-rounder', '3':'Best camper', '2':'Best five' };
+const arYear = () => R.q.ary || String(new Date().getFullYear());
+const arGrade = s => parseInt(String(s.grade||'').replace(/\D/g,''), 10) || 0;
+function arData(y){ S.settings.allround = S.settings.allround || {}; return S.settings.allround[y] = S.settings.allround[y] || {}; }
+function arAttendance(s, y){ let p = 0, t = 0; S.registers.forEach(r => { if(!r.date.startsWith(y)) return; const e = r.entries[s.id]; if(e && e.s){ t++; if(e.s==='P' || e.s==='L') p++; } });
+  if(!t) return { pct:null, pts:null, n:0, of:0 }; const pc = Math.round(p/t*100);
+  return { pct:pc, n:p, of:t, pts: pc>=100 ? 4 : pc>=95 ? 3 : pc>=90 ? 2 : pc>=85 ? 1 : 0 }; }
+function arMarks(d){ if(d.btec!=null && d.btec!==''){ const b = +d.btec; return b>=20 ? 4 : b>=15 ? 3 : b>=12 ? 2 : 1; }
+  if(d.t1==null || d.t1==='' || d.t2==null || d.t2==='') return null; const a = (+d.t1 + +d.t2)/2;
+  return a>=65 ? 4 : a>=50 ? 3 : a>=40 ? 2 : 1; }
+function arLeadAuto(s){ const p = patrol(s.patrol); return p && p.pl===s.id ? 2 : p && p.apl===s.id ? 1 : 0; }
+function arScore(s, y){ const d = arData(y)[s.id] || {}; const at = arAttendance(s, y);
+  const v = { disc: d.disc==null||d.disc==='' ? null : +d.disc, att: at.pts, beh: d.beh==null||d.beh==='' ? 4 : +d.beh, mark: arMarks(d),
+    lead: d.lead==null||d.lead==='' ? arLeadAuto(s) : +d.lead, ach: +(d.ach||0), camp: +(d.camp||0) };
+  const missing = ['disc','att','mark'].filter(k => v[k]==null);
+  return { v, d, at, missing, total: AR_CATS.reduce((a,[k]) => a + (v[k]||0), 0) }; }
+function arList(y){ return S.scouts.filter(s => s.status!=='Inactive' && arGrade(s) >= 10).map(s => ({ s, ...arScore(s, y) }))
+  .sort((a,b) => b.total - a.total || sname(a.s).localeCompare(sname(b.s))); }
+
+VIEWS.allround = () => { const y = arYear(), L = arList(y), ed = can('scout.edit');
+  const years = [...new Set([String(new Date().getFullYear()), ...S.registers.map(r => r.date.slice(0,4)), ...Object.keys(S.settings.allround||{})])].sort().reverse();
+  const avg = L.length ? (L.reduce((a,x) => a + x.total, 0)/L.length).toFixed(1) : '—', inc = L.filter(x => x.missing.length).length;
+  const status = (x, i) => x.missing.length ? `<span class="ar-st warn">${x.missing.includes('mark') ? 'Marks missing' : 'Incomplete'}</span>` : AR_ACH[x.v.ach] ? `<span class="ar-st gold">${AR_ACH[x.v.ach]}</span>` : i===0 ? '<span class="ar-st gold">Leading</span>' : i<5 ? '<span class="ar-st">Shortlisted</span>' : '<span class="muted">—</span>';
+  return `${pageH('Annual prize giving · Uniform activities', 'Best All-Round Student', `<select class="inp" style="width:auto" data-c="arYear" aria-label="Year">${opts(years.map(v=>[v,'Year '+v]), y)}</select>${ed?`<button class="btn" data-a="arMarks">${ic('edit','sm')} Enter term marks</button>`:''}${can('export')?`<button class="btn primary" data-a="arPDF">${ic('download','sm')} Export rubric (PDF)</button>`:''}`)}
+  <div class="ar-kpi"><div><small>Eligible scouts</small><b>${L.length}</b><span>Grade 10 and above</span></div><div><small>Highest score</small><b>${L[0] ? L[0].total : '—'} <em>/ 28</em></b><span>${L[0] ? esc(sname(L[0].s)) : ''}</span></div><div><small>Average score</small><b>${avg}</b><span>out of 28</span></div><div><small>Incomplete records</small><b class="${inc?'w':''}">${inc}</b><span>discipline, attendance or marks</span></div></div>
+  <div class="card ar-card"><div class="ar-h"><h2>Score composition</h2><span class="spacer"></span><div class="ar-lg">${AR_CATS.map(([k,l,c]) => `<span><i style="background:var(--ar-${k},${c})"></i>${l}</span>`).join('')}</div></div>
+    ${L.length ? `<div class="ar-r ar-scale"><span></span><span>Candidate</span><span class="ar-ticks"><span>0</span><span>7</span><span>14</span><span>21</span><span>28</span></span><span style="text-align:right">Total</span><span style="text-align:center">Status</span></div>
+    ${L.map((x,i) => `<button class="ar-r ${i===0?'win':''}" data-a="arOpen" data-id="${x.s.id}"><span class="ar-rk">${i===0 ? '★' : i+1}</span><span class="ar-who">${av(x.s,32)}<span><b>${esc(sname(x.s))}</b><small>${esc(x.s.grade||'')} · ${esc(patrol(x.s.patrol)?.name||'')}</small></span></span>
+      <span class="ar-stk">${AR_CATS.map(([k,l,c]) => x.v[k] ? `<i style="width:${x.v[k]/28*100}%;background:var(--ar-${k},${c})" title="${l}: ${x.v[k]}"></i>` : '').join('')}</span>
+      <span class="ar-tot">${x.total}<small> /28</small></span><span class="ar-stc">${status(x,i)}</span></button>`).join('')}`
+    : empty('trophy','No eligible scouts', 'Scouts in Grade 10 and above appear here. Check the Grade on each scout’s profile.')}</div>
+  <p class="small muted" style="margin-top:10px">Attendance comes from the year’s registers. Leadership comes from patrol roles (Patrol Leader 2, Assistant 1) unless a leader sets Head or Second head. Click a candidate to enter discipline, behaviour, marks, achievement and camping.</p>`; };
+C.arYear = el => { R.q.ary = el.value; renderMain(); };
+
+A.arOpen = el => { const s = scout(el.dataset.id), y = arYear(); if(!s) return; const x = arScore(s, y), d = x.d, ed = can('scout.edit');
+  const pick = (k, cur) => `<select class="inp" name="${k}" ${ed?'':'disabled'}>${opts(AR_OPTS[k], cur==null ? '' : String(cur))}</select>`;
+  const row = (k, l, info, ctl) => `<div class="ar-ln"><div><b>${l}</b><small>${info}</small></div><div>${ctl}</div><div class="ar-pts" style="--c:var(--ar-${k},${AR_CATS.find(c=>c[0]===k)[2]})">${x.v[k]==null ? '?' : x.v[k]}</div></div>`;
+  const pl = arLeadAuto(s);
+  modal({ title:`${esc(sname(s))} · ${y}`, wide:true, form:'arSave', body:`<input type="hidden" name="id" value="${s.id}">
+    <div class="ar-sh">${av(s,52)}<div><b>${esc(sname(s))}</b><div class="small muted">${esc(s.grade||'')} · ${esc(patrol(s.patrol)?.name||'')}</div></div><div class="ar-big">${x.total}<small>of 28</small></div></div>
+    ${row('disc','Discipline','Leader rating', pick('disc', d.disc))}
+    ${row('att','Attendance', x.at.of ? `${x.at.pct}% this year (${x.at.n} of ${x.at.of})` : 'No registers this year', '<span class="small muted">Automatic · 100% = 4 · 95–99% = 3 · 90–94% = 2 · 85–89% = 1</span>')}
+    ${row('beh','Records of behaviour','From the discipline record file', pick('beh', d.beh==null ? '4' : d.beh))}
+    ${row('mark','Final marks', d.btec ? 'BTEC points' : 'Term 1 + Term 2 average ÷ 2', `<div class="row nw" style="gap:8px"><input class="inp" name="t1" type="number" min="0" max="100" placeholder="Term 1 %" value="${esc(d.t1??'')}" ${ed?'':'disabled'}><input class="inp" name="t2" type="number" min="0" max="100" placeholder="Term 2 %" value="${esc(d.t2??'')}" ${ed?'':'disabled'}><input class="inp" name="btec" type="number" min="0" max="31" placeholder="or BTEC pts" value="${esc(d.btec??'')}" ${ed?'':'disabled'}></div>`)}
+    ${row('lead','Responsibility & leadership', pl ? (pl===2 ? 'Patrol Leader' : 'Assistant Patrol Leader') : 'No patrol role', pick('lead', d.lead))}
+    ${row('ach','Achievement in the activity','The troop’s award', pick('ach', d.ach||'0'))}
+    ${row('camp','Camping','National / international, in any grade', pick('camp', d.camp||'0'))}`,
+    foot:`<button type="button" class="btn" data-a="closeModal">${ed?'Cancel':'Close'}</button>${ed?'<button class="btn primary">Save scores</button>':''}` }); };
+F.arSave = d => { const y = arYear(), m = arData(y); const keep = v => v===undefined || v==='' ? '' : v;
+  m[d.id] = { disc:keep(d.disc), beh:keep(d.beh), lead:keep(d.lead), ach:keep(d.ach), camp:keep(d.camp), t1:keep(d.t1), t2:keep(d.t2), btec:keep(d.btec) };
+  audit(`Updated all-rounder scores for ${sname(scout(d.id))} (${y})`); closeModal(); refresh(); toast('Scores saved'); };
+
+A.arMarks = () => { const y = arYear(), L = arList(y);
+  modal({ title:`Term marks · ${y}`, wide:true, form:'arMarksSave', body:`<p class="small muted" style="margin-top:0">Term averages in %. For BTEC students, enter points instead.</p>
+    <div class="ar-mt"><div class="ar-mh"><span>Scout</span><span>Term 1 %</span><span>Term 2 %</span><span>BTEC pts</span></div>${L.map(x => `<div><span>${esc(sname(x.s))}<small>${esc(x.s.grade||'')}</small></span><input class="inp" type="number" name="t1_${x.s.id}" value="${esc(x.d.t1??'')}" min="0" max="100"><input class="inp" type="number" name="t2_${x.s.id}" value="${esc(x.d.t2??'')}" min="0" max="100"><input class="inp" type="number" name="bt_${x.s.id}" value="${esc(x.d.btec??'')}" min="0" max="31"></div>`).join('') || empty('users','No eligible scouts')}</div>`,
+    foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save marks</button>` }); };
+F.arMarksSave = d => { const y = arYear(), m = arData(y);
+  Object.keys(d).forEach(k => { const [f, id] = [k.slice(0,3), k.slice(3)]; const key = f==='t1_' ? 't1' : f==='t2_' ? 't2' : f==='bt_' ? 'btec' : null; if(!key) return; m[id] = m[id] || {}; m[id][key] = d[k]; });
+  audit(`Entered term marks for ${y}`); closeModal(); refresh(); toast('Marks saved'); };
+
+A.arPDF = () => withPDF(async () => { const y = arYear(), L = arList(y);
+  const ctx = await pdfDoc('Best All-Round Student · Uniform activities', `Annual prize giving ${y}  ·  ${L.length} eligible scouts (Grade 10 and above)`);
+  pdfTable(ctx, ['#','Scout','Grade','Disc.','Att.','Behav.','Marks','Lead.','Achiev.','Camp','Total'],
+    L.map((x,i) => [i+1, sname(x.s), String(x.s.grade||'').replace('Grade ','Gr '), ...AR_CATS.map(([k]) => x.v[k]==null ? '—' : x.v[k]), `${x.total}/28`]),
+    [22,140,38,38,36,42,40,40,48,38,49]);
+  pdfH(ctx, 'Scoring rubric');
+  pdfTable(ctx, ['Category','Scoring'], [
+    ['Discipline','Excellent 4 · Very good 3 · Good 2 · Satisfactory 1 · Poor 0'],
+    ['Attendance','100% = 4 · 95–99% = 3 · 90–94% = 2 · 85–89% = 1 · below 85% = 0'],
+    ['Records of behaviour','No records 4 · 1 record 2 · more than 1 record 0'],
+    ['Final marks','65–100% = 4 · 50–64% = 3 · 40–49% = 2 · below 40% = 1 (BTEC: 20–31 = 4 · 15–19 = 3 · 12–14 = 2 · below 12 = 1)'],
+    ['Responsibility & leadership','Head post 4 · Second head 3 · Leader 2 · Assistant leader 1'],
+    ['Achievements','All-rounder 4 · Best camper 3 · Best five 2'],
+    ['Camping','International camp 4 · National camp 2'] ], [140,391]);
+  await pdfSave(ctx, `best-all-rounder-${y}.pdf`); });
 /* ================= Scouts list, profiles, leaders ================= */
 VIEWS.scouts = () => {
   const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
