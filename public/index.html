@@ -1829,14 +1829,14 @@ VIEWS.scouts = () => {
   return `${pageH('Members', 'Scouts', acts)}${scoutTabs('scouts')}${scoutSummary()}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
     <div class="field" style="flex:2;min-width:180px"><label for="f_ss">Search</label><input class="inp" id="f_ss" type="search" placeholder="Name or scout ID" value="${esc(f.s)}" data-i="scoutFilter" data-k="s"></div>
-    ${field('Patrol', `<select class="inp" data-c="scoutFilter" data-k="p">${opts([['','All patrols'], ...S.patrols.map(p=>[p.id,p.name])], f.p)}</select>`, '" style="flex:1;min-width:130px')}
+    ${field('Patrol', `<select class="inp" data-c="scoutFilter" data-k="p">${opts([['','All patrols'], ...S.patrols.map(p=>[p.id,p.name]), ...(S.scouts.some(s => !patrol(s.patrol)) ? [['none','No patrol']] : [])], f.p)}</select>`, '" style="flex:1;min-width:130px')}
     ${field('Status', `<select class="inp" data-c="scoutFilter" data-k="st">${opts([['','Any status'], ...MEMBER_ST], f.st)}</select>`, '" style="flex:1;min-width:130px')}
     ${field('Rank', `<select class="inp" data-c="scoutFilter" data-k="rk">${opts([['','Any rank'], ...STAGES], f.rk)}</select>`, '" style="flex:1;min-width:130px')}
   </div></div>
   <div class="rlist slist2" id="scout-list">${scoutGroups(list)}</div>`;
 };
 const GENDERS = [['Girl','Girls'], ['Boy','Boys']];
-function filterScouts(f){ return S.scouts.filter(s => (!f.s || (sname(s)+' '+s.sid).toLowerCase().includes(f.s.toLowerCase())) && (!f.p || s.patrol===f.p) && (!f.st || s.status===f.st) && (!f.rk || s.rank===f.rk)
+function filterScouts(f){ return S.scouts.filter(s => (!f.s || (sname(s)+' '+s.sid).toLowerCase().includes(f.s.toLowerCase())) && (!f.p || (f.p==='none' ? !patrol(s.patrol) : s.patrol===f.p)) && (!f.st || s.status===f.st) && (!f.rk || s.rank===f.rk)
   && (!f.g || (f.g==='none' ? !genderOf(s.gender) : genderOf(s.gender)===f.g))).sort((a,b) => sname(a).localeCompare(sname(b))); }
 function genderOf(v){ v = String(v||'').trim().toLowerCase(); return ['girl','g','f','female','woman'].includes(v) ? 'Girl' : ['boy','b','m','male','man'].includes(v) ? 'Boy' : ''; }
 /* Tick lists of scouts: Girls, then Boys (then any not set), each A-Z. row(s) returns one row's HTML. */
@@ -1888,7 +1888,7 @@ function scoutForm(s){
     <div class="full eyebrow">Scout details</div>
     ${field('First name', inp('first', s.first, 'required'))}${field('Last name', inp('last', s.last, 'required'))}
     ${field('Girl or boy', sel('gender', [['','Choose…'], ...GENDERS.map(([g])=>g)], genderOf(s.gender), 'required'))}${field('Date of birth', inp('dob', s.dob, 'type="date" required'))}${field('Class / grade', sel('grade', ['Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10'], s.grade))}
-    ${field('Patrol', sel('patrol', S.patrols.map(p=>[p.id,p.name]), s.patrol))}
+    ${field('Patrol', sel('patrol', [['','No patrol'], ...S.patrols.map(p=>[p.id,p.name])], s.patrol||''))}
     ${field('Rank / stage', sel('rank', STAGES, s.rank))}${field('Join date', inp('joined', s.joined, 'type="date"'))}
     <div class="full eyebrow" style="margin-top:6px">Membership</div>
     ${field('Status', sel('status', MEMBER_ST, s.status))}
@@ -1906,7 +1906,7 @@ F.scout = d => {
   if(!d.first?.trim() || !d.last?.trim() || !d.dob || !genderOf(d.gender)){ $('#sf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>First name, last name, girl or boy, and date of birth are required.</span></div>`; return; }
   let s = d.id && scout(d.id); const isNew = !s;
   if(isNew){ const y = academicYear().y; const n = S.scouts.length + 1; s = { id:uid('s'), sid:`TM-${y}-${String(n).padStart(3,'0')}`, photo:null, activities:[], syllabus:{}, badgeProgress:{}, badges:[], guardian:{}, emergency:{}, medical:'' }; S.scouts.push(s); }
-  Object.assign(s, { first:d.first.trim(), last:d.last.trim(), gender:genderOf(d.gender), dob:d.dob, grade:d.grade, patrol:d.patrol, rank:d.rank, joined:d.joined, status:d.status });
+  Object.assign(s, { first:d.first.trim(), last:d.last.trim(), gender:genderOf(d.gender), dob:d.dob, grade:d.grade, patrol:d.patrol||null, rank:d.rank, joined:d.joined, status:d.status });
   if(can('contacts.view')){ s.guardian = { name:d.g_name, relation:d.g_relation, phone:d.g_phone, email:d.g_email }; s.emergency = { ...(s.emergency||{}), name:d.e_name, phone:d.e_phone }; }
   if(can('medical.view') && d.medical !== undefined) s.medical = d.medical;
   audit(`${isNew?'Added':'Edited'} scout ${sname(s)}`); closeModal(); toast(isNew ? `${sname(s)} added` : 'Changes saved');
@@ -1925,7 +1925,7 @@ A.importScouts = () => modal({ title:'Import or update scouts', wide:true, body:
   <div class="alert info" style="align-items:flex-start">${ic('edit','sm')}<span><b>To update scouts you already have</b> (grade, patrol, rank, status…): download the current list below, change the cells in Excel, save, and upload the same file here. Rows are matched by <b>scout_id</b>, or by first + last name. <b>Empty cells keep the current value.</b></span></div>
   <div class="row"><button class="btn sm primary" data-a="exportScoutsDo" data-fmt="xlsx">${ic('download','sm')} Download current scouts (Excel)</button><button class="btn sm" data-a="importTemplate">${ic('download','sm')} Blank template for new scouts</button></div>
   <p class="muted" style="margin:0">Upload a CSV or Excel file with a header row. Recognised columns:</p><p class="small num" style="background:var(--surface-2);padding:10px;border-radius:8px;word-break:break-word">${SCOUT_COLS.join(', ')}</p>
-  <p class="small muted">Gender: Girl or Boy (F or M also work). Grade: 10 or Grade 10. Patrol matches by name (a new name creates a patrol). Rank: ${STAGES.join(', ')}. Status: ${MEMBER_ST.join(', ')}. Dates as YYYY-MM-DD or DD/MM/YYYY.</p>
+  <p class="small muted">Gender: Girl or Boy (F or M also work). Grade: 10 or Grade 10. Patrol matches by name (a new name creates a patrol); empty = no patrol for new scouts, and <b>none</b> takes an existing scout out of their patrol. Rank: ${STAGES.join(', ')}. Status: ${MEMBER_ST.join(', ')}. Dates as YYYY-MM-DD or DD/MM/YYYY.</p>
   <label class="drop" for="imp-file" style="cursor:pointer">${ic('upload','lg')}<div style="font-weight:600;margin-top:6px">Choose a .csv or .xlsx file</div><input id="imp-file" type="file" accept=".csv,.xlsx,.xls" class="sr" data-c="importFile"></label><div id="imp-prev"></div></div>` });
 A.importTemplate = () => saveFile('milandhoo-scout-scouts-template.csv', csvOf([SCOUT_COLS, ['','Hamid','Naseer','Boy','2014-05-12','Grade 7','Pine','Membership','2026-10-16','Active','Naseer Ali','+960 777 0000','naseer@mail.mv','Aisha Ali','+960 999 0000','']]));
 let IMPORT_ROWS = [];
@@ -1942,6 +1942,7 @@ C.importFile = async el => { const file = el.files[0]; if(!file) return; let row
   IMPORT_ROWS = rows.map((r, n) => ({ ...Object.fromEntries(head.map((h,i) => [h==='id'||h==='scoutid'?'scout_id':h, (r[i]||'').trim()])), _row:n+2 })).filter(r => r.scout_id || (r.first && r.last));
   importPreview(); };
 /* Work out, without changing anything, which rows update an existing scout, which add a new one and which are skipped. */
+const NO_PATROL = /^(none|no patrol|no|-|—|n\/a)$/i;
 const normGrade = v => { v = String(v||'').trim(); const m = v.match(/^(?:gr(?:ade)?\.?\s*)?(\d{1,2})$/i); return m ? 'Grade ' + (+m[1]) : v; };
 const pickOf = (list, v) => list.find(x => x.toLowerCase()===String(v||'').trim().toLowerCase());
 function importPlan(){ const key = s => `${s.first} ${s.last}`.trim().replace(/\s+/g,' ').toLowerCase();
@@ -1959,7 +1960,8 @@ function importChanges(s, r){ const ch = [], set = (k, l, cur, v) => { if(v!==''
   if(r.scout_id){ set('first','First name', s.first, r.first); set('last','Last name', s.last, r.last); }
   set('gender','Gender', genderOf(s.gender), r.gender ? genderOf(r.gender) : ''); set('dob','Date of birth', s.dob, normDate(r.dob));
   set('grade','Grade', s.grade, normGrade(r.grade)); set('section','Section', s.section, r.section);
-  if(r.patrol){ const p = S.patrols.find(x => x.name.toLowerCase()===r.patrol.toLowerCase()); set('patrol','Patrol', pName(s.patrol), p ? p.name : r.patrol); }
+  if(r.patrol && NO_PATROL.test(r.patrol)){ if(patrol(s.patrol)) set('patrol','Patrol', pName(s.patrol), 'No patrol'); }
+  else if(r.patrol){ const p = S.patrols.find(x => x.name.toLowerCase()===r.patrol.toLowerCase()); set('patrol','Patrol', pName(s.patrol), p ? p.name : r.patrol); }
   set('rank','Rank', s.rank, pickOf(STAGES, r.rank)||''); set('status','Status', s.status, pickOf(MEMBER_ST, r.status)||''); set('joined','Joined', s.joined, normDate(r.joined));
   if(can('contacts.view')){ const g = s.guardian||{}, e = s.emergency||{};
     set('g.name','Guardian', g.name, r.guardian_name); set('g.phone','Guardian phone', g.phone, r.guardian_phone); set('g.email','Guardian email', g.email, r.guardian_email);
@@ -1976,15 +1978,15 @@ function importPreview(){ const el = $('#imp-prev'); if(!el) return;
     ${changed.length || P.add.length ? `<button class="btn primary" style="margin-top:10px;width:100%" data-a="importDo">Apply: update ${changed.length}${P.add.length?` · add ${P.add.length}`:''}</button>` : '<p class="small muted" style="margin-top:10px">Nothing to change.</p>'}`; }
 A.importDo = () => { const y = academicYear().y; const made = [];
   const patrolFor = name => { name = String(name||'').trim(); const hit = name && S.patrols.find(x => x.name.toLowerCase()===name.toLowerCase()); if(hit) return hit;
-    if(!name && S.patrols.length) return S.patrols[0];
+    if(!name || NO_PATROL.test(name)) return null;
     const p = { id:uid('p'), name:name||'New scouts', icon:'flag', color:COLORS[S.patrols.length % COLORS.length], motto:'', pl:null, apl:null, leaders:[], points:0 }; S.patrols.push(p); made.push(p.name); return p; };
   const P = importPlan(), addNew = !$('#imp-add') || $('#imp-add').checked; let nu = 0;
   P.upd.forEach(({ s, ch }) => { if(!ch.length) return; nu++; ch.forEach(c => {
-    if(c.k==='patrol') s.patrol = patrolFor(c.to).id; else if(c.k.startsWith('g.')){ s.guardian = s.guardian||{}; s.guardian[c.k.slice(2)] = c.to; }
+    if(c.k==='patrol') s.patrol = patrolFor(c.to)?.id || null; else if(c.k.startsWith('g.')){ s.guardian = s.guardian||{}; s.guardian[c.k.slice(2)] = c.to; }
     else if(c.k.startsWith('e.')){ s.emergency = s.emergency||{}; s.emergency[c.k.slice(2)] = c.to; } else s[c.k] = c.to; }); });
   const adds = addNew ? P.add : [];
   adds.forEach(r => { const p = patrolFor(r.patrol);
-  S.scouts.push({ id:uid('s'), sid:`TM-${y}-${String(S.scouts.length+1).padStart(3,'0')}`, first:r.first, last:r.last, gender:genderOf(r.gender), dob:normDate(r.dob)||`${y-12}-01-01`, grade:normGrade(r.grade)||'Grade 6', section:r.section||'A', patrol:p.id, rank:pickOf(STAGES, r.rank)||'Membership', joined:normDate(r.joined)||TODAY(), status:pickOf(MEMBER_ST, r.status)||'Pending', renewal:iso(addDays(new Date(),365)), fee:'Due', photo:null, photoConsent:false,
+  S.scouts.push({ id:uid('s'), sid:`TM-${y}-${String(S.scouts.length+1).padStart(3,'0')}`, first:r.first, last:r.last, gender:genderOf(r.gender), dob:normDate(r.dob)||`${y-12}-01-01`, grade:normGrade(r.grade)||'Grade 6', section:r.section||'A', patrol:p ? p.id : null, rank:pickOf(STAGES, r.rank)||'Membership', joined:normDate(r.joined)||TODAY(), status:pickOf(MEMBER_ST, r.status)||'Pending', renewal:iso(addDays(new Date(),365)), fee:'Due', photo:null, photoConsent:false,
     guardian:{ name:r.guardian_name, phone:r.guardian_phone, email:r.guardian_email, relation:'Guardian' }, emergency:{ name:r.emergency_name, phone:r.emergency_phone }, medical:r.medical||'', activities:[], syllabus:{}, badgeProgress:{}, badges:[] }); });
   const msg = [nu && `updated ${nu} scout${nu>1?'s':''}`, adds.length && `added ${adds.length} new scout${adds.length>1?'s':''}`, made.length && `created patrols ${made.join(', ')}`].filter(Boolean).join(', ') || 'nothing changed';
   audit('Import: ' + msg); toast(msg.charAt(0).toUpperCase() + msg.slice(1)); IMPORT_ROWS = []; closeModal(); refresh(); };
