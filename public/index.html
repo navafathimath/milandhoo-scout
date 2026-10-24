@@ -1200,9 +1200,14 @@ const PERM_LIST = [
   ['Sessions & calendar', [['session.edit','Plan sessions'],['session.delete','Delete sessions'],['event.edit','Add and edit events'],['event.delete','Delete events']]],
   ['Photos', [['photo.upload','Upload photos'],['photo.delete','Delete photos'],['photo.download','Download photos']]],
   ['Reports & settings', [['export','Export reports and lists'],['import','Import scouts'],['settings.view','Open Settings (group, year, session types)']]] ];
-const PERM_ROLES = ['leader','assistant'];
-const permsOf = r => (S?.settings?.perms && S.settings.perms[r]) || PERMS[r] || [];
-const can = p => ME && (ME.role==='admin' || permsOf(ME.role).includes(p));
+/* Leader positions, as in the Leaders hierarchy. All of them sign in with the "leader" access role
+   (that is what the database rules check); each position has its own permissions in Settings. */
+const POSITIONS = { gl:'Group Leader', lt:'LT In Charge', lic:'Leaders In Charge', sl:'Scout Leader' };
+const permKey = u => !u ? '' : u.role==='leader' ? (POSITIONS[u.pos] ? u.pos : 'sl') : u.role;
+const roleName = u => !u ? '' : u.role==='leader' ? POSITIONS[permKey(u)] : ROLES[u.role] || u.role;
+const permCols = () => [...Object.keys(POSITIONS), ...(S.users.some(u => u.role==='assistant') ? ['assistant'] : [])];
+const permsOf = k => { const P = S?.settings?.perms || {}; return P[k] || (POSITIONS[k] ? P.leader || PERMS.leader : PERMS[k]) || []; };
+const can = p => ME && (ME.role==='admin' || permsOf(permKey(ME)).includes(p));
 /* the admin account is hidden from everyone else and is never offered as a leader to pick */
 const leaderUsers = () => S.users.filter(u => u.role!=='scout' && u.role!=='admin');
 const seesUser = u => u && (u.role!=='admin' || ME?.role==='admin');
@@ -1489,7 +1494,7 @@ function renderApp(){ twoTerms(); schoolDays();
         ${isScout()?'':`<button class="icon-btn search-toggle" data-a="openSearch" aria-label="Search">${ic('search')}</button>`}
         <button class="icon-btn" data-a="theme" aria-label="Toggle dark mode" id="theme-btn">${ic(isDark()?'sun':'moon')}</button>
         <div style="position:relative"><button class="icon-btn" data-a="bell" aria-label="Notifications" id="bell-btn">${ic('bell')}<span class="bell-dot hide" data-unread></span></button><div id="bell-pop"></div></div>
-        <div style="position:relative"><button class="prof-btn" data-a="profMenu" aria-label="Profile menu">${av(isScout()?myScout():ME, 36)}<span class="who"><b>${esc(ME.name)}</b><span>${ROLES[ME.role]}</span></span>${ic('down','sm')}</button><div id="prof-pop"></div></div>
+        <div style="position:relative"><button class="prof-btn" data-a="profMenu" aria-label="Profile menu">${av(isScout()?myScout():ME, 36)}<span class="who"><b>${esc(ME.name)}</b><span>${roleName(ME)}</span></span>${ic('down','sm')}</button><div id="prof-pop"></div></div>
       </div>
     </header>
     <main id="main" tabindex="-1"></main>
@@ -1598,7 +1603,7 @@ I.search = el => {
   const m = s => String(s).toLowerCase().includes(q);
   const groups = [
     ['Scouts', S.scouts.filter(s => m(sname(s)) || m(s.sid)).slice(0,6).map(s => [av(s,28), sname(s), `${s.sid} · ${pName(s.patrol)}`, 'scout', s.id])],
-    ['Leaders', S.users.filter(u => u.role!=='scout' && seesUser(u) && (m(u.name)||m(u.email))).map(u => [av(u,28), u.name, ROLES[u.role], 'leader', u.id])],
+    ['Leaders', S.users.filter(u => u.role!=='scout' && seesUser(u) && (m(u.name)||m(u.email))).map(u => [av(u,28), u.name, roleName(u), 'leader', u.id])],
     ['Badges', S.badges.filter(b => m(b.name)).map(b => [`${bArt(b, '', 'width:28px;height:28px;border-width:1px', 'sm')}`, b.name, catLabel(b.category), 'badge', b.id])],
     ['Sessions', S.sessions.filter(s => !s.template && (m(s.title)||m(s.objectives))).slice(0,5).map(s => [`<span class="kpi"><span class="ic" style="width:28px;height:28px">${ic('fire','sm')}</span></span>`, s.title, fmtD(s.date), 'session', s.id])],
     ['Events', S.events.filter(e => m(e.title)||m(e.location)).slice(0,5).map(e => [`<span class="ev-dot" style="background:${EVENT_TYPES[e.type].color};width:14px;height:14px;margin:0 7px"></span>`, e.title, `${EVENT_TYPES[e.type].label} · ${e.recur!=='none'?'Repeats '+e.recur:fmtD(e.date)}`, 'calendar', e.id])],
@@ -2025,7 +2030,7 @@ function profOverview(s){ const p = patrol(s.patrol); const leaders = (p?.leader
   return `<div class="grid g21"><div class="card"><div class="card-h"><h2>Details</h2></div><dl class="facts" style="margin:0">
     ${[['Date of birth', `${fmtD(s.dob)} (age ${age(s.dob)})`],['Class / grade', s.grade],['Patrol', p?.name||'—'],['Rank / level', s.rank],['Joined', fmtD(s.joined)],['Membership', s.status]].map(([k,v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
     ${!s.photoConsent ? `<div class="alert" style="margin-top:14px">${ic('eyeoff','sm')}<span>No photo consent on file. Mark any photos of ${esc(s.first)} as private.</span></div>` : ''}</div>
-  <div class="card"><div class="card-h"><h2>Assigned leaders</h2></div><div class="list">${leaders.map(u => `<div class="li">${av(u,42)}<div class="grow"><b class="ttl" style="display:block">${esc(u.name)}</b><span class="small muted">${ROLES[u.role]}</span><div class="row small" style="gap:6px;margin-top:4px">${u.phone?`<a href="tel:${esc(u.phone.replace(/\s/g,''))}" class="chip">${ic('phone','sm')} ${esc(u.phone)}</a>`:''}<a href="mailto:${esc(u.email)}" class="chip">${ic('mail','sm')} Email</a></div></div></div>`).join('') || empty('shield','No leader assigned to this patrol')}</div></div></div>`; }
+  <div class="card"><div class="card-h"><h2>Assigned leaders</h2></div><div class="list">${leaders.map(u => `<div class="li">${av(u,42)}<div class="grow"><b class="ttl" style="display:block">${esc(u.name)}</b><span class="small muted">${roleName(u)}</span><div class="row small" style="gap:6px;margin-top:4px">${u.phone?`<a href="tel:${esc(u.phone.replace(/\s/g,''))}" class="chip">${ic('phone','sm')} ${esc(u.phone)}</a>`:''}<a href="mailto:${esc(u.email)}" class="chip">${ic('mail','sm')} Email</a></div></div></div>`).join('') || empty('shield','No leader assigned to this patrol')}</div></div></div>`; }
 function profBadges(s){ const earned = s.badges.map(b => ({ ...b, b:badge(b.badgeId) })).filter(x => x.b).sort((a,b) => a.date < b.date ? 1 : -1);
   return `<div class="card"><div class="card-h"><h2>Earned badges</h2>${can('badge.award')?`<button class="btn sm" data-a="awardBadge" data-sid="${s.id}">${ic('plus','sm')} Award</button>`:''}</div>
     <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">${earned.map(x => `<div style="text-align:center;padding:12px 6px;border:1px solid var(--line);border-radius:12px">${bArt(x.b, 'lg', 'margin:0 auto')}<b style="display:block;margin-top:8px">${esc(x.b.name)}</b><span class="small muted">${fmtD(x.date)}<br>by ${esc(user(x.by)?.name||'—')}</span></div>`).join('') || empty('medal','No badges yet')}</div></div>`; }
@@ -2162,7 +2167,12 @@ function orgDefault(){ return { lead:[
 function orgOf(){ if(!S.settings.org) S.settings.org = orgDefault(); return S.settings.org; }
 /* a member is a leader account id, or 'n:Name' for someone without an account (matched to an account by name when one exists) */
 function orgPerson(ref){ if(String(ref).startsWith('n:')){ const n = ref.slice(2).trim(); return leaderUsers().find(u => u.name.trim().toLowerCase()===n.toLowerCase()) || { name:n }; } const u = user(ref); return u && u.role!=='admin' ? u : null; }
-function orgPeople(refs){ return (refs||[]).map(orgPerson).filter(Boolean); }
+function orgPeople(refs){ const seen = new Set(); return (refs||[]).map(orgPerson).filter(p => p && !(p.id && seen.has(p.id)) && (!p.id || seen.add(p.id))); }
+/* Group Leader, LT In Charge and Leaders In Charge accounts appear in the matching box of the hierarchy. */
+function orgSyncPos(u){ if(u.role==='admin') return; const o = orgOf();
+  o.lead.forEach(l => l.m = (l.m||[]).filter(x => x!==u.id));
+  const t = u.role==='leader' && ['gl','lt','lic'].includes(u.pos) ? POSITIONS[u.pos].toLowerCase() : '';
+  const box = t && o.lead.find(l => String(l.role).trim().toLowerCase()===t); if(box && !orgPeople(box.m).some(p => p.id===u.id)) box.m.push(u.id); }
 function orgName(p){ return p.id ? `<button class="org-link" data-a="go" data-r="leader" data-id="${p.id}">${esc(p.name)}</button>` : esc(p.name); }
 
 function orgTree(){ const o = orgOf(), n = o.teams.length;
@@ -2174,7 +2184,7 @@ function orgTree(){ const o = orgOf(), n = o.teams.length;
 VIEWS.leaders = () => { const list = S.users.filter(u => u.role!=='scout' && seesUser(u)); const lv = R.q.lv || 'org';
   return `${pageH('Group', 'Leaders', `<div class="seg"><button class="${lv==='org'?'on':''}" data-a="go" data-r="leaders" data-q-lv="org">Hierarchy</button><button class="${lv==='list'?'on':''}" data-a="go" data-r="leaders" data-q-lv="list">List</button></div>${ME.role==='admin' ? (lv==='org' ? `<button class="btn primary" data-a="orgEdit">${ic('edit','sm')} Edit roles</button>` : `<button class="btn primary" data-a="addUser">${ic('plus','sm')} Add user</button>`) : ''}`)}
   ${lv==='org' ? orgTree() : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">${list.map(u => { const ps = S.patrols.filter(p => p.leaders.includes(u.id));
-    return `<button class="card" style="text-align:left;cursor:pointer" data-a="go" data-r="leader" data-id="${u.id}"><div class="row nw">${av(u,56)}<div style="min-width:0"><h3>${esc(u.name)}</h3><div class="small muted">${ROLES[u.role]}${u.role==='admin'?' · hidden from other leaders':''}${u.disabled?' · disabled':''}${u.sample?' · sample profile, cannot sign in':''}</div></div></div>
+    return `<button class="card" style="text-align:left;cursor:pointer" data-a="go" data-r="leader" data-id="${u.id}"><div class="row nw">${av(u,56)}<div style="min-width:0"><h3>${esc(u.name)}</h3><div class="small muted">${roleName(u)}${u.role==='admin'?' · hidden from other leaders':''}${u.disabled?' · disabled':''}${u.sample?' · sample profile, cannot sign in':''}</div></div></div>
     <div class="row" style="margin-top:12px;gap:6px">${ps.map(p => `<span class="chip">${pDot(p)} ${esc(p.name)}</span>`).join('') || '<span class="small muted">No patrols assigned</span>'}</div>
     <div class="small muted" style="margin-top:10px">${u.qualifications.length} qualifications · ${S.scouts.filter(s => ps.some(p=>p.id===s.patrol)).length} scouts</div></button>`; }).join('')}</div>
   ${ME.role==='admin' ? `<div class="card" style="margin-top:16px"><div class="card-h"><h2>Scout accounts</h2><span class="small muted">Read-only access for scouts</span></div><div class="list">${S.users.filter(u=>u.role==='scout').map(u => `<div class="li">${av(scout(u.scoutId)||u,36)}<div class="grow"><b>${esc(u.name)}</b><div class="small muted">${esc(u.email)}</div></div><button class="btn sm" data-a="editUser" data-id="${u.id}">Manage</button></div>`).join('') || empty('users','No scout accounts')}</div></div>` : ''}`}`; };
@@ -2205,14 +2215,14 @@ VIEWS.leader = () => { const u = user(R.id); if(!seesUser(u)) return empty('shie
   const acts = [...(u.activity||[]), ...S.audit.filter(a => a.user===u.id && !/Signed (in|out)/.test(a.action)).slice(0,6).map(a => ({ date:iso(new Date(a.ts)), text:a.action }))].sort((a,b) => a.date < b.date ? 1 : -1).slice(0,10);
   return `<button class="btn ghost sm" data-a="go" data-r="leaders" style="margin-bottom:10px">${ic('left','sm')} All leaders</button>
   <div class="card" style="margin-bottom:16px"><div class="prof-head"><div class="prof-photo">${av(u,104)}${canEd?`<button class="cam" data-a="photoLeader" data-id="${u.id}" aria-label="Change photo">${ic('camera','sm')}</button>`:''}</div>
-  <div style="flex:1;min-width:200px"><div class="eyebrow">${ROLES[u.role]}</div><h1 style="margin:2px 0 8px">${esc(u.name)}</h1><div class="row small" style="gap:6px">${u.phone?`<span class="chip">${ic('phone','sm')} <span class="num">${esc(u.phone)}</span></span>`:''}<span class="chip">${ic('mail','sm')} ${esc(u.email)}</span></div></div>
+  <div style="flex:1;min-width:200px"><div class="eyebrow">${roleName(u)}</div><h1 style="margin:2px 0 8px">${esc(u.name)}</h1><div class="row small" style="gap:6px">${u.phone?`<span class="chip">${ic('phone','sm')} <span class="num">${esc(u.phone)}</span></span>`:''}<span class="chip">${ic('mail','sm')} ${esc(u.email)}</span></div></div>
   ${canEd?`<button class="btn" data-a="editUser" data-id="${u.id}">${ic('edit','sm')} Edit</button>`:''}</div></div>
   <div class="grid g2"><div class="card"><div class="card-h"><h2>Qualifications & training</h2></div><div class="list">${u.qualifications.map(q => `<div class="li"><span class="badge-ic" style="width:34px;height:34px">${ic('shield','sm')}</span><span class="grow">${esc(q)}</span></div>`).join('') || empty('shield','None recorded')}</div></div>
   <div class="card"><div class="card-h"><h2>Assigned patrols & scouts</h2></div>${ps.map(p => `<div style="margin-bottom:12px"><div class="row" style="gap:8px;margin-bottom:6px"><span class="emblem" style="background:${p.color};width:30px;height:30px;border-radius:8px">${ic(p.icon,'sm')}</span><b>${esc(p.name)}</b></div><div class="row" style="gap:4px">${sc.filter(s=>s.patrol===p.id).map(s => `<button class="chip" style="border:0;cursor:pointer" data-a="go" data-r="scout" data-id="${s.id}">${esc(s.first)}</button>`).join('')}</div></div>`).join('') || empty('flag','No patrols assigned')}</div>
   <div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Activity history</h2></div><div class="list">${acts.map(a => `<div class="li"><span class="small muted num" style="width:90px">${fmtD(a.date)}</span><span class="grow">${esc(a.text)}</span></div>`).join('') || empty('history','No activity yet')}</div></div></div>`; };
-function userForm(u){ u = u || { name:'', email:'', role:'leader', phone:'', qualifications:[] }; const adm = ME.role==='admin';
+function userForm(u){ u = u || { name:'', email:'', role:'leader', pos:'sl', phone:'', qualifications:[] }; const adm = ME.role==='admin';
   return `<div class="form-grid">${field('Full name', inp('name', u.name, 'required'))}${field('Email (sign-in)', inp('email', u.email, `type="email" required ${adm?'':'readonly'}`))}
-  ${adm ? (u.role==='admin' ? field('Role', `<input type="hidden" name="role" value="admin"><input class="inp" value="Admin" readonly>`) : field('Role', sel('role', Object.entries(ROLES).filter(([k]) => k!=='admin'), u.role))) : ''}${field('Phone', inp('phone', u.phone, 'type="tel"'))}
+  ${adm ? (u.role==='admin' ? field('Role', `<input type="hidden" name="role" value="admin"><input class="inp" value="Admin" readonly>`) : field('Role', sel('role', [...Object.entries(POSITIONS), ...(u.role==='assistant' ? [['assistant', ROLES.assistant]] : []), ['scout', ROLES.scout]], u.role==='leader' ? permKey(u) : u.role))) : ''}${field('Phone', inp('phone', u.phone, 'type="tel"'))}
   ${u.role!=='scout' || !u.id ? `${field('Qualifications & training (one per line)', ta('quals', (u.qualifications||[]).join('\n')), 'full')}` : ''}
   ${adm && u.role!=='admin' ? `<div class="field full"><label>Linked scout (for scout accounts)</label><select class="inp" name="scoutId">${opts([['','—'], ...S.scouts.map(s=>[s.id, sname(s)])], u.scoutId)}</select></div>` : ''}
   ${adm && u.role!=='admin' ? `<div class="field full"><label>Assigned patrols</label><div class="row">${S.patrols.map(p => `<label class="check"><input type="checkbox" name="patrols" value="${p.id}" ${p.leaders.includes(u.id)?'checked':''}> ${esc(p.name)}</label>`).join('')}</div></div>` : ''}
@@ -2228,8 +2238,8 @@ F.user = async d => { const err = m => $('#uf-err').innerHTML = `<div class="ale
   if(isNew){ if(String(d.pw||'').length < 8) return err('Set a temporary password of at least 8 characters.'); u = { id:uid('u'), photo:null, activity:[], pw:await sha(d.pw) }; S.users.push(u); }
   Object.assign(u, { name:d.name.trim(), email:d.email.trim(), phone:d.phone||'' }); if(d.quals !== undefined) u.qualifications = String(d.quals).split('\n').map(x=>x.trim()).filter(Boolean); u.qualifications = u.qualifications || [];
   if(!isNew && !Cloud.on && String(d.newpw||'').length >= 8) u.pw = await sha(d.newpw);
-  if(ME.role==='admin' && u.role!=='admin'){ u.role = d.role || u.role; u.scoutId = d.scoutId || null; u.disabled = !!d.disabled; const sel = [].concat(d.patrols||[]); S.patrols.forEach(p => { p.leaders = p.leaders.filter(x => x!==u.id); if(sel.includes(p.id)) p.leaders.push(u.id); }); }
-  u.title = ROLES[u.role]; audit(`${isNew?'Created':'Updated'} account ${u.name} (${ROLES[u.role]})`); closeModal(); toast(isNew?'Account created':'Saved'); if(u.id===ME.id) renderApp(); else refresh(); };
+  if(ME.role==='admin' && u.role!=='admin'){ if(POSITIONS[d.role]){ u.role = 'leader'; u.pos = d.role; } else { u.role = d.role || u.role; delete u.pos; } u.scoutId = d.scoutId || null; u.disabled = !!d.disabled; const sel = [].concat(d.patrols||[]); S.patrols.forEach(p => { p.leaders = p.leaders.filter(x => x!==u.id); if(sel.includes(p.id)) p.leaders.push(u.id); }); }
+  u.title = roleName(u); orgSyncPos(u); audit(`${isNew?'Created':'Updated'} account ${u.name} (${roleName(u)})`); closeModal(); toast(isNew?'Account created':'Saved'); if(u.id===ME.id) renderApp(); else refresh(); };
 function dropUser(id){ S.users = S.users.filter(u => u.id!==id);
   S.patrols.forEach(p => p.leaders = (p.leaders||[]).filter(x => x!==id)); [...S.sessions, ...S.events].forEach(x => { if(Array.isArray(x.leaders)) x.leaders = x.leaders.filter(l => l!==id); });
   const o = S.settings.org; if(o) [...o.lead, ...o.teams].forEach(t => t.m = (t.m||[]).filter(m => m!==id)); }
@@ -3108,14 +3118,14 @@ VIEWS.settings = () => { if(!can('settings.view')) return empty('lock','Your rol
   ${adm ? `<div class="card" style="grid-column:1/-1"><div class="card-h"><h2>Data</h2></div><p class="small muted" style="margin-bottom:12px">${Cloud.on ? 'Data is stored in your Firebase project and shared live with every leader. Download a backup now and then as an extra copy. A backup includes uploaded photos.' : 'This portal stores its data in this browser. Save a backup regularly and restore it on another device. A backup includes uploaded photos.'}</p>
     <div class="row"><button class="btn" data-a="backup">${ic('download','sm')} Download backup</button><label class="btn" for="restore-file" style="cursor:pointer">${ic('upload','sm')} Restore backup</label><input id="restore-file" type="file" accept=".json,.txt,application/json" class="sr" data-c="restore"><span class="spacer"></span><button class="btn danger" data-a="clearScouts">${ic('trash','sm')} Remove all scouts</button></div></div>` : ''}
   </div>`; };
-function permCard(adm){ const on = r => new Set(permsOf(r));
-  const L = PERM_ROLES.map(r => [r, on(r)]);
+function permCard(adm){ const on = r => new Set(permsOf(r)), cols = permCols();
+  const L = cols.map(r => [r, on(r)]);
   return `<form class="card" style="grid-column:1/-1" data-f="perms"><div class="card-h"><h2>Roles & permissions</h2><span class="spacer"></span>${adm ? `<button type="button" class="btn sm" data-a="permsReset">Restore defaults</button><button class="btn sm primary">Save</button>` : '<span class="small muted">Only the admin can change these</span>'}</div>
   <p class="small muted" style="margin:0 0 10px">The <b>Admin</b> account can do everything, manages accounts and data, and is hidden from other leaders. <b>Scouts</b> are always read-only and see only their own profile, the calendar and Scout Notes.</p>
-  <div class="tbl-wrap"><table class="tbl perm-t"><thead><tr><th>Permission</th><th>Admin</th>${PERM_ROLES.map(r => `<th>${ROLES[r]}</th>`).join('')}</tr></thead><tbody>
-  ${PERM_LIST.map(([g, items]) => `<tr class="perm-g"><td colspan="${2+PERM_ROLES.length}">${g}</td></tr>${items.map(([k,l]) => `<tr><td>${l}</td><td>${ic('check','sm')}</td>${L.map(([r, s]) => `<td><input type="checkbox" name="${r}" value="${k}" ${s.has(k)?'checked':''} ${adm?'':'disabled'} aria-label="${esc(ROLES[r]+': '+l)}"></td>`).join('')}</tr>`).join('')}`).join('')}
+  <div class="tbl-wrap"><table class="tbl perm-t"><thead><tr><th>Permission</th><th>Admin</th>${cols.map(r => `<th>${POSITIONS[r] || ROLES[r]}</th>`).join('')}</tr></thead><tbody>
+  ${PERM_LIST.map(([g, items]) => `<tr class="perm-g"><td colspan="${2+cols.length}">${g}</td></tr>${items.map(([k,l]) => `<tr><td>${l}</td><td>${ic('check','sm')}</td>${L.map(([r, s]) => `<td><input type="checkbox" name="${r}" value="${k}" ${s.has(k)?'checked':''} ${adm?'':'disabled'} aria-label="${esc((POSITIONS[r] || ROLES[r])+': '+l)}"></td>`).join('')}</tr>`).join('')}`).join('')}
   </tbody></table></div></form>`; }
-F.perms = d => { if(ME.role!=='admin') return; S.settings.perms = Object.fromEntries(PERM_ROLES.map(r => [r, [].concat(d[r] ?? [])]));
+F.perms = d => { if(ME.role!=='admin') return; S.settings.perms = { ...(S.settings.perms||{}), ...Object.fromEntries(permCols().map(r => [r, [].concat(d[r] ?? [])])) };
   audit('Updated roles & permissions'); save(); renderApp(); toast('Permissions saved'); };
 A.permsReset = () => confirmBox('Restore the default permissions for every role?', () => { delete S.settings.perms; audit('Restored default permissions'); save(); renderApp(); toast('Defaults restored'); }, 'Restore defaults');
 C.logoFile = async el => { const f = el.files[0]; if(!f) return; try { const url = await readFile(f); const im = await loadImg(url); const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d'); const k = Math.max(512/im.width, 512/im.height); x.fillStyle = '#fff'; x.fillRect(0,0,512,512); x.drawImage(im, (512-im.width*k)/2, (512-im.height*k)/2, im.width*k, im.height*k);
