@@ -198,6 +198,27 @@ button.sl-r{cursor:pointer}button.sl-r:hover{background:var(--surface-2)}button.
 .w2-next .btn{margin-top:8px}
 @media (max-width:1100px){ .w2-next{margin-right:22px} .w2-l{max-width:none} .welcome2::before{background:linear-gradient(90deg,#08406B 0%,rgba(10,79,130,.85) 55%,rgba(10,79,130,.35) 100%)} }
 @media (max-width:760px){ .welcome2{flex-direction:column;background-size:cover;background-position:70% 60%} .welcome2::before{background:linear-gradient(180deg,rgba(8,64,107,.92) 0%,rgba(10,79,130,.75) 60%,rgba(10,79,130,.4) 100%)} .w2-l{padding:20px 18px 6px} .w2-l h1{font-size:1.4rem} .w2-next{align-self:stretch;width:auto;margin:6px 14px 16px} }
+
+/* Login: split card — form on the left, scout scene on the right (dashboard theme) */
+.login3{position:fixed;inset:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:24px 16px;background:#EEF4F8;color:#13283A}
+.l3-box{display:grid;grid-template-columns:1fr 1fr;width:min(1240px,100%);min-height:min(700px,calc(100vh - 48px));background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 30px 70px -40px rgba(9,60,100,.55);border:1px solid #E1EAF0}
+.l3-form{display:flex;flex-direction:column;justify-content:center;padding:44px 64px}
+.l3-logo{width:96px;height:96px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#fff}
+.l3-logo img{width:92%;height:92%;object-fit:contain}.l3-logo img.own{width:100%;height:100%;object-fit:cover}
+.l3-form h1{text-align:center;font-size:1.35rem;color:#13283A;margin:0}.l3-sub{text-align:center;color:#6B7F8E;margin:6px 0 26px}
+.login3 .field label{color:#2B4252;font-weight:600}
+.login3 .inp{height:48px;background-color:#fff;color:#13283A;border:1px solid #D9E3EA;padding-left:58px;background-repeat:no-repeat}
+.login3 #f_email{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237A8D9B' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3 7 9 6 9-6'/%3E%3C/svg%3E"),linear-gradient(#EEF3F7,#EEF3F7);background-position:13px center,0 0;background-size:20px 20px,44px 100%}
+.login3 #f_password{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237A8D9B' stroke-width='1.8' stroke-linecap='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V8a4 4 0 0 1 8 0v3'/%3E%3C/svg%3E"),linear-gradient(#EEF3F7,#EEF3F7);background-position:13px center,0 0;background-size:20px 20px,44px 100%}
+.login3 form[data-f=login]>*{order:0}.login3 form[data-f=login] [data-a=forgot]{order:1;align-self:flex-end;height:auto;padding:0;background:none;border:0;color:#5B6F7E;font-weight:500;text-decoration:underline;text-underline-offset:3px;font-size:.88rem}
+.login3 form[data-f=login] .alert{order:2}.login3 form[data-f=login] [type=submit]{order:3;height:50px;background:#0977B6;border-color:#0977B6;color:#fff}
+.login3 .btn.ghost{color:#13283A}.login3 .muted,.login3 .small,.login3 .eyebrow{color:#5B6F7E}.login3 h2{color:#13283A}
+.login3 .demo-acc button{background:#F6F9FB;border-color:#DCE6ED;color:#13283A}
+.l3-foot{text-align:center;color:#7A8D9B;font-size:.85rem;margin-top:26px}
+.l3-pic{position:relative;background:#0A4F82 url(img/login-scene-tall-2.jpg) center 62%/cover no-repeat}
+.l3-pic::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(8,62,104,.9) 0%,rgba(8,62,104,.45) 30%,rgba(8,62,104,0) 55%)}
+.l3-cap{position:absolute;left:32px;right:32px;bottom:30px;z-index:1;color:#fff}.l3-cap b{display:block;font-family:var(--f-head);font-size:1.5rem;line-height:1.25}.l3-cap span{display:block;margin-top:6px;color:#9FE0B8;font-weight:700;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase}
+@media (max-width:900px){ .l3-cap{display:none} .l3-pic::after{display:none} .l3-box{grid-template-columns:1fr;min-height:0} .l3-pic{order:-1;height:230px;background-position:center 58%} .l3-form{padding:28px 22px} .l3-cap{bottom:18px;left:20px;right:20px} .l3-cap b{font-size:1.15rem} .l3-logo{width:80px;height:80px;margin-top:-68px;position:relative;z-index:2;box-shadow:0 8px 20px -8px rgba(0,0,0,.35),0 0 0 4px #fff} .login3{align-items:flex-start;padding:12px} }
 </style>
 <script src="firebase-config.js"></script>
 <script src="badges/syllabus.js"></script>
@@ -1402,14 +1423,18 @@ function refresh(){ save(); renderMain(); }
 function closePops(){ ['#bell-pop','#prof-pop'].forEach(s => { const el = $(s); if(el) el.innerHTML = ''; }); const sr = $('#search-res'); sr && sr.classList.add('hide'); $('#search')?.classList.remove('open'); }
 
 /* ---- login ---- */
-function loginView(){
-  return `<div class="login2"><div class="login2-card"><div class="login2-logo"><img src="${S.settings.logo && imgData(S.settings.logo) ? imgData(S.settings.logo) : DEFAULT_LOGO}" alt="${esc(S.settings.groupName)} logo" class="${S.settings.logo && imgData(S.settings.logo) ? 'own' : ''}"></div><div id="login-card">${loginForm(takeLoginErr())}</div>
-    <div class="login2-signs"><span>Teamwork</span><span>Discipline</span><span>Service</span><span>Friendship</span></div>
-    <div class="login2-grp">${esc(S.settings.groupName)}${S.settings.school ? ' · ' + esc(S.settings.school) : ''}</div></div></div>`;
+function loginView(){ const own = S.settings.logo && imgData(S.settings.logo);
+  return `<div class="login3"><div class="l3-box">
+    <section class="l3-form"><div class="l3-logo"><img src="${own || DEFAULT_LOGO}" alt="${esc(S.settings.groupName)} logo" class="${own?'own':''}"></div>
+      <h1>${esc(S.settings.groupName)}</h1><p class="l3-sub">Sign in to Milandhoo Scout Portal</p>
+      <div id="login-card">${loginForm(takeLoginErr())}</div>
+      <p class="l3-foot">${esc(S.settings.school || 'Milandhoo School')} · Be Prepared</p></section>
+    <section class="l3-pic" aria-hidden="true"><div class="l3-cap"><b>Every patrol, badge and campfire in one place</b><span>Teamwork · Discipline · Service · Friendship</span></div></section>
+  </div></div>`;
 }
 function loginForm(err=''){
   const demo = [['admin@trailmark.school','Mariyam Saeed','Group Scout Leader'],['leader@trailmark.school','Ibrahim Rasheed','Scout Leader'],['assistant@trailmark.school','Aishath Shifa','Assistant Leader'],['scout@trailmark.school','Ahmed Zaid','Scout (read-only)']];
-  return `<h2 style="font-size:1.7rem;text-align:center">Sign in</h2><p class="muted" style="margin:6px 0 20px;text-align:center">Use your leader account to continue.</p>
+  return `
   <form data-f="login" class="stack" novalidate>
     ${field('Email', inp('email','', 'type="email" autocomplete="username" required'))}
     ${field('Password', inp('password','', 'type="password" autocomplete="current-password" required'))}
