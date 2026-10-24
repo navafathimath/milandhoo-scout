@@ -1868,7 +1868,7 @@ A.arRubricPDF = () => withPDF(async () => {
 VIEWS.scouts = () => {
   const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
   const list = filterScouts(f); const nG = S.scouts.filter(s => genderOf(s.gender)==='Girl').length, nB = S.scouts.filter(s => genderOf(s.gender)==='Boy').length;
-  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import / update</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkActivity">${ic('plus','sm')} Add activity</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
+  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import / update</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkActivity">${ic('plus','sm')} Add activity</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPatrol">${ic('flag','sm')} Change patrol</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
   return `${pageH('Members', 'Scouts', acts)}${scoutTabs('scouts')}${scoutSummary()}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
     <div class="field" style="flex:2;min-width:180px"><label for="f_ss">Search</label><input class="inp" id="f_ss" type="search" placeholder="Name or scout ID" value="${esc(f.s)}" data-i="scoutFilter" data-k="s"></div>
@@ -2125,6 +2125,19 @@ C.baReg = el => { const r = S.registers.find(x => x.id===el.value); if(!r) retur
   baRows().forEach(x => { const i = x.querySelector('input'), e = r.entries?.[i.value]; if(e && (e.s==='P' || e.s==='L')){ i.checked = true; n++; } }); baCount(); toast(`Ticked ${n} scouts who attended`); };
 A.baAll = () => { baRows().filter(x => !x.hidden).forEach(x => x.querySelector('input').checked = true); baCount(); };
 A.baNone = () => { baRows().forEach(x => x.querySelector('input').checked = false); baCount(); };
+/* Move many scouts into a patrol, or out of every patrol, at once. Uses the same pick list as Add activity. */
+A.bulkPatrol = () => { const list = [...S.scouts].sort((a,b) => pName(a.patrol).localeCompare(pName(b.patrol)) || sname(a).localeCompare(sname(b)));
+  modal({ title:'Change patrol for several scouts', wide:true, form:'bulkPatrol', body:`${field('Move ticked scouts to', sel('to', [['','No patrol'], ...S.patrols.map(p => [p.id, p.name])], ''))}
+    <div class="ba-h"><b>Scouts</b><span class="spacer"></span><span class="small muted" id="ba-n">0 selected</span></div>
+    <div class="row" style="gap:8px;margin-bottom:8px"><input class="inp" style="flex:1;min-width:160px" placeholder="Find a scout" data-i="baFind" aria-label="Find a scout"><select class="inp" style="width:auto" data-c="baPatrol" aria-label="Patrol">${opts([['','All patrols'], ...S.patrols.map(p => [p.id, p.name]), ['__none','No patrol']], '')}</select></div>
+    <div class="row" style="gap:8px;margin-bottom:8px"><button type="button" class="btn sm" data-a="baAll">Select all shown</button><button type="button" class="btn sm ghost" data-a="baNone">Clear</button></div>
+    <div class="ba-list">${list.map(s => `<label class="check ba-row" data-p="${patrol(s.patrol) ? s.patrol : '__none'}" data-n="${esc(sname(s).toLowerCase())}"><input type="checkbox" name="ids" value="${s.id}" data-c="baCount"> ${av(s,26)} <span class="grow">${esc(sname(s))}</span><span class="small muted">${esc(patrol(s.patrol)?.name || 'No patrol')} · ${esc(s.grade||'')}${s.status==='Inactive'?' · inactive':''}</span></label>`).join('') || empty('users','No scouts')}</div><div id="ba-err"></div>`,
+    foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Move ticked scouts</button>` }); };
+F.bulkPatrol = d => { const ids = [].concat(d.ids ?? []);
+  if(!ids.length) return $('#ba-err').innerHTML = `<div class="alert" style="margin-top:10px">${ic('alert','sm')}<span>Tick at least one scout.</span></div>`;
+  const to = d.to || null; ids.forEach(id => { const s = scout(id); if(!s || s.patrol===to) return;
+    S.patrols.forEach(p => { if(p.id!==to){ if(p.pl===id) p.pl = null; if(p.apl===id) p.apl = null; } }); s.patrol = to; });
+  const where = to ? patrol(to).name : 'no patrol'; audit(`Moved ${ids.length} scouts to ${where}`); closeModal(); refresh(); toast(`Moved ${ids.length} scout${ids.length>1?'s':''} to ${where}`); };
 F.bulkActivity = d => { const ids = [].concat(d.ids ?? []); if(!d.title?.trim()) return;
   if(!ids.length) return $('#ba-err').innerHTML = `<div class="alert" style="margin-top:10px">${ic('alert','sm')}<span>Tick at least one scout.</span></div>`;
   ids.forEach(id => { const s = scout(id); if(!s) return; s.activities = s.activities || []; s.activities.push({ type:d.type, title:d.title.trim(), date:d.date, role:d.role||'Participant', cert:!!d.cert }); });
@@ -2674,7 +2687,8 @@ A.badgeDelete = el => { const b = badge(el.dataset.id); confirmBox(`Delete <b>${
 /* ================= Syllabus ================= */
 VIEWS.syllabus = () => { const st = R.q.stage || 'all'; const ed = can('syllabus.edit');
   const stageScouts = stg => activeScouts().filter(s => s.rank===stg);
-  const pRows = S.patrols.map(p => ({ p, cells: STAGES.map(stg => { const ss = stageScouts(stg).filter(s=>s.patrol===p.id); const items = S.syllabus.filter(i=>i.stage===stg); const done = ss.reduce((a,s)=>a+items.filter(i=>s.syllabus[i.id]).length,0); const behind = ss.reduce((a,s)=>a+sylFor(s).behind,0); return { n:ss.length, p:pct(done, ss.length*items.length), behind }; }) }));
+  const noP = { id:'__none', name:'No patrol', color:'#9AA8B2' }, hasNone = activeScouts().some(s => !patrol(s.patrol));
+  const pRows = [...S.patrols, ...(hasNone ? [noP] : [])].map(p => ({ p, cells: STAGES.map(stg => { const ss = stageScouts(stg).filter(s => p===noP ? !patrol(s.patrol) : s.patrol===p.id); const items = S.syllabus.filter(i=>i.stage===stg); const done = ss.reduce((a,s)=>a+items.filter(i=>s.syllabus[i.id]).length,0); const behind = ss.reduce((a,s)=>a+sylFor(s).behind,0); return { n:ss.length, p:pct(done, ss.length*items.length), behind }; }) }));
   const items = S.syllabus.filter(i => st==='all' || i.stage===st);
   return `${pageH('Progress scheme', 'Syllabus', ed ? `<button class="btn primary" data-a="sylForm">${ic('plus','sm')} Add item</button>` : '')}
   <div class="card" style="margin-bottom:16px"><div class="card-h"><h2>Progress by patrol and stage</h2><span class="small muted">Scouts are tracked against the stage they are working on</span></div>
