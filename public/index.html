@@ -388,6 +388,7 @@ main{padding:24px;max-width:1360px;width:100%;margin:0 auto;flex:1}
 .av img{width:100%;height:100%;object-fit:cover}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 .field label,.lbl{font-size:.78rem;font-weight:600;color:var(--ink-2)}
+@media (max-width:900px), (pointer:coarse){ input,select,textarea,.inp{font-size:16px!important} }
 .inp,select.inp,textarea.inp{height:42px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--surface-2);width:100%;min-width:0}
 textarea.inp{height:auto;min-height:84px;padding:10px 12px;resize:vertical}
 .inp:focus{outline:2px solid color-mix(in srgb,var(--primary) 40%,transparent);border-color:var(--primary)}
@@ -1452,6 +1453,10 @@ function resetDiscipline(){ if(!S?.settings || S.settings.migDisc1) return;
 function regularSession2(){ if(!S?.sessions || S.settings.migRegular2) return;
   S.sessions.filter(s => s.template && String(s.title).trim().toLowerCase()==='regular session').forEach(s => Object.assign(s, { time:'16:30', end:'18:00', objectives:REGULAR_OBJECTIVES, timeline:JSON.parse(JSON.stringify(REGULAR_TIMELINE)) }));
   S.settings.migRegular2 = true; }
+/* One-time (requested): scouts who joined in 2026 start as Pending. */
+function pending2026(){ if(!S?.scouts || S.settings.migPending2026) return; let n = 0;
+  S.scouts.forEach(s => { if(String(s.joined||'').startsWith('2026') && !['Pending','Inactive'].includes(s.status)){ s.status = 'Pending'; n++; } });
+  if(n) audit(`Set ${n} scouts who joined in 2026 to Pending`); S.settings.migPending2026 = true; }
 function tidySessions(){ if(!S?.sessions || S.settings.migSessions1) return;
   const key = s => String(s.title||'').trim().toLowerCase(), asTpl = s => Object.assign(s, { template:true, date:'', registerId:null, reflection:'', photos:[], leaders:[], materials:(s.materials||[]).map(m => ({ ...m, done:false })) });
   const pickOne = test => S.sessions.filter(s => test(key(s))).sort((a,b) => (b.template?1:0) - (a.template?1:0) || String(b.date).localeCompare(String(a.date)))[0];
@@ -1489,7 +1494,7 @@ const ROUTE_PARENT = { scout:'scouts', register:'attendance', session:'sessions'
 
 let collapsed = false;
 try { collapsed = localStorage.getItem('tm_collapsed')==='1'; } catch(e){}
-function applyTheme(){ let t = 'system'; try { t = localStorage.getItem('tm_theme') || 'system'; } catch(e){} if(t==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); return t; }
+function applyTheme(){ let t = 'light'; try { t = localStorage.getItem('tm_theme') || 'light'; } catch(e){} if(t==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); return t; }
 function isDark(){ const t = document.documentElement.getAttribute('data-theme'); return t ? t==='dark' : matchMedia('(prefers-color-scheme: dark)').matches; }
 
 /* School calendar special days (MoE 2026 → academic year 2027), added once. Holidays cancel the weekly meeting; special days are only marked. */
@@ -1567,7 +1572,7 @@ function renderMain(){ twoTerms(); schoolDays();
   AFTER[R.route] && AFTER[R.route]();
   updateChrome();
 }
-function go(route, extra={}){ R.route = route; R.id = extra.id ?? null; R.tab = extra.tab ?? null; R.q = extra.q || {}; if(!extra.fromHistory){ const h = routeHref(route, R.id); if(location.hash !== h) history.pushState(null, '', h); } closePops(); while(modalStack.length) closeModal(); $('#shell')?.classList.remove('drawer'); renderMain(); window.scrollTo(0,0); try { if(!isScout()) localStorage.setItem('tm_route', JSON.stringify({ route, id:R.id })); } catch(e){} }
+function go(route, extra={}){ if(route==='calendar' && R.route!=='calendar' && !extra.keepView) CAL.view = 'month'; R.route = route; R.id = extra.id ?? null; R.tab = extra.tab ?? null; R.q = extra.q || {}; if(!extra.fromHistory){ const h = routeHref(route, R.id); if(location.hash !== h) history.pushState(null, '', h); } closePops(); while(modalStack.length) closeModal(); $('#shell')?.classList.remove('drawer'); renderMain(); window.scrollTo(0,0); try { if(!isScout()) localStorage.setItem('tm_route', JSON.stringify({ route, id:R.id })); } catch(e){} }
 function refresh(){ save(); renderMain(); }
 function closePops(){ ['#bell-pop','#prof-pop'].forEach(s => { const el = $(s); if(el) el.innerHTML = ''; }); const sr = $('#search-res'); sr && sr.classList.add('hide'); $('#search')?.classList.remove('open'); }
 
@@ -3110,7 +3115,7 @@ const Cloud = {
     ME.role = role;
     if(role==='admin') this.migrate();
     if(role==='admin' && email===ADMIN_EMAIL) S.users.filter(x => x.role==='admin' && x!==ME).forEach(x => dropUser(x.id));
-    if(role!=='scout'){ tidySessions(); resetDiscipline(); regularSession2(); }
+    if(role!=='scout'){ tidySessions(); resetDiscipline(); regularSession2(); pending2026(); }
     const askMove = role==='admin' && email !== ADMIN_EMAIL && !S.users.some(x => (x.email||'').toLowerCase()===ADMIN_EMAIL && x.id!==ME.id);
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
     this.subscribe();
