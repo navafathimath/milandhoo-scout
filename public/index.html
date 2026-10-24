@@ -1358,7 +1358,6 @@ const NAV = [
   { id:'scouts', label:'Scouts', icon:'users' },
   { id:'patrols', label:'Patrols', icon:'flag' },
   { id:'badges', label:'Badge work', icon:'medal' },
-  { id:'allround', label:'Best All-Rounder', icon:'trophy' },
   { id:'syllabus', label:'Syllabus', icon:'map' },
   { id:'notes', label:'Scout Notes', icon:'book' },
   { id:'sessions', label:'Session planning', icon:'fire' },
@@ -1371,7 +1370,7 @@ const SCOUT_NAV = [
   { id:'me', label:'My profile', icon:'users' }, { id:'calendar', label:'Calendar', icon:'calendar' },
   { id:'notes', label:'Scout Notes', icon:'book' } ];
 const navList = () => isScout() ? SCOUT_NAV : NAV.filter(n => !n.admin || ME.role==='admin');
-const ROUTE_PARENT = { scout:'scouts', register:'attendance', session:'sessions', album:'gallery', leader:'leaders', badge:'badges', me:'me', note:'notes' };
+const ROUTE_PARENT = { scout:'scouts', register:'attendance', session:'sessions', album:'gallery', leader:'leaders', badge:'badges', me:'me', note:'notes', allround:'scouts' };
 
 let collapsed = false;
 try { collapsed = localStorage.getItem('tm_collapsed')==='1'; } catch(e){}
@@ -1668,11 +1667,12 @@ function arScore(s, y){ const d = arData(y)[s.id] || {}; const at = arAttendance
 function arList(y){ return S.scouts.filter(s => s.status!=='Inactive' && arGrade(s) >= 10).map(s => ({ s, ...arScore(s, y) }))
   .sort((a,b) => b.total - a.total || sname(a.s).localeCompare(sname(b.s))); }
 
+const scoutTabs = on => `<div class="tabs">${[['scouts','All scouts'],['allround','Best All-Rounder']].map(([k,l]) => `<button class="tab ${on===k?'on':''}" data-a="go" data-r="${k}">${l}</button>`).join('')}</div>`;
 VIEWS.allround = () => { const y = arYear(), L = arList(y), ed = can('scout.edit');
   const years = [...new Set([String(new Date().getFullYear()), ...S.registers.map(r => r.date.slice(0,4)), ...Object.keys(S.settings.allround||{})])].sort().reverse();
   const avg = L.length ? (L.reduce((a,x) => a + x.total, 0)/L.length).toFixed(1) : '—', inc = L.filter(x => x.missing.length).length;
   const status = (x, i) => x.missing.length ? `<span class="ar-st warn">${x.missing.includes('mark') ? 'Marks missing' : 'Incomplete'}</span>` : AR_ACH[x.v.ach] ? `<span class="ar-st gold">${AR_ACH[x.v.ach]}</span>` : i===0 ? '<span class="ar-st gold">Leading</span>' : i<5 ? '<span class="ar-st">Shortlisted</span>' : '<span class="muted">—</span>';
-  return `${pageH('Annual prize giving · Uniform activities', 'Best All-Round Student', `<select class="inp" style="width:auto" data-c="arYear" aria-label="Year">${opts(years.map(v=>[v,'Year '+v]), y)}</select>${ed?`<button class="btn" data-a="arMarks">${ic('edit','sm')} Enter term marks</button>`:''}${can('export')?`<button class="btn primary" data-a="arPDF">${ic('download','sm')} Export rubric (PDF)</button>`:''}`)}
+  return `${pageH('Annual prize giving · Uniform activities', 'Best All-Round Student', `<select class="inp" style="width:auto" data-c="arYear" aria-label="Year">${opts(years.map(v=>[v,'Year '+v]), y)}</select>${ed?`<button class="btn" data-a="arMarks">${ic('edit','sm')} Enter term marks</button>`:''}${can('export')?`<button class="btn primary" data-a="arPDF">${ic('download','sm')} Export rubric (PDF)</button>`:''}`)}${scoutTabs('allround')}
   <div class="ar-kpi"><div><small>Eligible scouts</small><b>${L.length}</b><span>Grade 10 and above</span></div><div><small>Highest score</small><b>${L[0] ? L[0].total : '—'} <em>/ 28</em></b><span>${L[0] ? esc(sname(L[0].s)) : ''}</span></div><div><small>Average score</small><b>${avg}</b><span>out of 28</span></div><div><small>Incomplete records</small><b class="${inc?'w':''}">${inc}</b><span>discipline, attendance or marks</span></div></div>
   <div class="card ar-card"><div class="ar-h"><h2>Score composition</h2><span class="spacer"></span><div class="ar-lg">${AR_CATS.map(([k,l,c]) => `<span><i style="background:var(--ar-${k},${c})"></i>${l}</span>`).join('')}</div></div>
     ${L.length ? `<div class="ar-r ar-scale"><span></span><span>Candidate</span><span class="ar-ticks"><span>0</span><span>7</span><span>14</span><span>21</span><span>28</span></span><span style="text-align:right">Total</span><span style="text-align:center">Status</span></div>
@@ -1729,7 +1729,7 @@ VIEWS.scouts = () => {
   const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
   const list = filterScouts(f); const nG = S.scouts.filter(s => genderOf(s.gender)==='Girl').length, nB = S.scouts.filter(s => genderOf(s.gender)==='Boy').length;
   const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
-  return `${pageH('Members', 'Scouts', acts)}${scoutSummary()}
+  return `${pageH('Members', 'Scouts', acts)}${scoutTabs('scouts')}${scoutSummary()}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
     <div class="field" style="flex:2;min-width:180px"><label for="f_ss">Search</label><input class="inp" id="f_ss" type="search" placeholder="Name or scout ID" value="${esc(f.s)}" data-i="scoutFilter" data-k="s"></div>
     ${field('Patrol', `<select class="inp" data-c="scoutFilter" data-k="p">${opts([['','All patrols'], ...S.patrols.map(p=>[p.id,p.name])], f.p)}</select>`, '" style="flex:1;min-width:130px')}
