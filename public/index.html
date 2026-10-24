@@ -1412,6 +1412,10 @@ const REGULAR_SESSION = { title:'Regular session', time:'15:30', end:'17:00', lo
     {time:'16:55',label:'Closing',detail:'Points total, Scout Law of the day, flag down and dismissal'}],
   materials:['Flag and pole','Whistle','First-aid kit','Points board and marker','Ropes (one per scout)','Attendance register','Drinking water'].map(t => ({ t, done:false })),
   risk:'Check the hall and field for hazards before starting; a leader and first-aid kit on hand; water break every 30 minutes; headcount at opening and dismissal.' };
+/* One-time: the score form used to save Discipline as Excellent for every scout nobody rated. Put those back to Not set. */
+function resetDiscipline(){ if(!S?.settings || S.settings.migDisc1) return;
+  Object.values(S.settings.allround || {}).forEach(yr => Object.values(yr).forEach(d => { if(String(d.disc)==='4') d.disc = ''; }));
+  S.settings.migDisc1 = true; }
 function tidySessions(){ if(!S?.sessions || S.settings.migSessions1) return;
   const key = s => String(s.title||'').trim().toLowerCase(), asTpl = s => Object.assign(s, { template:true, date:'', registerId:null, reflection:'', photos:[], leaders:[], materials:(s.materials||[]).map(m => ({ ...m, done:false })) });
   const pickOne = test => S.sessions.filter(s => test(key(s))).sort((a,b) => (b.template?1:0) - (a.template?1:0) || String(b.date).localeCompare(String(a.date)))[0];
@@ -3019,7 +3023,7 @@ const Cloud = {
     ME.role = role;
     if(role==='admin') this.migrate();
     if(role==='admin' && email===ADMIN_EMAIL) S.users.filter(x => x.role==='admin' && x!==ME).forEach(x => dropUser(x.id));
-    if(role!=='scout') tidySessions();
+    if(role!=='scout'){ tidySessions(); resetDiscipline(); }
     const askMove = role==='admin' && email !== ADMIN_EMAIL && !S.users.some(x => (x.email||'').toLowerCase()===ADMIN_EMAIL && x.id!==ME.id);
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
     this.subscribe();
@@ -3342,7 +3346,7 @@ VIEWS.guide = () => { const sec = (icon, t, items) => `<div class="card"><div cl
   await Store.open();
   let st = await Store.get('kv','state');
   if(!st || st.v!==3 || !st.scouts){ st = await buildSeed(); await Store.set('kv','state', st); }
-  S = st; Object.assign(IMG, await Store.all('img')); tidySessions();
+  S = st; Object.assign(IMG, await Store.all('img')); tidySessions(); resetDiscipline();
   const sess = await Store.get('kv','session'); if(sess) ME = S.users.find(u => u.id===sess.uid && !u.disabled) || null;
   genReminders(); save();
   if(ME && isScout()) R.route = 'me';
