@@ -1820,14 +1820,13 @@ A.arRubricPDF = () => withPDF(async () => {
 VIEWS.scouts = () => {
   const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
   const list = filterScouts(f); const nG = S.scouts.filter(s => genderOf(s.gender)==='Girl').length, nB = S.scouts.filter(s => genderOf(s.gender)==='Boy').length;
-  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import / update</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkActivity">${ic('tent','sm')} Add activity</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
+  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import / update</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkActivity">${ic('plus','sm')} Add activity</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
   return `${pageH('Members', 'Scouts', acts)}${scoutTabs('scouts')}${scoutSummary()}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
     <div class="field" style="flex:2;min-width:180px"><label for="f_ss">Search</label><input class="inp" id="f_ss" type="search" placeholder="Name or scout ID" value="${esc(f.s)}" data-i="scoutFilter" data-k="s"></div>
     ${field('Patrol', `<select class="inp" data-c="scoutFilter" data-k="p">${opts([['','All patrols'], ...S.patrols.map(p=>[p.id,p.name])], f.p)}</select>`, '" style="flex:1;min-width:130px')}
     ${field('Status', `<select class="inp" data-c="scoutFilter" data-k="st">${opts([['','Any status'], ...MEMBER_ST], f.st)}</select>`, '" style="flex:1;min-width:130px')}
     ${field('Rank', `<select class="inp" data-c="scoutFilter" data-k="rk">${opts([['','Any rank'], ...STAGES], f.rk)}</select>`, '" style="flex:1;min-width:130px')}
-    ${field('Girls / boys', `<select class="inp" data-c="scoutFilter" data-k="g">${opts([['','Girls and boys'], ['Girl',`Girls (${nG})`], ['Boy',`Boys (${nB})`], ['none','Not set']], f.g)}</select>`, '" style="flex:1;min-width:130px')}
   </div></div>
   <div class="rlist slist2" id="scout-list">${scoutGroups(list)}</div>`;
 };
