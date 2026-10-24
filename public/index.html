@@ -1371,6 +1371,32 @@ function loadImg(srcUrl){ return new Promise((res, rej) => { const i = new Image
 async function compress(file, max=1400, q=.78){ const url = await readFile(file); const im = await loadImg(url); const k = Math.min(1, max/Math.max(im.width, im.height));
   const c = document.createElement('canvas'); c.width = Math.round(im.width*k); c.height = Math.round(im.height*k); const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(im, 0, 0, c.width, c.height);
   return { full:c.toDataURL('image/jpeg', q), w:c.width, h:c.height, origKB:Math.round(file.size/1024) }; }
+/* One-time tidy of Session planning: drop the dated (past and upcoming) sessions and keep three templates,
+   "Knots that hold", "Patrol camp prep" and a fully planned "Regular session". */
+const REGULAR_SESSION = { title:'Regular session', time:'15:30', end:'17:00', location:'School hall & sports field',
+  objectives:'Weekly troop meeting: opening ceremony, uniform inspection, a patrol game, the skill of the week and a closing ceremony',
+  timeline:[{time:'15:30',label:'Opening',detail:'Fall in by patrols in horseshoe, flag break, prayer and the Scout Promise'},
+    {time:'15:40',label:'Inspection',detail:'Uniform, scarf, woggle and personal kit checked by patrol leaders; points recorded'},
+    {time:'15:50',label:'Notices',detail:'Announcements, birthdays and last week’s patrol points'},
+    {time:'16:00',label:'Game',detail:'Warm-up game run by the duty patrol'},
+    {time:'16:15',label:'Skills',detail:'Skill of the week in patrol corners (knots, first aid, compass or signalling)'},
+    {time:'16:45',label:'Patrol time',detail:'Log book entries, badge progress and next week’s duties'},
+    {time:'16:55',label:'Closing',detail:'Points total, Scout Law of the day, flag down and dismissal'}],
+  materials:['Flag and pole','Whistle','First-aid kit','Points board and marker','Ropes (one per scout)','Attendance register','Drinking water'].map(t => ({ t, done:false })),
+  risk:'Check the hall and field for hazards before starting; a leader and first-aid kit on hand; water break every 30 minutes; headcount at opening and dismissal.' };
+function tidySessions(){ if(!S?.sessions || S.settings.migSessions1) return;
+  const key = s => String(s.title||'').trim().toLowerCase(), asTpl = s => Object.assign(s, { template:true, date:'', registerId:null, reflection:'', photos:[], leaders:[], materials:(s.materials||[]).map(m => ({ ...m, done:false })) });
+  const pickOne = test => S.sessions.filter(s => test(key(s))).sort((a,b) => (b.template?1:0) - (a.template?1:0) || String(b.date).localeCompare(String(a.date)))[0];
+  const knots = pickOne(k => k==='knots that hold'), camp = pickOne(k => k==='patrol camp prep');
+  let reg = pickOne(k => k==='regular session' || k==='regular meeting' || k==='standard weekly meeting');
+  if(!reg){ reg = { id:uid('ss'), syllabus:[], badges:[] }; S.sessions.push(reg); }
+  const syl = ['scout promise & law','flag & uniform care','patrol system'].map(t => S.syllabus.find(y => String(y.topic||'').trim().toLowerCase()===t)?.id).filter(Boolean);
+  const bdg = (S.badges||[]).filter(x => /tenderfoot/i.test(x.name||'')).slice(0,1).map(x => x.id);
+  Object.assign(asTpl(reg), JSON.parse(JSON.stringify(REGULAR_SESSION)), { syllabus: reg.syllabus?.length ? reg.syllabus : syl, badges: reg.badges?.length ? reg.badges : bdg });
+  const keep = [knots, camp, reg].filter(Boolean); keep.forEach(asTpl);
+  const gone = new Set(S.sessions.filter(s => !keep.includes(s)).map(s => s.id));
+  S.sessions = keep; S.registers.forEach(x => { if(x.sessionId && (gone.has(x.sessionId) || keep.some(s => s.id===x.sessionId))) x.sessionId = null; });
+  S.settings.migSessions1 = true; }
 /* ================= Shell, router, login, events ================= */
 const VIEWS = {}, A = {}, C = {}, I = {}, F = {}, AFTER = {};
 const NAV = [
@@ -2805,6 +2831,7 @@ const Cloud = {
     if(!ME){ ME = { id:uid('u'), name:u.displayName || u.email.split('@')[0], email:u.email, role, phone:'', photo:null, title:ROLES[role], qualifications:[], activity:[] }; S.users.push(ME); }
     ME.role = role;
     if(role==='admin') this.migrate();
+    if(role!=='scout') tidySessions();
     const askMove = role==='admin' && email !== ADMIN_EMAIL && !S.users.some(x => (x.email||'').toLowerCase()===ADMIN_EMAIL && x.id!==ME.id);
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
     this.subscribe();
@@ -3122,7 +3149,7 @@ VIEWS.guide = () => { const sec = (icon, t, items) => `<div class="card"><div cl
   await Store.open();
   let st = await Store.get('kv','state');
   if(!st || st.v!==3 || !st.scouts){ st = await buildSeed(); await Store.set('kv','state', st); }
-  S = st; Object.assign(IMG, await Store.all('img'));
+  S = st; Object.assign(IMG, await Store.all('img')); tidySessions();
   const sess = await Store.get('kv','session'); if(sess) ME = S.users.find(u => u.id===sess.uid && !u.disabled) || null;
   genReminders(); save();
   if(ME && isScout()) R.route = 'me';
