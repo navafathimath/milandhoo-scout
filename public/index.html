@@ -3246,8 +3246,9 @@ const Cloud = {
     F.cloudSetup = d => this.createPortal(d);
     F.login = async d => { try { await this.auth.signInWithEmailAndPassword(String(d.email).trim(), d.password); } catch(e){ $('#login-card').innerHTML = loginForm(this.authMsg(e)); } };
     F.resetReq = async d => { const em = String(d.email||'').trim();
-      try { await this.auth.sendPasswordResetEmail(em); } catch(e){ if(/invalid-email/.test(e.code)) return $('#login-card').innerHTML = loginForm('Enter a valid email address.'); }
-      $('#login-card').innerHTML = `<h2>Check your email</h2><p class="muted" style="margin:6px 0 20px">If an account exists for <b>${esc(em)}</b>, a password reset link is on its way. Check your spam folder if it does not arrive in a few minutes.</p><button class="btn primary lg" style="width:100%" data-a="backLogin">Back to sign in</button>`; };
+      try { await this.auth.sendPasswordResetEmail(em); } catch(e){ if(/invalid-email/.test(e.code)) return $('#login-card').innerHTML = loginForm('Enter a valid email address.');
+        if(/user-not-found/.test(e.code)) return $('#login-card').innerHTML = `<h2>Email not registered</h2><p class="muted" style="margin:6px 0 20px"><b>${esc(em)}</b> is not registered on the portal. Check the spelling, or ask the admin to add you.</p><button class="btn primary lg" style="width:100%" data-a="backLogin">Back to sign in</button>`; }
+      $('#login-card').innerHTML = `<h2>Check your email</h2><p class="muted" style="margin:6px 0 12px">If <b>${esc(em)}</b> is registered on the portal, a password reset link has been sent to it. Check your spam folder too.</p><p class="muted small" style="margin:0 0 20px">No email after a few minutes? This email is probably not registered. Check the spelling, or ask the admin to add you.</p><button class="btn primary lg" style="width:100%" data-a="backLogin">Back to sign in</button>`; };
     F.changePw = async d => { const err = m => $('#cpw-err').innerHTML = `<div class="alert">${ic('alert','sm')}<span>${m}</span></div>`;
       if(String(d.pw).length < 8) return err('Use at least 8 characters.');
       if(d.pw !== d.pw2) return err('The two new passwords do not match.');
