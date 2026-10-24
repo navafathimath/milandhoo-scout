@@ -758,9 +758,11 @@ summary::-webkit-details-marker{display:none}
 /* all-rounder: bulk scores */
 .ar-seg{display:flex;flex-wrap:wrap;width:100%}.ar-seg button{flex:1 1 auto}
 .ar-bk{border:1px solid var(--line-2);border-radius:10px;overflow:hidden}
-.ar-bk-all{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);font-size:.82rem;font-weight:600;color:var(--ink-2)}.ar-bk-all span{flex:1}.ar-bk-all .inp{width:220px}
-.ar-bk-r{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line-2)}.ar-bk-r .ar-who{flex:1}.ar-bk-r .inp{width:220px}
-@media (max-width:560px){ .ar-bk-all .inp,.ar-bk-r .inp{width:150px} }
+.ar-bk-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px}.ar-bk-bar .inp{width:auto}
+.ar-bk-all{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;background:var(--surface-2);font-size:.82rem;font-weight:600;color:var(--ink-2)}.ar-bk-all #ar-bk-t{flex:1}.ar-bk-all .inp{width:200px}
+.ar-bk-r{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--line-2);transition:background .3s}.ar-bk-r .ar-who{flex:1}.ar-bk-r .inp{width:200px}
+.ar-bk-r .ar-tk,.ar-bk-all input[type=checkbox]{width:18px;height:18px;accent-color:var(--primary)}.ar-fr[hidden]{display:none!important}.ar-bk-r.ar-done{background:color-mix(in srgb,var(--ok) 14%,transparent)}
+@media (max-width:560px){ .ar-bk-all .inp{width:100%;order:3} .ar-bk-all .btn{order:4;width:100%} .ar-bk-r .inp{width:140px} }
 /* scout import preview and bulk activity */
 .imp-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:6px}
 .imp-sum>div{padding:10px 12px;border-left:1px solid var(--line-2)}.imp-sum>div:first-child{border-left:0}.imp-sum b{display:block;font-size:1.25rem;font-family:var(--f-head)}.imp-sum b.w{color:var(--warn)}.imp-sum span{font-size:.74rem;color:var(--ink-2)}
@@ -1718,7 +1720,7 @@ const AR_CATS = [
   ['disc', 'Discipline', '#0B3A5C'], ['att', 'Attendance', '#1F6FA8'], ['beh', 'Behaviour', '#4D97C8'], ['mark', 'Final marks', '#2E8B6A'],
   ['lead', 'Leadership', '#7DB89C'], ['ach', 'Achievement', '#C9A227'], ['camp', 'Camping', '#B07A4A'] ];
 const AR_OPTS = {
-  disc: [['4','Excellent'],['3','Very good'],['2','Good'],['1','Satisfactory'],['0','Poor']],
+  disc: [['','Not set'],['4','Excellent'],['3','Very good'],['2','Good'],['1','Satisfactory'],['0','Poor']],
   beh:  [['4','No records filed'],['2','1 record'],['0','More than 1 record']],
   lead: [['','From patrol role'],['4','Head post'],['3','Second head'],['2','Leader'],['1','Assistant leader'],['0','None']],
   ach:  [['0','None'],['4','All-rounder'],['3','Best camper'],['2','Best five']],
@@ -1771,10 +1773,11 @@ A.arBulk = el => { const y = arYear(), L = arList(y).sort((a,b) => sname(a.s).lo
   const info = { disc:'Leader rating for each scout.', beh:'From the discipline record file.', lead:'“From patrol role” gives Patrol Leaders 2 and Assistants 1 automatically.', ach:'The troop’s award in uniform activities.', camp:'National or international camps attended in any grade.', marks:'Term averages in %. For BTEC students, enter points instead.' }[cat];
   modal({ title:`Enter scores · ${y}`, wide:true, form:'arBulkSave', body:`<input type="hidden" name="cat" value="${cat}">
     <div class="seg ar-seg">${AR_BULK.map(([k,l]) => `<button type="button" class="${k===cat?'on':''}" data-a="arBulkCat" data-k="${k}">${l}</button>`).join('')}</div>
-    <p class="small muted" style="margin:10px 0">${info} Showing ${L.length} scout${L.length===1?'':'s'} (${esc(arShowLabel())}).</p>
-    ${!L.length ? empty('users','No scouts to show') : isM ? `<div class="ar-mt"><div class="ar-mh"><span>Scout</span><span>Term 1 %</span><span>Term 2 %</span><span>BTEC pts</span></div>${L.map(x => `<div><span>${esc(sname(x.s))}<small>${esc(x.s.grade||'')}</small></span><input class="inp" type="number" name="t1_${x.s.id}" value="${esc(x.d.t1??'')}" min="0" max="100"><input class="inp" type="number" name="t2_${x.s.id}" value="${esc(x.d.t2??'')}" min="0" max="100"><input class="inp" type="number" name="bt_${x.s.id}" value="${esc(x.d.btec??'')}" min="0" max="31"></div>`).join('')}</div>`
-    : `<div class="ar-bk"><div class="ar-bk-all"><span>Set everyone to</span><select class="inp" data-c="arSetAll" aria-label="Set everyone to">${opts([['__','Choose…'], ...AR_OPTS[cat]], '__')}</select></div>
-      ${L.map(x => `<div class="ar-bk-r"><span class="ar-who">${av(x.s,28)}<span><b>${esc(sname(x.s))}</b><small>${esc(x.s.grade||'')}${cat==='lead' && arLeadAuto(x.s) ? ` · ${arLeadAuto(x.s)===2 ? 'Patrol Leader' : 'Assistant PL'}` : ''}</small></span></span><select class="inp" name="v_${x.s.id}">${opts(AR_OPTS[cat], cur(x, cat))}</select></div>`).join('')}</div>`}`,
+    <p class="small muted" style="margin:10px 0">${info} ${isM ? '' : 'Tick scouts, choose a score and click Apply.'}</p>
+    ${L.length ? `<div class="ar-bk-bar"><select class="inp" data-c="arRankF" aria-label="Filter by rank">${opts([['','All ranks'], ...STAGES.map(x => [x, x])], '')}</select><span class="small muted" id="ar-bk-n">${L.length} shown</span></div>` : ''}
+    ${!L.length ? empty('users','No scouts to show') : isM ? `<div class="ar-mt"><div class="ar-mh"><span>Scout</span><span>Term 1 %</span><span>Term 2 %</span><span>BTEC pts</span></div>${L.map(x => `<div class="ar-fr" data-rank="${esc(x.s.rank||'')}"><span>${esc(sname(x.s))}<small>${esc(x.s.grade||'')}</small></span><input class="inp" type="number" name="t1_${x.s.id}" value="${esc(x.d.t1??'')}" min="0" max="100"><input class="inp" type="number" name="t2_${x.s.id}" value="${esc(x.d.t2??'')}" min="0" max="100"><input class="inp" type="number" name="bt_${x.s.id}" value="${esc(x.d.btec??'')}" min="0" max="31"></div>`).join('')}</div>`
+    : `<div class="ar-bk"><div class="ar-bk-all"><label class="check" style="margin:0"><input type="checkbox" data-c="arTickAll" aria-label="Tick all shown"> All</label><span id="ar-bk-t">0 ticked</span><select class="inp" id="ar-bk-v" aria-label="Score to give">${opts([['__','Choose a score…'], ...AR_OPTS[cat]], '__')}</select><button type="button" class="btn sm primary" data-a="arApply">Apply to ticked</button></div>
+      ${L.map(x => `<div class="ar-bk-r ar-fr" data-rank="${esc(x.s.rank||'')}"><input type="checkbox" class="ar-tk" data-c="arTick" aria-label="Tick ${esc(sname(x.s))}"><span class="ar-who">${av(x.s,28)}<span><b>${esc(sname(x.s))}</b><small>${esc(x.s.grade||'')} · ${esc(x.s.rank||'')}${cat==='lead' && arLeadAuto(x.s) ? ` · ${arLeadAuto(x.s)===2 ? 'Patrol Leader' : 'Assistant PL'}` : ''}</small></span></span><select class="inp" name="v_${x.s.id}">${opts(AR_OPTS[cat], cur(x, cat))}</select></div>`).join('')}</div>`}`,
     foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save</button>` }); };
 function arBulkApply(d){ const y = arYear(), m = arData(y), cat = d.cat;
   Object.keys(d).forEach(k => { let id, key;
@@ -1783,7 +1786,17 @@ function arBulkApply(d){ const y = arYear(), m = arData(y), cat = d.cat;
     if(!key || !scout(id)) return; m[id] = m[id] || {}; m[id][key] = d[k]; }); }
 const arFormData = el => { const f = el.closest('form'), d = {}; new FormData(f).forEach((v,k) => d[k] = v); return d; };
 A.arBulkCat = el => { arBulkApply(arFormData(el)); save(); const k = el.dataset.k; closeModal(); A.arBulk({ dataset:{ k } }); };
-C.arSetAll = el => { if(el.value==='__') return; el.closest('form').querySelectorAll('select[name^="v_"]').forEach(s => s.value = el.value); };
+const arRows = () => [...document.querySelectorAll('.modal .ar-fr')];
+const arTicked = () => arRows().filter(x => !x.hidden && x.querySelector('.ar-tk')?.checked);
+const arTickN = () => { const t = $('#ar-bk-t'); if(t) t.textContent = `${arTicked().length} ticked`; };
+C.arTick = () => arTickN();
+C.arTickAll = el => { arRows().forEach(x => { const c = x.querySelector('.ar-tk'); if(c && !x.hidden) c.checked = el.checked; }); arTickN(); };
+C.arRankF = el => { let n = 0; arRows().forEach(x => { x.hidden = !!el.value && x.dataset.rank!==el.value; if(x.hidden){ const c = x.querySelector('.ar-tk'); if(c) c.checked = false; } else n++; });
+  const a = $('[data-c=arTickAll]'); if(a) a.checked = false; $('#ar-bk-n').textContent = `${n} shown`; arTickN(); };
+A.arApply = () => { const v = $('#ar-bk-v').value, T = arTicked(); if(v==='__') return toast('Choose a score first');
+  if(!T.length) return toast('Tick at least one scout');
+  T.forEach(x => { x.querySelector('select[name^="v_"]').value = v; x.classList.add('ar-done'); setTimeout(() => x.classList.remove('ar-done'), 900); });
+  toast(`${$('#ar-bk-v').selectedOptions[0].text} given to ${T.length} scout${T.length>1?'s':''}. Click Save when done.`); };
 F.arBulkSave = d => { arBulkApply(d); const l = (AR_BULK.find(x => x[0]===d.cat)||[])[1]; audit(`Entered all-rounder ${String(l).toLowerCase()} scores for ${arYear()}`); closeModal(); refresh(); toast('Scores saved'); };
 
 A.arOpen = el => { const s = scout(el.dataset.id), y = arYear(); if(!s) return; const x = arScore(s, y), d = x.d, ed = can('scout.edit');
