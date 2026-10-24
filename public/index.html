@@ -1432,21 +1432,26 @@ async function compress(file, max=1400, q=.78){ const url = await readFile(file)
   return { full:c.toDataURL('image/jpeg', q), w:c.width, h:c.height, origKB:Math.round(file.size/1024) }; }
 /* One-time tidy of Session planning: drop the dated (past and upcoming) sessions and keep three templates,
    "Knots that hold", "Patrol camp prep" and a fully planned "Regular session". */
-const REGULAR_SESSION = { title:'Regular session', time:'15:30', end:'17:00', location:'School hall & sports field',
-  objectives:'Weekly troop meeting: opening ceremony, uniform inspection, a patrol game, the skill of the week and a closing ceremony',
-  timeline:[{time:'15:30',label:'Opening',detail:'Fall in by patrols in horseshoe, flag break, prayer and the Scout Promise'},
-    {time:'15:40',label:'Inspection',detail:'Uniform, scarf, woggle and personal kit checked by patrol leaders; points recorded'},
-    {time:'15:50',label:'Notices',detail:'Announcements, birthdays and last week’s patrol points'},
-    {time:'16:00',label:'Game',detail:'Warm-up game run by the duty patrol'},
-    {time:'16:15',label:'Skills',detail:'Skill of the week in patrol corners (knots, first aid, compass or signalling)'},
-    {time:'16:45',label:'Patrol time',detail:'Log book entries, badge progress and next week’s duties'},
-    {time:'16:55',label:'Closing',detail:'Points total, Scout Law of the day, flag down and dismissal'}],
+const REGULAR_TIMELINE = [{time:'16:30',label:'Attendance',detail:'Attendance marked at the beginning, as scouts arrive'},
+    {time:'16:35',label:'Opening',detail:'Fall in by patrols in open column of patrols'},
+    {time:'16:40',label:'Inspection',detail:'Uniform, scarf, woggle and personal kit checked by patrol leaders'},
+    {time:'17:00',label:'Game',detail:'Warm-up game run by the duty patrol'},
+    {time:'17:15',label:'Skills',detail:'Skill of the week in patrol corners (knots, first aid, compass or signalling)'},
+    {time:'17:45',label:'Patrol time',detail:'Log book entries, badge progress and next week\u2019s duties'},
+    {time:'17:55',label:'Closing',detail:'Points total and dismissal'}];
+const REGULAR_OBJECTIVES = 'Weekly troop meeting: uniform inspection, a patrol game and the skill of the week';
+const REGULAR_SESSION = { title:'Regular session', time:'16:30', end:'18:00', location:'School hall & sports field',
+  objectives:REGULAR_OBJECTIVES, timeline:REGULAR_TIMELINE,
   materials:['Flag and pole','Whistle','First-aid kit','Points board and marker','Ropes (one per scout)','Attendance register','Drinking water'].map(t => ({ t, done:false })),
   risk:'Check the hall and field for hazards before starting; a leader and first-aid kit on hand; water break every 30 minutes; headcount at opening and dismissal.' };
 /* One-time: the score form used to save Discipline as Excellent for every scout nobody rated. Put those back to Not set. */
 function resetDiscipline(){ if(!S?.settings || S.settings.migDisc1) return;
   Object.values(S.settings.allround || {}).forEach(yr => Object.values(yr).forEach(d => { if(String(d.disc)==='4') d.disc = ''; }));
   S.settings.migDisc1 = true; }
+/* One-time: Regular session now starts at 4:30 with attendance first (requested change). */
+function regularSession2(){ if(!S?.sessions || S.settings.migRegular2) return;
+  S.sessions.filter(s => s.template && String(s.title).trim().toLowerCase()==='regular session').forEach(s => Object.assign(s, { time:'16:30', end:'18:00', objectives:REGULAR_OBJECTIVES, timeline:JSON.parse(JSON.stringify(REGULAR_TIMELINE)) }));
+  S.settings.migRegular2 = true; }
 function tidySessions(){ if(!S?.sessions || S.settings.migSessions1) return;
   const key = s => String(s.title||'').trim().toLowerCase(), asTpl = s => Object.assign(s, { template:true, date:'', registerId:null, reflection:'', photos:[], leaders:[], materials:(s.materials||[]).map(m => ({ ...m, done:false })) });
   const pickOne = test => S.sessions.filter(s => test(key(s))).sort((a,b) => (b.template?1:0) - (a.template?1:0) || String(b.date).localeCompare(String(a.date)))[0];
@@ -2830,7 +2835,7 @@ function sessionForm(s){ s = s || { title:'', date:TODAY(), time:'15:30', end:'1
   <div class="field full"><label>Leaders responsible</label><div class="row">${leaderUsers().map(u => `<label class="check"><input type="checkbox" name="leaders" value="${u.id}" ${s.leaders.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div>
   ${field('Risk notes', ta('risk', s.risk), 'full')}
   <label class="check full"><input type="checkbox" name="template" ${s.template?'checked':''}> Save as a reusable template</label></div>`; }
-const tlRow = t => `<div class="row nw tl-row" style="gap:6px"><input class="inp" type="time" name="tl_time" value="${esc(t.time)}" style="width:110px;flex:none" aria-label="Time"><select class="inp" name="tl_label" style="width:120px;flex:none" aria-label="Block">${opts(['Opening','Game','Skills','Activity','Break','Closing'], t.label)}</select><input class="inp" name="tl_detail" value="${esc(t.detail)}" placeholder="What happens" style="flex:1;min-width:0" aria-label="Detail"><button type="button" class="icon-btn" data-a="tlDel" aria-label="Remove block">${ic('x','sm')}</button></div>`;
+const tlRow = t => `<div class="row nw tl-row" style="gap:6px"><input class="inp" type="time" name="tl_time" value="${esc(t.time)}" style="width:110px;flex:none" aria-label="Time"><select class="inp" name="tl_label" style="width:120px;flex:none" aria-label="Block">${opts([...new Set(['Attendance','Opening','Inspection','Game','Skills','Activity','Patrol time','Break','Closing', ...(t.label ? [t.label] : [])])], t.label)}</select><input class="inp" name="tl_detail" value="${esc(t.detail)}" placeholder="What happens" style="flex:1;min-width:0" aria-label="Detail"><button type="button" class="icon-btn" data-a="tlDel" aria-label="Remove block">${ic('x','sm')}</button></div>`;
 A.tlAdd = () => $('#tl-rows').insertAdjacentHTML('beforeend', tlRow({ time:'', label:'Activity', detail:'' }));
 A.tlDel = el => el.closest('.tl-row').remove();
 A.newSession = () => { const tpls = S.sessions.filter(s => s.template);
@@ -3105,7 +3110,7 @@ const Cloud = {
     ME.role = role;
     if(role==='admin') this.migrate();
     if(role==='admin' && email===ADMIN_EMAIL) S.users.filter(x => x.role==='admin' && x!==ME).forEach(x => dropUser(x.id));
-    if(role!=='scout'){ tidySessions(); resetDiscipline(); }
+    if(role!=='scout'){ tidySessions(); resetDiscipline(); regularSession2(); }
     const askMove = role==='admin' && email !== ADMIN_EMAIL && !S.users.some(x => (x.email||'').toLowerCase()===ADMIN_EMAIL && x.id!==ME.id);
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
     this.subscribe();
@@ -3429,7 +3434,7 @@ VIEWS.guide = () => { const sec = (icon, t, items) => `<div class="card"><div cl
   await Store.open();
   let st = await Store.get('kv','state');
   if(!st || st.v!==3 || !st.scouts){ st = await buildSeed(); await Store.set('kv','state', st); }
-  S = st; Object.assign(IMG, await Store.all('img')); tidySessions(); resetDiscipline();
+  S = st; Object.assign(IMG, await Store.all('img')); tidySessions(); resetDiscipline(); regularSession2();
   const sess = await Store.get('kv','session'); if(sess) ME = S.users.find(u => u.id===sess.uid && !u.disabled) || null;
   genReminders(); save();
   if(ME && isScout()) R.route = 'me';
