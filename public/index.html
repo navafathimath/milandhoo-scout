@@ -2730,11 +2730,43 @@ VIEWS.sessions = () => { const tab = R.tab || 'upcoming'; const t = TODAY();
       <p class="small" style="color:var(--ink-2)">${esc(s.objectives)}</p>
       <div class="row" style="gap:6px">${s.syllabus.map(id => S.syllabus.find(i=>i.id===id)).filter(Boolean).map(i => chip(ic('map','sm')+' '+esc(i.topic))).join('')}${s.badges.map(badge).filter(Boolean).map(b => chip(ic(b.icon,'sm')+' '+esc(b.name),'gold')).join('')}</div>
       ${!s.template ? `<div class="row small muted" style="gap:12px;margin-top:auto">${reg ? `<span>${ic('clipboard','sm')} ${regCounts(reg).pct}% attended</span>` : ''}${s.reflection ? `<span>${ic('edit','sm')} Reflection</span>` : ''}${s.photos.length ? `<span>${ic('image','sm')} ${s.photos.length} photos</span>` : ''}<span>${s.materials.filter(m=>m.done).length}/${s.materials.length} materials ready</span></div>` : ''}</button>`; }).join('') || empty('fire', tab==='templates' ? 'No templates yet' : 'No sessions here', can('session.edit') ? 'Plan a session to get started.' : '')}</div>`; };
+/* Printable session plan: details, objectives, timeline, materials checklist, risk notes and space for notes. */
+A.sessionPDF = el => withPDF(async () => { const s = S.sessions.find(x => x.id===el.dataset.id); if(!s) return;
+  const when = s.template ? 'Session template' : `${fmtD(s.date,'long')}  ·  ${fmtT(s.time)} – ${fmtT(s.end)}`;
+  const ctx = await pdfDoc(s.title, when), { doc } = ctx, H = doc.internal.pageSize.getHeight(), X = 32, W = 531;
+  const room = n => { if(ctx.y + n > H - 46){ doc.addPage(); ctx.y = 44; } };
+  const para = (t, size=10, col=[19,40,58]) => { doc.setFont('helvetica','normal'); doc.setFontSize(size); doc.setTextColor(...col);
+    doc.splitTextToSize(String(t), W).forEach(l => { room(14); doc.text(l, X, ctx.y); ctx.y += size*1.35; }); ctx.y += 6; };
+  const head = t => { room(40); pdfH(ctx, t); ctx.y += 4; };
+  const leaders = (s.leaders||[]).map(id => user(id)?.name).filter(Boolean).join(', ') || '—';
+  const facts = [['Date', s.template ? 'Template (no date)' : fmtD(s.date,'long')], ['Time', s.time ? `${fmtT(s.time)} – ${fmtT(s.end)}` : '—'], ['Location', s.location || '—'], ['Leaders', leaders]];
+  doc.setFontSize(10); facts.forEach(([k,v]) => { const ls = doc.splitTextToSize(String(v), W-90); room(ls.length*13+4);
+    doc.setFont('helvetica','bold'); doc.setTextColor(78,101,119); doc.text(k, X, ctx.y); doc.setFont('helvetica','normal'); doc.setTextColor(19,40,58);
+    ls.forEach((l,i) => doc.text(l, X+90, ctx.y + i*13)); ctx.y += ls.length*13 + 4; }); ctx.y += 8;
+  if(s.objectives){ head('Objectives'); para(s.objectives); }
+  const syl = (s.syllabus||[]).map(id => S.syllabus.find(i => i.id===id)).filter(Boolean).map(i => `${i.stage}: ${i.topic}`), bdg = (s.badges||[]).map(id => badge(id)?.name).filter(Boolean);
+  if(syl.length || bdg.length){ head('Syllabus & badges'); if(syl.length) para('Syllabus: ' + syl.join(' · ')); if(bdg.length) para('Badges: ' + bdg.join(' · ')); }
+  if((s.timeline||[]).length){ head('Activity timeline'); const cw = [70,110,W-180];
+    doc.setFillColor(228,240,248); doc.rect(X, ctx.y-2, W, 20, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(10,92,143);
+    ['Time','Part','What happens'].forEach((t,i) => doc.text(t, X + 6 + cw.slice(0,i).reduce((a,b)=>a+b,0), ctx.y+11)); ctx.y += 20;
+    s.timeline.forEach((t, k) => { doc.setFont('helvetica','normal'); doc.setFontSize(9.5); const ls = doc.splitTextToSize(String(t.detail||''), cw[2]-12), rh = Math.max(1, ls.length)*12 + 10; room(rh);
+      if(k % 2){ doc.setFillColor(244,249,252); doc.rect(X, ctx.y-2, W, rh, 'F'); }
+      doc.setTextColor(19,40,58); doc.setFont('helvetica','bold'); doc.text(t.time ? fmtT(t.time) : '', X+6, ctx.y+11); doc.text(String(t.label||''), X+6+cw[0], ctx.y+11);
+      doc.setFont('helvetica','normal'); ls.forEach((l,i) => doc.text(l, X+6+cw[0]+cw[1], ctx.y+11+i*12)); ctx.y += rh; }); ctx.y += 14; }
+  if((s.materials||[]).length){ head('Materials checklist'); doc.setFont('helvetica','normal'); doc.setFontSize(10); const colW = W/2;
+    s.materials.forEach((m, i) => { const cx = X + (i%2)*colW; if(i%2===0) room(18); doc.setDrawColor(120,140,150); doc.rect(cx, ctx.y-9, 10, 10);
+      if(m.done){ doc.setDrawColor(18,137,68); doc.setLineWidth(1.5); doc.line(cx+2, ctx.y-4, cx+4.5, ctx.y-1.5); doc.line(cx+4.5, ctx.y-1.5, cx+8.5, ctx.y-7); doc.setLineWidth(.5); }
+      doc.setTextColor(19,40,58); doc.text(doc.splitTextToSize(String(m.t), colW-24)[0], cx+16, ctx.y); if(i%2===1 || i===s.materials.length-1) ctx.y += 18; }); ctx.y += 8; }
+  if(s.risk){ head('Risk notes'); para(s.risk); }
+  if(s.reflection){ head('Reflection'); para(s.reflection); }
+  head('Leader notes'); doc.setDrawColor(210,220,228); for(let i=0;i<5;i++){ room(24); ctx.y += 20; doc.line(X, ctx.y, X+W, ctx.y); }
+  doc.setFont('helvetica','normal');
+  await pdfSave(ctx, `session-${(s.title||'plan').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}${s.date ? '-' + s.date : ''}.pdf`); });
 VIEWS.session = () => { const s = S.sessions.find(x => x.id===R.id); if(!s) return empty('fire','Session not found'); const ed = can('session.edit');
   const reg = s.registerId && S.registers.find(r => r.id===s.registerId); const past = s.date && s.date <= TODAY();
   const photos = s.photos.map(id => S.photos.find(p=>p.id===id)).filter(Boolean);
   return `<button class="btn ghost sm" data-a="go" data-r="sessions" data-tab="${s.template?'templates':past?'past':'upcoming'}" style="margin-bottom:10px">${ic('left','sm')} Sessions</button>
-  ${pageH(s.template ? 'Session template' : `${fmtD(s.date,'long')} · ${fmtT(s.time)}–${fmtT(s.end)}`, esc(s.title), `${ed?`<button class="btn" data-a="dupSession" data-id="${s.id}">${ic('copy','sm')} ${s.template?'Use template':'Duplicate'}</button><button class="btn" data-a="editSession" data-id="${s.id}">${ic('edit','sm')} Edit</button>`:''}${can('session.delete')?`<button class="icon-btn" data-a="delSession" data-id="${s.id}" aria-label="Delete session">${ic('trash')}</button>`:''}`)}
+  ${pageH(s.template ? 'Session template' : `${fmtD(s.date,'long')} · ${fmtT(s.time)}–${fmtT(s.end)}`, esc(s.title), `${ed?`<button class="btn" data-a="dupSession" data-id="${s.id}">${ic('copy','sm')} ${s.template?'Use template':'Duplicate'}</button><button class="btn" data-a="editSession" data-id="${s.id}">${ic('edit','sm')} Edit</button>`:''}<button class="btn" data-a="sessionPDF" data-id="${s.id}">${ic('download','sm')} PDF</button>${can('session.delete')?`<button class="icon-btn" data-a="delSession" data-id="${s.id}" aria-label="Delete session">${ic('trash')}</button>`:''}`)}
   <div class="grid g21">
   <div class="stack">
     <div class="card"><div class="card-h"><h2>Plan</h2></div><dl class="facts" style="margin:0 0 14px">${[['Location', s.location||'—'],['Leaders', s.leaders.map(id=>user(id)?.name).filter(Boolean).join(', ')||'—']].map(([k,v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
