@@ -2763,6 +2763,7 @@ const CLOUD_KEYS = ['meta','settings','users','patrols','scouts','badges','sylla
 const CLOUD_DEF = { users:[], patrols:[], scouts:[], badges:[], syllabus:[], registers:[], sessions:[], events:[], albums:[], photos:[], notifications:[], audit:[], readBy:{}, reminded:{} };
 const FB_VER = '10.12.2';
 let LOGIN_ERR = '';
+const ADMIN_EMAIL = 'navafathimath@gmail.com';
 function takeLoginErr(){ const e = LOGIN_ERR; LOGIN_ERR = ''; return e; }
 const Cloud = {
   on: (() => { try { const c = window.TRAILMARK_FIREBASE; return !!(c && c.apiKey && c.projectId && !/PASTE|YOUR/i.test(c.apiKey + c.projectId)); } catch(e){ return false; } })(),
@@ -2804,10 +2805,12 @@ const Cloud = {
     if(!ME){ ME = { id:uid('u'), name:u.displayName || u.email.split('@')[0], email:u.email, role, phone:'', photo:null, title:ROLES[role], qualifications:[], activity:[] }; S.users.push(ME); }
     ME.role = role;
     if(role==='admin') this.migrate();
+    const askMove = role==='admin' && email !== ADMIN_EMAIL && !S.users.some(x => (x.email||'').toLowerCase()===ADMIN_EMAIL && x.id!==ME.id);
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
     this.subscribe();
     if(role!=='scout'){ genReminders(); audit('Signed in'); }
     save(); if(!startRoute()) R.route = isScout() ? 'me' : 'dashboard'; renderApp();
+    if(askMove) setTimeout(() => A.adminMove(), 600);
   },
   /* one-time clean-up: drop the sample leader and scout accounts, and make the admin account a separate, hidden "ADMIN" profile */
   migrate(){ if(S.settings.migAccounts1) return;
@@ -2879,7 +2882,7 @@ const Cloud = {
   subscribe(){
     this.stop();
     this.keys().forEach(k => this.unsubs.push(this.db.doc('portal/' + k).onSnapshot(s => { if(!s.exists || s.metadata.hasPendingWrites) return; this.applyRemote(k, s.data().json); }, () => {})));
-    this.unsubs.push(this.db.doc('portal/access').onSnapshot(s => { if(!s.exists) return; this.members = s.data().members || {};
+    this.unsubs.push(this.db.doc('portal/access').onSnapshot(s => { if(!s.exists || !this.auth.currentUser) return; this.members = s.data().members || {};
       const r = this.members[(this.auth.currentUser?.email||'').toLowerCase()];
       if(!r){ LOGIN_ERR = 'Your access to the portal was removed.'; this.auth.signOut(); return; }
       if(r !== this.role){ this.role = r; ME.role = r; this.subscribe(); renderApp(); } }, () => {}));
@@ -2947,20 +2950,29 @@ const Cloud = {
     A.resetUserPw = async el => { const u = user(el.dataset.id); try { await this.auth.sendPasswordResetEmail(u.email); toast(`Password reset link emailed to ${u.email}`); audit(`Sent password reset email to ${u.name}`); save(); } catch(e){ toast('Could not send the reset email: ' + e.message); } };
     const origUser = F.user;
     F.user = async (d, f) => {
-      const old = d.id && user(d.id), ne = String(d.email||'').trim(), moved = old && ne && ne.toLowerCase()!==String(old.email||'').toLowerCase();
+      let existed = false; const old = d.id && user(d.id), ne = String(d.email||'').trim(), moved = old && ne && ne.toLowerCase()!==String(old.email||'').toLowerCase();
       if(moved){ const err = m => $('#uf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>${m}</span></div>`;
         if(S.users.some(x => x.id!==old.id && (x.email||'').toLowerCase()===ne.toLowerCase())) return err('Another account already uses that email.');
         if(String(d.newpw||'').length < 8) return err('You changed the email, so set a new password of at least 8 characters for it.');
         try { const sec = firebase.apps.find(a => a.name==='tm-secondary') || firebase.initializeApp(window.TRAILMARK_FIREBASE, 'tm-secondary');
           await sec.auth().createUserWithEmailAndPassword(ne, d.newpw); await sec.auth().signOut(); }
-        catch(e){ if(e.code !== 'auth/email-already-in-use') return err('Could not create the sign-in for the new email: ' + esc(this.authMsg(e))); toast('That email already has a sign-in, so its existing password stays.'); } }
+        catch(e){ if(e.code !== 'auth/email-already-in-use') return err('Could not create the sign-in for the new email: ' + esc(this.authMsg(e))); existed = true; } }
       if(!d.id){ if(String(d.pw||'').length < 8) return origUser(d, f);
         try { const sec = firebase.apps.find(a => a.name==='tm-secondary') || firebase.initializeApp(window.TRAILMARK_FIREBASE, 'tm-secondary');
           await sec.auth().createUserWithEmailAndPassword(String(d.email).trim(), d.pw); await sec.auth().signOut(); }
         catch(e){ if(e.code !== 'auth/email-already-in-use'){ $('#uf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>Could not create the sign-in account: ${esc(this.authMsg(e))}</span></div>`; return; } } }
       await origUser(d, f); this.flush();
+      if(moved && existed){ try { await this.auth.sendPasswordResetEmail(ne); } catch(e){} }
+      if(moved && !existed && old.id!==ME.id) toast(`Sign-in moved to ${ne}`);
+      if(moved && existed && old.id!==ME.id) toast(`${ne} already had a sign-in, so a password reset link was emailed to it`);
       if(moved && old.id===ME.id){ try { await this.accessP; await this.db.waitForPendingWrites(); } catch(e){}
-        LOGIN_ERR = `Your sign-in email is now ${esc(ne)}. Sign in with it and the new password.`; this.stop(); await this.auth.signOut(); } };
+        LOGIN_ERR = existed ? `Your sign-in email is now ${esc(ne)}. That email already had a password, so a reset link was emailed to it. Open the email, set the new password, then sign in.` : `Your sign-in email is now ${esc(ne)}. Sign in with it and the new password.`;
+        this.stop(); await this.auth.signOut(); } };
+    /* one-time: move the admin sign-in to the group's admin email */
+    A.adminMove = () => modal({ title:'Move the admin sign-in', form:'adminMove', body:`<p class="muted" style="margin-top:0">The admin account will sign in with <b>${ADMIN_EMAIL}</b> from now on. <b>${esc(ME.email)}</b> will stop working as the admin sign-in.</p>
+      <div class="stack">${field('New admin email', inp('email', ADMIN_EMAIL, 'type="email" readonly'))}${field('Password for the new email (8+ characters)', inp('newpw', '', 'type="text" minlength="8" required autocomplete="new-password"'))}</div><div id="uf-err"></div>`,
+      foot:`<button type="button" class="btn" data-a="closeModal">Later</button><button class="btn primary">Move admin sign-in</button>` });
+    F.adminMove = d => F.user({ id:ME.id, name:ME.name, email:ADMIN_EMAIL, phone:ME.phone||'', role:'admin', newpw:d.newpw });
   },
 };
 /* ================= Settings, audit, guide ================= */
