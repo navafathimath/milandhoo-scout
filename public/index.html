@@ -661,10 +661,10 @@ svg.chart .grid{stroke:var(--line-2)}
 @media (min-width:561px){ .search-toggle{display:none} }
 </style>
 <style>
-.kpis{grid-template-columns:repeat(6,minmax(0,1fr))}
+.kpis{grid-template-columns:repeat(5,minmax(0,1fr))}
 .kpis .card{padding:14px}
-@media (max-width:1280px){ .kpis{grid-template-columns:repeat(3,minmax(0,1fr))} }
-@media (max-width:640px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px} .quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px} .quick .btn{padding:0 10px;font-size:.82rem} .welcome .bgsvg{display:none} }
+@media (max-width:1280px){ .kpis{grid-template-columns:repeat(6,minmax(0,1fr))} .kpis>*{grid-column:span 2} .kpis>*:nth-child(n+4){grid-column:span 3} }
+@media (max-width:640px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px} .kpis>*,.kpis>*:nth-child(n+4){grid-column:auto} .kpis>*:last-child:nth-child(odd){grid-column:1/-1} .quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px} .quick .btn{padding:0 10px;font-size:.82rem} .welcome .bgsvg{display:none} }
 .kpi>.chip{align-self:flex-start}
 .reg-actions{position:sticky;bottom:16px;z-index:6;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(6px);padding:8px 0;border-radius:12px}
 .g21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
@@ -1706,7 +1706,6 @@ VIEWS.dashboard = () => {
     ['medal', awarded, 'Badges awarded this term', term.name, 'badges', true],
     ['calendar', upCount, 'Events in the next 30 days', up[0] ? 'Next: ' + up[0].title : '', 'calendar'],
     ['map', behind, 'Syllabus items behind', 'Across current stages', 'syllabus'],
-    ['refresh', ren.length, 'Renewals due (30 days)', `${S.scouts.filter(s=>s.status==='Expired').length} already expired`, 'scouts', true],
   ];
   const tw = termWeek(addDays(pd(TODAY()), -pd(TODAY()).getDay()));
   const law = SCOUT_LAW[Math.floor(pd(TODAY()).getTime()/86400000) % SCOUT_LAW.length];
