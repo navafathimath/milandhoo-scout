@@ -2182,7 +2182,7 @@ function orgTree(){ const o = orgOf(), n = o.teams.length;
       return `<div class="org-team" style="--c:${t.color}"><h4>${t.icon?`<span class="org-ti">${esc(t.icon)}</span>`:''}${esc(t.name)}</h4>${t.desc?`<div class="org-du">${esc(t.desc)}</div>`:''}
       ${ms.map(p => `<div class="org-m">${av(p,32)}${orgName(p)}</div>`).join('') || '<div class="org-m muted small">No one assigned yet</div>'}</div>`; }).join('')}</div>` : ''}</div>`; }
 VIEWS.leaders = () => { const list = S.users.filter(u => u.role!=='scout' && seesUser(u)); const lv = R.q.lv || 'org';
-  return `${pageH('Group', 'Leaders', `<div class="seg"><button class="${lv==='org'?'on':''}" data-a="go" data-r="leaders" data-q-lv="org">Hierarchy</button><button class="${lv==='list'?'on':''}" data-a="go" data-r="leaders" data-q-lv="list">List</button></div>${ME.role==='admin' ? (lv==='org' ? `<button class="btn primary" data-a="orgEdit">${ic('edit','sm')} Edit roles</button>` : `<button class="btn primary" data-a="addUser">${ic('plus','sm')} Add user</button>`) : ''}`)}
+  return `${pageH('Group', 'Leaders', `<div class="seg"><button class="${lv==='org'?'on':''}" data-a="go" data-r="leaders" data-q-lv="org">Hierarchy</button><button class="${lv==='list'?'on':''}" data-a="go" data-r="leaders" data-q-lv="list">List</button></div>${ME.role==='admin' ? (lv==='org' ? `<button class="btn primary" data-a="orgEdit">${ic('edit','sm')} Edit roles</button>` : `<button class="btn" data-a="bulkUsers">${ic('upload','sm')} Bulk add</button><button class="btn primary" data-a="addUser">${ic('plus','sm')} Add user</button>`) : ''}`)}
   ${lv==='org' ? orgTree() : `<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">${list.map(u => { const ps = S.patrols.filter(p => p.leaders.includes(u.id));
     return `<button class="card" style="text-align:left;cursor:pointer" data-a="go" data-r="leader" data-id="${u.id}"><div class="row nw">${av(u,56)}<div style="min-width:0"><h3>${esc(u.name)}</h3><div class="small muted">${roleName(u)}${u.role==='admin'?' · hidden from other leaders':''}${u.disabled?' · disabled':''}${u.sample?' · sample profile, cannot sign in':''}</div></div></div>
     <div class="row" style="margin-top:12px;gap:6px">${ps.map(p => `<span class="chip">${pDot(p)} ${esc(p.name)}</span>`).join('') || '<span class="small muted">No patrols assigned</span>'}</div>
@@ -2229,6 +2229,59 @@ function userForm(u){ u = u || { name:'', email:'', role:'leader', pos:'sl', pho
   ${!u.id ? field('Temporary password (8+ characters)', inp('pw','','type="text" required minlength="8"'), 'full') : adm ? field('New password (only needed when you change the email)', inp('newpw','','type="text" minlength="8" autocomplete="new-password"'), 'full') : ''}
   ${adm && u.id && u.id!==ME.id ? `<label class="check full"><input type="checkbox" name="disabled" ${u.disabled?'checked':''}> Disable sign-in for this account</label>` : ''}</div><div id="uf-err"></div>`; }
 A.addUser = () => modal({ title:'Add user', wide:true, form:'user', body:userForm(), foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Create account</button>` });
+/* ---- bulk add: many accounts at once from Excel, CSV or rows pasted from a spreadsheet ---- */
+const BU_COLS = ['name','email','role','phone','patrols','password','linked_scout'];
+let BU_ROWS = [];
+A.bulkUsers = () => { BU_ROWS = []; modal({ title:'Bulk add users', wide:true, body:`<div class="stack">
+  <p class="muted" style="margin:0">One row per person. Columns: <b>${BU_COLS.join(', ')}</b>. Only name and email are required.</p>
+  <p class="small muted" style="margin:0">Role: ${[...Object.values(POSITIONS), 'Scout'].join(', ')} (empty = Scout Leader). Patrols: names separated by ; (for example Kestrel; Pine). Password: leave empty and one is made for each person. Linked scout: the scout's ID or full name, for Scout accounts.</p>
+  <div class="row"><button class="btn sm" data-a="buTemplate">${ic('download','sm')} Download template</button></div>
+  <label class="drop" for="bu-file" style="cursor:pointer">${ic('upload','lg')}<div style="font-weight:600;margin-top:6px">Choose a .xlsx or .csv file</div><input id="bu-file" type="file" accept=".csv,.xlsx,.xls" class="sr" data-c="buFile"></label>
+  ${field('…or paste rows copied from Excel (with the header row)', `<textarea class="inp" rows="5" data-i="buPaste" placeholder="name&#9;email&#9;role&#9;phone&#10;Ibrahim Azim&#9;azim@school.mv&#9;LT In Charge&#9;7771234"></textarea>`)}
+  <div id="bu-prev"></div></div>` }); };
+A.buTemplate = () => saveFile('milandhoo-scout-users-template.csv', csvOf([BU_COLS, ['Ibrahim Azim','azim@school.mv','LT In Charge','7771234','Kestrel; Pine','',''], ['Aminath Lamya','lamya@school.mv','Scout','','','','Aminath Lamya']]));
+function buSet(rows){ rows = rows.filter(r => r.some(x => String(x).trim())); if(!rows.length){ BU_ROWS = []; return buPreview(); }
+  const hasHead = rows[0].some(x => /^(name|email|e-mail)$/i.test(String(x).trim()));
+  const head = hasHead ? rows.shift().map(x => String(x).trim().toLowerCase().replace(/[\s-]+/g,'_').replace(/^e_mail$/,'email').replace(/^full_name$/,'name')) : BU_COLS;
+  BU_ROWS = rows.map(r => Object.fromEntries(head.map((k,i) => [k, String(r[i] ?? '').trim()]))); buPreview(); }
+C.buFile = async el => { const file = el.files[0]; if(!file) return; let rows;
+  try { if(/\.xlsx?$/i.test(file.name)){ const X = await getXLSX(); const wb = X.read(await file.arrayBuffer()); rows = X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, defval:'' }); } else rows = parseCSV(await file.text()); }
+  catch(e){ $('#bu-prev').innerHTML = `<div class="alert">${ic('alert','sm')}<span>That file could not be read. Save it as .xlsx or CSV (UTF-8) and try again.</span></div>`; return; }
+  buSet(rows); };
+I.buPaste = el => { const t = el.value; buSet(t.split(/\r?\n/).map(l => l.includes('\t') ? l.split('\t') : parseCSV(l)[0] || [])); };
+const buRole = v => { v = String(v||'').trim().toLowerCase(); if(!v) return 'sl';
+  const k = Object.entries(POSITIONS).find(([k,l]) => k===v || l.toLowerCase()===v); if(k) return k[0];
+  return v==='scout' ? 'scout' : /^assistant/.test(v) ? 'assistant' : null; };
+function buCheck(){ const seen = new Set(); return BU_ROWS.map(r => { const em = (r.email||'').toLowerCase(), role = buRole(r.role); let err = '';
+  if(!r.name) err = 'Name is missing'; else if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) err = 'Email is missing or not valid';
+  else if(seen.has(em)) err = 'This email is on the sheet twice'; else if(S.users.some(u => (u.email||'').toLowerCase()===em)) err = 'Already has an account';
+  else if(!role) err = `Role “${r.role}” is not one of ${[...Object.values(POSITIONS), 'Scout'].join(', ')}`;
+  else if(r.password && r.password.length < 8) err = 'Password must be 8+ characters';
+  seen.add(em); const sc = role==='scout' && r.linked_scout ? S.scouts.find(s => s.sid.toLowerCase()===r.linked_scout.toLowerCase() || sname(s).toLowerCase()===r.linked_scout.toLowerCase()) : null;
+  return { r, role, err, sc }; }); }
+function buPreview(){ const el = $('#bu-prev'); if(!el) return; if(!BU_ROWS.length) return el.innerHTML = '';
+  const L = buCheck(), ok = L.filter(x => !x.err);
+  el.innerHTML = `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Patrols</th><th></th></tr></thead><tbody>${L.map(x => `<tr><td>${esc(x.r.name||'—')}</td><td>${esc(x.r.email||'—')}</td><td>${x.role ? esc(POSITIONS[x.role] || ROLES[x.role]) : '—'}${x.sc ? `<div class="small muted">${esc(sname(x.sc))}</div>` : ''}</td><td class="small">${esc(x.r.patrols||'')}</td><td>${x.err ? `<span class="chip bad">${esc(x.err)}</span>` : chip('Ready','ok')}</td></tr>`).join('')}</tbody></table></div>
+    ${ok.length ? `<button class="btn primary" style="margin-top:12px;width:100%" data-a="buCreate">Create ${ok.length} account${ok.length>1?'s':''}</button>` : '<p class="small muted" style="margin-top:10px">No rows are ready yet.</p>'}
+    ${ok.length < L.length ? `<p class="small muted" style="margin-top:6px">${L.length-ok.length} row${L.length-ok.length>1?'s are':' is'} skipped. Fix them in the sheet and upload again.</p>` : ''}`; }
+const buPw = () => { const a = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; let s = ''; const v = crypto.getRandomValues(new Uint32Array(8)); v.forEach(n => s += a[n % a.length]); return 'Scout-' + s; };
+A.buCreate = async el => { const L = buCheck().filter(x => !x.err); if(!L.length) return; el.disabled = true; const done = [], failed = [];
+  for(const [i, x] of L.entries()){ el.textContent = `Creating ${i+1} of ${L.length}…`; const pw = x.r.password || buPw(), email = x.r.email.trim();
+    try { const res = Cloud.on ? await Cloud.makeLogin(email, pw) : 'created';
+      const u = { id:uid('u'), name:x.r.name.trim(), email, phone:x.r.phone||'', photo:null, activity:[], qualifications:[], pw: Cloud.on ? undefined : await sha(pw) };
+      if(POSITIONS[x.role]){ u.role = 'leader'; u.pos = x.role; } else u.role = x.role;
+      u.scoutId = x.sc ? x.sc.id : null; u.title = roleName(u); S.users.push(u);
+      String(x.r.patrols||'').split(/[;,]/).map(t => t.trim().toLowerCase()).filter(Boolean).forEach(n => { const p = S.patrols.find(q => q.name.toLowerCase()===n); if(p && u.role!=='scout' && !p.leaders.includes(u.id)) p.leaders.push(u.id); });
+      orgSyncPos(u); done.push({ u, pw: res==='exists' ? null : pw }); }
+    catch(e){ failed.push(`${x.r.name}: ${e.message || e}`); } }
+  if(done.length){ audit(`Bulk added ${done.length} accounts`); save(); }
+  BU_DONE = done; closeModal(); refresh();
+  modal({ title:`${done.length} account${done.length===1?'':'s'} created`, wide:true, body:`${failed.length ? `<div class="alert" style="margin-bottom:12px;align-items:flex-start">${ic('alert','sm')}<span>${failed.map(esc).join('<br>')}</span></div>` : ''}
+    <p class="muted" style="margin-top:0">Share each person's email and password privately. They can change it under profile menu → Change password. These passwords are shown only now, so download the list.</p>
+    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Password</th></tr></thead><tbody>${done.map(d => `<tr><td>${esc(d.u.name)}</td><td>${esc(roleName(d.u))}</td><td>${esc(d.u.email)}</td><td class="num">${d.pw===null ? '<span class="muted small">existing password kept</span>' : esc(d.pw)}</td></tr>`).join('')}</tbody></table></div>`,
+    foot:`<button type="button" class="btn" data-a="buDownload">${ic('download','sm')} Download sign-in list</button><button type="button" class="btn primary" data-a="closeModal">Done</button>` }); };
+let BU_DONE = [];
+A.buDownload = () => saveFile(`milandhoo-scout-new-accounts-${TODAY()}.csv`, csvOf([['name','role','email','password','portal'], ...BU_DONE.map(d => [d.u.name, roleName(d.u), d.u.email, d.pw ?? 'existing password kept', location.origin])]));
 A.editUser = el => { const u = user(el.dataset.id); modal({ title:'Edit ' + esc(u.name), wide:true, form:'user', body:`<input type="hidden" name="id" value="${u.id}">` + userForm(u), foot:`${ME.role==='admin'&&u.id!==ME.id?`<button type="button" class="btn danger" data-a="deleteUser" data-id="${u.id}">Delete account</button><button type="button" class="btn" data-a="resetUserPw" data-id="${u.id}">Reset password</button><span class="spacer"></span>`:''}<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save</button>` }); };
 F.user = async d => { const err = m => $('#uf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>${m}</span></div>`;
   if(!d.name?.trim() || !d.email?.trim()) return err('Name and email are required.');
@@ -3057,6 +3110,10 @@ const Cloud = {
   },
 
   /* ---- swap local-only behaviours for Firebase ones ---- */
+  /* create a Firebase sign-in without signing the admin out; an email that already has one keeps its password */
+  async makeLogin(email, pw){ const sec = firebase.apps.find(a => a.name==='tm-secondary') || firebase.initializeApp(window.TRAILMARK_FIREBASE, 'tm-secondary');
+    try { await sec.auth().createUserWithEmailAndPassword(email, pw); await sec.auth().signOut(); return 'created'; }
+    catch(e){ if(e.code==='auth/email-already-in-use') return 'exists'; throw new Error(this.authMsg(e)); } },
   install(){
     F.cloudSetup = d => this.createPortal(d);
     F.login = async d => { try { await this.auth.signInWithEmailAndPassword(String(d.email).trim(), d.password); } catch(e){ $('#login-card').innerHTML = loginForm(this.authMsg(e)); } };
