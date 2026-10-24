@@ -1865,7 +1865,7 @@ function scoutRows(list, quickSet, g=''){
   if(!list.length) return empty('users','No scouts match these filters','Clear a filter or add a new scout.');
   return list.map(s => { const a = attOf(s.id); const p = patrol(s.patrol); const img = s.photo && imgData(s.photo);
     return `<button class="sl-r${quickSet?' qs':''}" data-a="go" data-r="scout" data-id="${s.id}"><span class="rl-ini ${g==='girl'||g==='boy'?g:''}">${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
-    <span class="sl-nm"><b>${esc(sname(s))}</b><small>${s.joined ? `Joined ${fmtD(s.joined)}` : 'Join date not set'}<span class="c-show">${p ? ' · '+esc(p.name) : ''}</span></small></span>
+    <span class="sl-nm"><b>${esc(sname(s))}</b><small>${s.joined ? `Joined ${fmtD(s.joined)}` : 'Join date not set'}${s.grade ? ` · ${esc(s.grade)}${s.section ? esc(s.section) : ''}` : ''}<span class="c-show">${p ? ' · '+esc(p.name) : ''}</span></small></span>
     <span class="c-hide">${p ? `<span class="rl-pill">${pDot(p)}${esc(p.name)}</span>` : '<span class="muted">—</span>'}</span><span class="c-hide sl-rk">${esc(s.rank||'—')}</span><span class="c-hide"><span class="sl-st ${MST_CLS[s.status]||'E'}">${esc(s.status)}</span></span>
     ${quickSet ? `<span class="gset"><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Girl">Girl</span><span class="btn sm" data-a="setGender" data-id="${s.id}" data-g="Boy">Boy</span></span>` : attBar(a)}</button>`; }).join('');
 }
