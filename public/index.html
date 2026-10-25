@@ -1121,7 +1121,7 @@ async function buildSeed(){
       const e = { s:st }; if(st==='L'){ e.time = `15:${pad(35 + Math.floor(r()*20))}`; e.remark = pick(['Bus delay','Extra class','Dentist appointment','']); }
       if(st==='A') e.remark = pick(['No notice','Unwell','','Family event']); if(st==='E') e.remark = pick(['School sports trial','Medical leave','Travel with family']);
       entries[s.id] = e; });
-    return { id:`r_${k+1}`, date, type:'Regular meeting', patrol:'all', status: k===11 ? 'draft' : 'final', entries, createdBy: k%3===0?'u_asst':'u_leader', finalizedAt: k===11?null:Date.now()-((12-k)*7*86400000), sessionId:null };
+    return { id:`r_${k+1}`, date, type:'Regular session', patrol:'all', status: k===11 ? 'draft' : 'final', entries, createdBy: k%3===0?'u_asst':'u_leader', finalizedAt: k===11?null:Date.now()-((12-k)*7*86400000), sessionId:null };
   });
 
   // badge progress & awards
@@ -1216,7 +1216,7 @@ async function buildSeed(){
     v:3, seededAt:now,
     settings:{ groupName:'Milandhoo School Scout Troop', school:'Sunrise International School', logo:null, year:AY.label,
       terms:[{name:'Term 1', start:`${y}-08-01`, end:`${y}-12-31`},{name:'Term 2', start:`${y+1}-01-01`, end:`${y+1}-06-30`}],
-      sessionTypes:['Regular meeting','Camp','Event','Special session','Hike'], lowAttendance:75, badgeSet:'2006' },
+      sessionTypes:['Regular session','Meeting','Camp','Event','Special session','Hike'], lowAttendance:75, badgeSet:'2006' },
     users, patrols, scouts, badges, syllabus, registers, sessions, events, albums, photos, notifications, audit, resets:{},
   };
 }
@@ -1457,6 +1457,14 @@ function regularSession2(){ if(!S?.sessions || S.settings.migRegular2) return;
 function pending2026(){ if(!S?.scouts || S.settings.migPending2026) return; let n = 0;
   S.scouts.forEach(s => { if(String(s.joined||'').startsWith('2026') && !['Pending','Inactive'].includes(s.status)){ s.status = 'Pending'; n++; } });
   if(n) audit(`Set ${n} scouts who joined in 2026 to Pending`); S.settings.migPending2026 = true; }
+/* One-time (requested): the "Regular meeting" session type is now "Regular session", with "Meeting" added after it. */
+function sessionTypes2(){ if(!S?.settings || S.settings.migTypes2) return; const st = S.settings;
+  let t = (st.sessionTypes || []).map(x => /^regular meeting$/i.test(String(x).trim()) ? 'Regular session' : x);
+  if(!t.includes('Regular session')) t.unshift('Regular session');
+  if(!t.some(x => /^meeting$/i.test(String(x).trim()))) t.splice(t.indexOf('Regular session') + 1, 0, 'Meeting');
+  st.sessionTypes = [...new Set(t)];
+  (S.registers || []).forEach(r => { if(/^regular meeting$/i.test(String(r.type||'').trim())) r.type = 'Regular session'; });
+  st.migTypes2 = true; }
 function tidySessions(){ if(!S?.sessions || S.settings.migSessions1) return;
   const key = s => String(s.title||'').trim().toLowerCase(), asTpl = s => Object.assign(s, { template:true, date:'', registerId:null, reflection:'', photos:[], leaders:[], materials:(s.materials||[]).map(m => ({ ...m, done:false })) });
   const pickOne = test => S.sessions.filter(s => test(key(s))).sort((a,b) => (b.template?1:0) - (a.template?1:0) || String(b.date).localeCompare(String(a.date)))[0];
@@ -2426,9 +2434,9 @@ function attRegisters(){
     <b class="num" style="font-family:var(--f-head);font-size:1.15rem">${c.pct}%</b>${r.status==='final' ? chip(ic('lock','sm')+' Final') : chip('Draft','gold')}</button>`; }).join('') || empty('clipboard','No registers match','Change the filters or start a new register.')}</div>`;
 }
 C.regFilter = el => { R.q[el.dataset.k] = el.value; renderMain(); };
-A.quickRegister = () => createRegister({ date:TODAY(), type:'Regular meeting', patrol:'all' });
+A.quickRegister = () => createRegister({ date:TODAY(), type:'Regular session', patrol:'all' });
 A.newRegister = () => modal({ title:'New attendance register', form:'newRegister', body:`<div class="form-grid">
-  ${field('Date', inp('date', TODAY(), 'type="date" required'))}${field('Session type', sel('type', S.settings.sessionTypes, 'Regular meeting'))}
+  ${field('Date', inp('date', TODAY(), 'type="date" required'))}${field('Session type', sel('type', S.settings.sessionTypes, 'Regular session'))}
   ${field('Who', sel('patrol', [['all','Whole troop'], ...S.patrols.map(p=>[p.id, p.name+' patrol'])], 'all'), 'full')}
   ${field('Link to session plan (optional)', sel('sessionId', [['','None'], ...S.sessions.filter(s=>!s.template).sort((a,b)=>a.date<b.date?1:-1).slice(0,15).map(s=>[s.id, `${fmtD(s.date,'short')} · ${s.title}`])], nextSession()?.date===TODAY()?nextSession().id:''), 'full')}</div>`,
   foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Open register</button>` });
@@ -2828,7 +2836,7 @@ VIEWS.session = () => { const s = S.sessions.find(x => x.id===R.id); if(!s) retu
   </div></div>`; };
 C.matTick = el => { const s = S.sessions.find(x => x.id===el.dataset.id); s.materials[+el.dataset.i].done = el.checked; refresh(); };
 F.reflection = d => { const s = S.sessions.find(x => x.id===d.id); s.reflection = d.reflection; audit(`Added reflection for ${s.title}`); save(); toast('Reflection saved'); };
-A.sessionRegister = el => { const s = S.sessions.find(x => x.id===el.dataset.id); createRegister({ date:s.date, type:'Regular meeting', patrol:'all', sessionId:s.id }); };
+A.sessionRegister = el => { const s = S.sessions.find(x => x.id===el.dataset.id); createRegister({ date:s.date, type:'Regular session', patrol:'all', sessionId:s.id }); };
 function sessionForm(s){ s = s || { title:'', date:TODAY(), time:'15:30', end:'17:00', location:'School hall', objectives:'', syllabus:[], badges:[], timeline:[{time:'15:30',label:'Opening',detail:''},{time:'15:45',label:'Game',detail:''},{time:'16:00',label:'Skills',detail:''},{time:'16:45',label:'Closing',detail:''}], materials:[], leaders:[ME.id], risk:'', template:false };
   return `<div class="form-grid">${field('Title', inp('title', s.title, 'required'), 'full')}
   ${s.template ? '' : field('Date', inp('date', s.date, 'type="date" required'))}${field('Location', inp('location', s.location))}${field('Start', inp('time', s.time, 'type="time"'))}${field('End', inp('end', s.end, 'type="time"'))}
@@ -3115,7 +3123,7 @@ const Cloud = {
     ME.role = role;
     if(role==='admin') this.migrate();
     if(role==='admin' && email===ADMIN_EMAIL) S.users.filter(x => x.role==='admin' && x!==ME).forEach(x => dropUser(x.id));
-    if(role!=='scout'){ tidySessions(); resetDiscipline(); regularSession2(); pending2026(); }
+    if(role!=='scout'){ tidySessions(); resetDiscipline(); regularSession2(); pending2026(); sessionTypes2(); }
     const askMove = role==='admin' && email !== ADMIN_EMAIL && !S.users.some(x => (x.email||'').toLowerCase()===ADMIN_EMAIL && x.id!==ME.id);
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
     this.subscribe();
@@ -3133,7 +3141,7 @@ const Cloud = {
     const out = { resets:{} };
     CLOUD_KEYS.forEach(k => { if(k==='meta') return; out[k] = st[k] !== undefined ? st[k] : JSON.parse(JSON.stringify(CLOUD_DEF[k] ?? {})); });
     out.v = st.meta?.v || 3; out.seededAt = st.meta?.seededAt || Date.now();
-    out.settings = Object.assign({ groupName:'Milandhoo Scout Troop', school:'', logo:null, year:academicYear().label, terms:[], sessionTypes:['Regular meeting'], lowAttendance:75 }, out.settings || {});
+    out.settings = Object.assign({ groupName:'Milandhoo Scout Troop', school:'', logo:null, year:academicYear().label, terms:[], sessionTypes:['Regular session','Meeting'], lowAttendance:75 }, out.settings || {});
     this.priv = st.private || {}; this.mergePriv(out.scouts); return out;
   },
   mergePriv(scouts){ scouts.forEach(s => { const p = this.priv[s.id]; s.guardian = p?.guardian || s.guardian || {}; s.emergency = p?.emergency || s.emergency || {}; s.medical = p?.medical ?? s.medical ?? ''; }); },
@@ -3439,7 +3447,7 @@ VIEWS.guide = () => { const sec = (icon, t, items) => `<div class="card"><div cl
   await Store.open();
   let st = await Store.get('kv','state');
   if(!st || st.v!==3 || !st.scouts){ st = await buildSeed(); await Store.set('kv','state', st); }
-  S = st; Object.assign(IMG, await Store.all('img')); tidySessions(); resetDiscipline(); regularSession2();
+  S = st; Object.assign(IMG, await Store.all('img')); tidySessions(); resetDiscipline(); regularSession2(); sessionTypes2();
   const sess = await Store.get('kv','session'); if(sess) ME = S.users.find(u => u.id===sess.uid && !u.disabled) || null;
   genReminders(); save();
   if(ME && isScout()) R.route = 'me';
