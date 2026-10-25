@@ -788,6 +788,10 @@ summary::-webkit-details-marker{display:none}
 .pt-m .touch-move{width:auto;height:30px;font-size:.76rem;padding:0 6px}.pt-empty{padding:16px;text-align:center;font-size:.82rem;color:var(--ink-2);border:1px dashed var(--line);border-radius:10px;margin-top:6px}
 @media (max-width:900px){ .pt-board{grid-template-columns:minmax(0,1fr)} }
 @media (max-width:560px){ .pt-row{grid-template-columns:20px 30px minmax(0,1fr) 34px auto;gap:8px} .pt-bar{display:none} .pt-pod{padding:16px 14px 0} .pt-pen{width:46px;height:46px} }
+/* bullet points in session text; growing text boxes */
+.rt .bul{margin:2px 0 0;padding-left:18px}.rt .bul li{margin:1px 0}.rt .bul li::marker{color:var(--primary)}
+textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-top:9px;padding-bottom:9px}
+.tl-row textarea.tl-detail{flex:1;min-width:0;height:42px;min-height:42px}
 /* syllabus rows with edit / delete */
 .syl-row{display:flex;align-items:center;gap:6px;padding:0;border-left:0;border-right:0;border-top:0}
 .syl-main{flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 4px;border:0;background:none;text-align:left;cursor:pointer;color:inherit;font:inherit}
@@ -1337,6 +1341,12 @@ function field(label, inner, cls=''){ return `<div class="field ${cls}"><label>$
 const inp = (name, val='', attrs='') => { const el = `<input class="inp" id="f_${name}" name="${name}" value="${esc(val)}" ${attrs}>`;
   return /type="password"/.test(attrs) ? `<span class="pw-wrap">${el}<button type="button" class="pw-eye" data-a="pwEye" aria-label="Show password" title="Show password">${ic('eye','sm')}</button></span>` : el; };
 const sel = (name, list, val, attrs='') => `<select class="inp" id="f_${name}" name="${name}" ${attrs}>${opts(list, val)}</select>`;
+/* Text written as several lines (or "- point" lines) shows as bullet points; a single line stays plain text. */
+const textLines = t => String(t||'').split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+const richText = t => { const ls = textLines(t); if(!ls.length) return ''; const bul = ls.length > 1 || /^[-•*·]\s/.test(ls[0]);
+  return bul ? `<ul class="bul">${ls.map(l => `<li>${esc(l.replace(/^[-•*·]\s*/, ''))}</li>`).join('')}</ul>` : esc(ls[0]); };
+const bulletText = t => { const ls = textLines(t); return ls.length > 1 || /^[-•*·]\s/.test(ls[0]||'') ? ls.map(l => '• ' + l.replace(/^[-•*·]\s*/, '')).join('\n') : (ls[0]||''); };
+function autoGrow(el){ el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; }
 const ta = (name, val='', attrs='') => `<textarea class="inp" id="f_${name}" name="${name}" ${attrs}>${esc(val)}</textarea>`;
 function pageH(eyebrow, title, actions=''){ return `<div class="page-h"><div class="t"><div class="eyebrow">${eyebrow}</div><h1>${title}</h1></div><div class="row">${actions}</div></div>`; }
 
@@ -1352,6 +1362,7 @@ function modal({ title, body, foot='', wide=false, onMount, form }){
   root.appendChild(mask); modalStack.push(mask);
   const first = mask.querySelector('input:not([type=hidden]):not([type=checkbox]),select,textarea'); if(first && window.innerWidth > 900) setTimeout(() => first.focus(), 30);
   onMount && onMount(mask);
+  mask.querySelectorAll('textarea[data-i=autoGrow]').forEach(autoGrow);
   return mask;
 }
 function closeModal(){ const m = modalStack.pop(); m && m.remove(); }
@@ -2789,7 +2800,7 @@ VIEWS.sessions = () => { const tab = R.tab || 'upcoming'; const t = TODAY();
   <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${list.map(s => { const reg = s.registerId && S.registers.find(r => r.id===s.registerId);
     return `<button class="card" style="text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:8px" data-a="go" data-r="session" data-id="${s.id}">
       <div class="row nw" style="gap:10px">${s.template ? `<span class="kpi"><span class="ic">${ic('copy')}</span></span>` : `<span class="agenda-date" style="width:44px"><span class="small muted">${MON[pd(s.date).getMonth()]}</span><b style="font-size:1.35rem">${pd(s.date).getDate()}</b></span>`}<div style="min-width:0;flex:1"><h3>${esc(s.title)}</h3><div class="small muted">${s.template?'Template':fmtD(s.date,'dow')} · ${fmtT(s.time)}${s.location?' · '+esc(s.location):''}</div>${s.type ? `<span class="chip" style="margin-top:4px">${esc(s.type)}</span>` : ''}</div></div>
-      <p class="small" style="color:var(--ink-2)">${esc(s.objectives)}</p>
+      <div class="small rt" style="color:var(--ink-2)">${richText(s.objectives)}</div>
       <div class="row" style="gap:6px">${s.syllabus.map(id => S.syllabus.find(i=>i.id===id)).filter(Boolean).map(i => chip(ic('map','sm')+' '+esc(i.topic))).join('')}${s.badges.map(badge).filter(Boolean).map(b => chip(ic(b.icon,'sm')+' '+esc(b.name),'gold')).join('')}</div>
       ${!s.template ? `<div class="row small muted" style="gap:12px;margin-top:auto">${reg ? `<span>${ic('clipboard','sm')} ${regCounts(reg).pct}% attended</span>` : ''}${s.reflection ? `<span>${ic('edit','sm')} Reflection</span>` : ''}${s.photos.length ? `<span>${ic('image','sm')} ${s.photos.length} photos</span>` : ''}<span>${s.materials.filter(m=>m.done).length}/${s.materials.length} materials ready</span></div>` : ''}</button>`; }).join('') || empty('fire', tab==='templates' ? 'No templates yet' : 'No sessions here', can('session.edit') ? 'Plan a session to get started.' : '')}</div>`; };
 /* Printable session plan: details, objectives, timeline, materials checklist, risk notes and space for notes. */
@@ -2805,13 +2816,13 @@ A.sessionPDF = el => withPDF(async () => { const s = S.sessions.find(x => x.id==
   doc.setFontSize(10); facts.forEach(([k,v]) => { const ls = doc.splitTextToSize(String(v), W-90); room(ls.length*13+4);
     doc.setFont('helvetica','bold'); doc.setTextColor(78,101,119); doc.text(k, X, ctx.y); doc.setFont('helvetica','normal'); doc.setTextColor(19,40,58);
     ls.forEach((l,i) => doc.text(l, X+90, ctx.y + i*13)); ctx.y += ls.length*13 + 4; }); ctx.y += 8;
-  if(s.objectives){ head('Objectives'); para(s.objectives); }
+  if(s.objectives){ head('Objectives'); para(bulletText(s.objectives)); }
   const syl = (s.syllabus||[]).map(id => S.syllabus.find(i => i.id===id)).filter(Boolean).map(i => `${i.stage}: ${i.topic}`), bdg = (s.badges||[]).map(id => badge(id)?.name).filter(Boolean);
   if(syl.length || bdg.length){ head('Syllabus & badges'); if(syl.length) para('Syllabus: ' + syl.join(' · ')); if(bdg.length) para('Badges: ' + bdg.join(' · ')); }
   if((s.timeline||[]).length){ head('Activity timeline'); const cw = [70,110,W-180];
     doc.setFillColor(228,240,248); doc.rect(X, ctx.y-2, W, 20, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(10,92,143);
     ['Time','Part','What happens'].forEach((t,i) => doc.text(t, X + 6 + cw.slice(0,i).reduce((a,b)=>a+b,0), ctx.y+11)); ctx.y += 20;
-    s.timeline.forEach((t, k) => { doc.setFont('helvetica','normal'); doc.setFontSize(9.5); const ls = doc.splitTextToSize(String(t.detail||''), cw[2]-12), rh = Math.max(1, ls.length)*12 + 10; room(rh);
+    s.timeline.forEach((t, k) => { doc.setFont('helvetica','normal'); doc.setFontSize(9.5); const ls = doc.splitTextToSize(bulletText(t.detail), cw[2]-12), rh = Math.max(1, ls.length)*12 + 10; room(rh);
       if(k % 2){ doc.setFillColor(244,249,252); doc.rect(X, ctx.y-2, W, rh, 'F'); }
       doc.setTextColor(19,40,58); doc.setFont('helvetica','bold'); doc.text(t.time ? fmtT(t.time) : '', X+6, ctx.y+11); doc.text(String(t.label||''), X+6+cw[0], ctx.y+11);
       doc.setFont('helvetica','normal'); ls.forEach((l,i) => doc.text(l, X+6+cw[0]+cw[1], ctx.y+11+i*12)); ctx.y += rh; }); ctx.y += 14; }
@@ -2832,9 +2843,9 @@ VIEWS.session = () => { const s = S.sessions.find(x => x.id===R.id); if(!s) retu
   <div class="grid g21">
   <div class="stack">
     <div class="card"><div class="card-h"><h2>Plan</h2></div><dl class="facts" style="margin:0 0 14px">${[['Type', s.type||'—'],['Location', s.location||'—'],['Leaders', s.leaders.map(id=>user(id)?.name).filter(Boolean).join(', ')||'—']].map(([k,v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
-      <h4 style="margin-bottom:4px">Objectives</h4><p>${esc(s.objectives)||'—'}</p>
+      <h4 style="margin-bottom:4px">Objectives</h4><div class="rt">${richText(s.objectives)||'—'}</div>
       ${s.syllabus.length || s.badges.length ? `<h4 style="margin:14px 0 6px">Linked syllabus & badges</h4><div class="row" style="gap:6px">${s.syllabus.map(id => S.syllabus.find(i=>i.id===id)).filter(Boolean).map(i => chip(ic('map','sm')+' '+esc(i.stage)+': '+esc(i.topic))).join('')}${s.badges.map(badge).filter(Boolean).map(b => `<button class="chip gold" style="border:0;cursor:pointer" data-a="go" data-r="badge" data-id="${b.id}">${ic(b.icon,'sm')} ${esc(b.name)}</button>`).join('')}</div>` : ''}</div>
-    <div class="card"><div class="card-h"><h2>Activity timeline</h2></div><div class="timeline">${s.timeline.map(t => `<div class="tl-item" style="margin-bottom:16px"><div class="row" style="gap:8px"><b class="num">${fmtT(t.time)}</b>${chip(esc(t.label), t.label==='Skills'?'gold':'')}</div><div class="small muted" style="margin-top:3px">${esc(t.detail)}</div></div>`).join('') || '<p class="muted">No timeline yet.</p>'}</div></div>
+    <div class="card"><div class="card-h"><h2>Activity timeline</h2></div><div class="timeline">${s.timeline.map(t => `<div class="tl-item" style="margin-bottom:16px"><div class="row" style="gap:8px"><b class="num">${fmtT(t.time)}</b>${chip(esc(t.label), t.label==='Skills'?'gold':'')}</div><div class="small muted rt" style="margin-top:3px">${richText(t.detail)}</div></div>`).join('') || '<p class="muted">No timeline yet.</p>'}</div></div>
     ${!s.template ? `<div class="card"><div class="card-h"><h2>After the session</h2>${!past?chip('Opens after '+fmtD(s.date,'short')):''}</div>
       <div class="stack">
       <div class="row" style="justify-content:space-between;padding:10px 12px;background:var(--surface-2);border-radius:10px"><span class="row nw" style="gap:8px">${ic('clipboard')} <b>Attendance</b></span>${reg ? `<button class="btn sm" data-a="go" data-r="register" data-id="${reg.id}">${regCounts(reg).pct}% · open register</button>` : can('attendance.take') ? `<button class="btn sm" data-a="sessionRegister" data-id="${s.id}">Create linked register</button>` : '<span class="small muted">No register</span>'}</div>
@@ -2851,7 +2862,7 @@ A.sessionRegister = el => { const s = S.sessions.find(x => x.id===el.dataset.id)
 function sessionForm(s){ s = s || { title:'', date:TODAY(), time:'15:30', end:'17:00', location:'School hall', objectives:'', syllabus:[], badges:[], timeline:[{time:'15:30',label:'Opening',detail:''},{time:'15:45',label:'Game',detail:''},{time:'16:00',label:'Skills',detail:''},{time:'16:45',label:'Closing',detail:''}], materials:[], leaders:[ME.id], risk:'', template:false };
   return `<div class="form-grid">${field('Title', inp('title', s.title, 'required'), 'full')}
   ${field('Session type', sel('type', [...new Set([...S.settings.sessionTypes, ...(s.type ? [s.type] : [])])], s.type || S.settings.sessionTypes[0] || 'Regular session'))}${s.template ? '' : field('Date', inp('date', s.date, 'type="date" required'))}${field('Start', inp('time', s.time, 'type="time"'))}${field('End', inp('end', s.end, 'type="time"'))}${field('Location', inp('location', s.location), s.template ? '' : 'full')}
-  ${field('Objectives', ta('objectives', s.objectives), 'full')}
+  ${field('Objectives (one point per line for bullet points)', ta('objectives', s.objectives, 'data-i="autoGrow" rows="3"'), 'full')}
   <div class="field full"><label>Linked syllabus items</label><div style="max-height:150px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:6px 10px">${STAGES.map(st => `<div class="small muted" style="margin-top:4px">${st}</div>${S.syllabus.filter(i=>i.stage===st).map(i => `<label class="check" style="min-height:28px"><input type="checkbox" name="syllabus" value="${i.id}" ${s.syllabus.includes(i.id)?'checked':''}> ${esc(i.topic)}</label>`).join('')}`).join('')}</div></div>
   <div class="field full"><label>Linked badges</label><input class="inp" type="search" placeholder="Search badges" data-i="bcheckFind" aria-label="Search badges" style="margin-bottom:6px"><div class="bcheck-list">${badgesAZ().map(b => `<label class="check" data-name="${esc(b.name.toLowerCase())}"><input type="checkbox" name="badges" value="${b.id}" ${s.badges.includes(b.id)?'checked':''}>${bArt(b,'','width:28px;height:28px','sm')} ${esc(b.name)}</label>`).join('')}</div></div>
   <div class="field full"><label>Activity timeline</label><div id="tl-rows" class="stack" style="gap:8px">${s.timeline.map(tlRow).join('')}</div><button type="button" class="btn sm" style="margin-top:6px;align-self:flex-start" data-a="tlAdd">${ic('plus','sm')} Add block</button></div>
@@ -2859,7 +2870,8 @@ function sessionForm(s){ s = s || { title:'', date:TODAY(), time:'15:30', end:'1
   <div class="field full"><label>Leaders responsible</label><div class="row">${leaderUsers().map(u => `<label class="check"><input type="checkbox" name="leaders" value="${u.id}" ${s.leaders.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div>
   ${field('Risk notes', ta('risk', s.risk), 'full')}
   <label class="check full"><input type="checkbox" name="template" ${s.template?'checked':''}> Save as a reusable template</label></div>`; }
-const tlRow = t => `<div class="row nw tl-row" style="gap:6px"><input class="inp" type="time" name="tl_time" value="${esc(t.time)}" style="width:110px;flex:none" aria-label="Time"><select class="inp" name="tl_label" style="width:120px;flex:none" aria-label="Block">${opts([...new Set(['Attendance','Opening','Inspection','Game','Skills','Activity','Patrol time','Break','Closing', ...(t.label ? [t.label] : [])])], t.label)}</select><input class="inp" name="tl_detail" value="${esc(t.detail)}" placeholder="What happens" style="flex:1;min-width:0" aria-label="Detail"><button type="button" class="icon-btn" data-a="tlDel" aria-label="Remove block">${ic('x','sm')}</button></div>`;
+const tlRow = t => `<div class="row nw tl-row" style="gap:6px;align-items:flex-start"><input class="inp" type="time" name="tl_time" value="${esc(t.time)}" style="width:132px;flex:none" aria-label="Time"><select class="inp" name="tl_label" style="width:120px;flex:none" aria-label="Block">${opts([...new Set(['Attendance','Opening','Inspection','Game','Skills','Activity','Patrol time','Break','Closing', ...(t.label ? [t.label] : [])])], t.label)}</select><textarea class="inp tl-detail" name="tl_detail" rows="1" placeholder="What happens (one point per line for bullets)" data-i="autoGrow" aria-label="Detail">${esc(t.detail)}</textarea><button type="button" class="icon-btn" data-a="tlDel" aria-label="Remove block">${ic('x','sm')}</button></div>`;
+I.autoGrow = el => autoGrow(el);
 A.tlAdd = () => $('#tl-rows').insertAdjacentHTML('beforeend', tlRow({ time:'', label:'Activity', detail:'' }));
 A.tlDel = el => el.closest('.tl-row').remove();
 A.newSession = () => { const tpls = S.sessions.filter(s => s.template);
