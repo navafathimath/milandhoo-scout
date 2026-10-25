@@ -348,6 +348,11 @@ svg.i.sm{width:16px;height:16px} svg.i.lg{width:26px;height:26px}
 .pop-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:0;background:none;width:100%;cursor:pointer;text-align:left}
 .pop-item:hover{background:var(--wash)}
 main{padding:24px;max-width:1360px;width:100%;margin:0 auto;flex:1}
+/* Large desktop screens: scale the whole portal up so it fills the screen at a natural size (phones and laptops unchanged) */
+@media (min-width:1600px){ html{zoom:1.1} }
+@media (min-width:1800px){ html{zoom:1.2} }
+@media (min-width:2200px){ html{zoom:1.4} }
+@media (min-width:2400px){ html{zoom:1.55} }
 .bnav{display:none}
 .drawer-mask{display:none}
 
