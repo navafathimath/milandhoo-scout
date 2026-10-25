@@ -1261,10 +1261,6 @@ const activeScouts = () => S.scouts.filter(s => s.status==='Active' || s.status=
 const myScout = () => isScout() ? scout(ME.scoutId) : null;
 
 function audit(action){ S.audit.unshift({ ts:Date.now(), user:ME?.id, action }); if(S.audit.length>400) S.audit.length = 400; }
-/* Notifications are kept for 24 hours, then removed for everyone. */
-const NOTE_TTL = 24*3600*1000;
-function pruneNotes(){ if(!S?.notifications || !ME || isScout()) return false; const cut = Date.now() - NOTE_TTL, n = S.notifications.length;
-  S.notifications = S.notifications.filter(x => (x.ts||0) >= cut); return S.notifications.length !== n; }
 function notify(type, title, body, link){ S.notifications.unshift({ id:uid('n'), type, title, body, ts:Date.now(), read:false, link }); }
 
 /* ---- stats ---- */
@@ -3057,7 +3053,7 @@ VIEWS.notifications = () => { const tf = R.q.t || ''; const rf = R.q.rf || 'all'
   const list = visibleNotifs().filter(n => (!tf || n.type===tf) && (rf==='all' || (rf==='unread' ? !isRead(n) : isRead(n)))).sort((a,b) => b.ts - a.ts);
   return `${pageH('Notification centre', 'Notifications', `${ME.role==='admin'?`<button class="btn primary" data-a="broadcast">${ic('megaphone','sm')} Announcement</button>`:''}<button class="btn" data-a="readAll">${ic('check','sm')} Mark all read</button>`)}
   <div class="row" style="margin-bottom:14px"><div class="seg">${[['all','All'],['unread',`Unread (${unread()})`],['read','Read']].map(([k,l]) => `<button class="${rf===k?'on':''}" data-a="notifRF" data-k="${k}">${l}</button>`).join('')}</div>
-  <select class="inp" style="width:auto" data-c="notifType" aria-label="Filter by type">${opts([['','All types'], ...Object.entries(NOTIF_TYPES).map(([k,t])=>[k,t.label])], tf)}</select>
+  <select class="inp" style="width:auto" data-c="notifType" aria-label="Filter by type">${opts([['','All types'], ...Object.entries(NOTIF_TYPES).filter(([k]) => !['renewal','photo'].includes(k)).map(([k,t])=>[k,t.label])], tf)}</select>
   ${'Notification' in window && !isScout() ? `<button class="btn sm ghost" data-a="pushEnable">${ic('bell','sm')} Browser alerts</button>` : ''}</div>
   <div class="card" style="padding:8px">${list.map(n => `<div class="row nw" style="gap:4px;align-items:flex-start">${notifRow(n).replace('class="notif','style="flex:1" class="notif')}<button class="icon-btn" style="margin-top:8px" data-a="notifToggle" data-id="${n.id}" aria-label="Mark as ${isRead(n)?'unread':'read'}" title="Mark as ${isRead(n)?'unread':'read'}">${ic(isRead(n)?'mail':'check','sm')}</button></div>`).join('') || empty('bell','No notifications here')}</div>`; };
 A.notifRF = el => { R.q.rf = el.dataset.k; renderMain(); };
@@ -3127,7 +3123,7 @@ const Cloud = {
     ME.role = role;
     if(role==='admin') this.migrate();
     if(role==='admin' && email===ADMIN_EMAIL) S.users.filter(x => x.role==='admin' && x!==ME).forEach(x => dropUser(x.id));
-    if(role!=='scout'){ tidySessions(); resetDiscipline(); regularSession2(); pending2026(); sessionTypes2(); pruneNotes(); }
+    if(role!=='scout'){ tidySessions(); resetDiscipline(); regularSession2(); pending2026(); sessionTypes2(); }
     const askMove = role==='admin' && email !== ADMIN_EMAIL && !S.users.some(x => (x.email||'').toLowerCase()===ADMIN_EMAIL && x.id!==ME.id);
     Store.set('kv', 'brand', { groupName:S.settings.groupName, school:S.settings.school, year:S.settings.year });
     this.subscribe();
@@ -3446,7 +3442,6 @@ VIEWS.guide = () => { const sec = (icon, t, items) => `<div class="card"><div cl
 /* ================= Boot ================= */
 (async function boot(){
   applyTheme(); startRoute();
-  setInterval(() => { if(pruneNotes()){ save(); refresh(); } }, 30*60*1000);   // drop notifications older than 24 hours while the portal stays open
   if(Cloud.on){ await Store.open(); Object.assign(IMG, await Store.all('img')); return Cloud.start(); }
   try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { const b = $('#theme-btn'); if(b) b.innerHTML = ic(isDark()?'sun':'moon'); }); } catch(e){}
   await Store.open();
@@ -3454,7 +3449,7 @@ VIEWS.guide = () => { const sec = (icon, t, items) => `<div class="card"><div cl
   if(!st || st.v!==3 || !st.scouts){ st = await buildSeed(); await Store.set('kv','state', st); }
   S = st; Object.assign(IMG, await Store.all('img')); tidySessions(); resetDiscipline(); regularSession2(); sessionTypes2();
   const sess = await Store.get('kv','session'); if(sess) ME = S.users.find(u => u.id===sess.uid && !u.disabled) || null;
-  pruneNotes(); genReminders(); save();
+  genReminders(); save();
   if(ME && isScout()) R.route = 'me';
   renderApp();
 })();
