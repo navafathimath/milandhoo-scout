@@ -792,6 +792,8 @@ summary::-webkit-details-marker{display:none}
 .rt .bul{margin:2px 0 0;padding-left:18px}.rt .bul li{margin:1px 0}.rt .bul li::marker{color:var(--primary)}
 textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-top:9px;padding-bottom:9px}
 .tl-row textarea.tl-detail{flex:1;min-width:0;height:42px;min-height:42px}
+@media (max-width:640px){ .tl-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;gap:6px!important;padding-bottom:10px;border-bottom:1px dashed var(--line)}
+  .tl-row>input[type=time],.tl-row>select{width:100%!important}.tl-row>textarea.tl-detail{grid-column:1/-1;grid-row:2;width:100%} }
 /* syllabus rows with edit / delete */
 .syl-row{display:flex;align-items:center;gap:6px;padding:0;border-left:0;border-right:0;border-top:0}
 .syl-main{flex:1;min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 4px;border:0;background:none;text-align:left;cursor:pointer;color:inherit;font:inherit}
