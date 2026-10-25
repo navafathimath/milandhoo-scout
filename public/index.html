@@ -347,12 +347,8 @@ svg.i.sm{width:16px;height:16px} svg.i.lg{width:26px;height:26px}
 .pop{position:absolute;right:0;top:52px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);min-width:240px;padding:6px;z-index:60}
 .pop-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:0;background:none;width:100%;cursor:pointer;text-align:left}
 .pop-item:hover{background:var(--wash)}
-main{padding:24px;max-width:1360px;width:100%;margin:0 auto;flex:1}
-/* Large desktop screens: scale the whole portal up so it fills the screen at a natural size (phones and laptops unchanged) */
-@media (min-width:1600px){ html{zoom:1.1} }
-@media (min-width:1800px){ html{zoom:1.2} }
-@media (min-width:2200px){ html{zoom:1.4} }
-@media (min-width:2400px){ html{zoom:1.55} }
+main{padding:24px;width:100%;max-width:none;margin:0;flex:1;min-width:0}
+svg.chart{display:block;max-height:340px}   /* the trend chart keeps a sensible size on very wide screens */   /* desktop: content always uses the full width, at any browser zoom */
 .bnav{display:none}
 .drawer-mask{display:none}
 
