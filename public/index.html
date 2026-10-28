@@ -3221,11 +3221,33 @@ const Cloud = {
     clearTimeout(this.timer); if(!ME || !this.db || this.role==='scout') return;
     this.keys().forEach(k => { const j = this.ser(k); if(j === this.sent[k]) return;
       if(k==='registers' && !this.regReplace && this.sent[k] !== undefined) return this.saveRegs();
+      if(k==='users' && this.sent[k] !== undefined) return this.saveUsers();
       if(k==='registers'){ this.regReplace = false; this.regOps = []; }
       if(j.length > 1000000){ toast(`The ${k} data is too large to save (1 MB limit per area). Delete old records or photos.`); return; }
       this.sent[k] = j;
       this.db.doc('portal/' + k).set({ json:j, by:ME.email, ts:Date.now() }).catch(e => { delete this.sent[k]; toast('Could not save changes: ' + (e.code==='permission-denied' ? 'your role cannot change this.' : e.message)); }); });
     if(this.role==='admin') this.syncAccess();
+  },
+  /* Accounts are merged person by person, so one leader's portal can only change the people it actually changed
+     (a profile photo set on one device is never overwritten by an older copy of the list on another). */
+  userKey(u){ const { pw, ...x } = u; return JSON.stringify(x); },
+  mergeUsers(baseJ, local, remote){ const base = new Map(JSON.parse(baseJ || '[]').map(u => [u.id, this.userKey(u)]));
+    const L = new Map(local.map(u => [u.id, u])), out = [], seen = new Set();
+    remote.forEach(ru => { const lu = L.get(ru.id); seen.add(ru.id);
+      if(lu){ out.push(base.get(ru.id) !== this.userKey(lu) ? lu : ru); }            // changed here → keep mine, else take theirs
+      else if(!base.has(ru.id)) out.push(ru); });                                    // added elsewhere → keep; deleted here → drop
+    local.forEach(lu => { if(seen.has(lu.id)) return;
+      if(!base.has(lu.id) || base.get(lu.id) !== this.userKey(lu)) out.push(lu); }); // new here (or changed here) → keep; deleted elsewhere → drop
+    return out; },
+  adoptUsers(list){ S.users = list; const me = this.findMe(); if(me){ me.role = this.role; ME = me; } },
+  saveUsers(){
+    if(this.userBusy){ this.userAgain = true; return; } this.userBusy = true; const ref = this.db.doc('portal/users'), base = this.sent.users;
+    this.userP = this.db.runTransaction(async t => { const d = await t.get(ref); const remote = d.exists ? JSON.parse(d.data().json) : [];
+      const merged = this.mergeUsers(base, S.users, remote); const j = JSON.stringify(merged.map(({ pw, ...u }) => u));
+      t.set(ref, { json:j, by:ME.email, ts:Date.now() }); return { merged, j }; })
+    .then(({ merged, j }) => { this.sent.users = j; this.adoptUsers(merged); if(this.role==='admin') this.syncAccess(); this.rerender(true); })
+    .catch(e => { toast('Accounts not saved yet, retrying… ' + (e.code==='permission-denied' ? '(your role cannot change this)' : '')); setTimeout(() => this.schedule(), 4000); })
+    .finally(() => { this.userBusy = false; if(this.userAgain){ this.userAgain = false; this.schedule(); } });
   },
   /* Registers are saved in a transaction: other leaders' marks already on the server are kept and this
      leader's own changes (regOps) are applied on top, so several leaders can mark one register at once. */
@@ -3270,6 +3292,7 @@ const Cloud = {
   stop(){ this.unsubs.forEach(f => { try { f(); } catch(e){} }); this.unsubs = []; },
   applyRemote(k, j){
     if(j === this.sent[k]) return;
+    if(k==='users' && this.sent.users !== undefined){ const base = this.sent.users; this.sent.users = j; this.adoptUsers(this.mergeUsers(base, S.users, JSON.parse(j))); if(this.ser('users') !== j) this.schedule(); this.rerender(true); return; }
     if(this.ser(k) !== (this.sent[k] ?? this.ser(k))) return;   // local unsaved edit wins; it is about to be written
     this.sent[k] = j; const v = JSON.parse(j);
     if(k==='meta'){ S.v = v.v; S.seededAt = v.seededAt; return; }
@@ -3285,8 +3308,9 @@ const Cloud = {
     if(!ME) return; if(full) renderApp(); else { renderMain(); } }, 350); },
 
   /* ---- images ---- */
-  want(id){ if(this.loading.has(id) || !this.db || !ME) return; this.loading.add(id);
-    this.db.doc('images/' + id).get().then(s => { if(s.exists){ IMG[id] = s.data().data; Store.set('img', id, IMG[id]); this.rerender(id===S.settings.logo || id===ME?.photo); if(LB) drawLB(); } }).catch(() => {}); },
+  want(id, tries=0){ if((this.loading.has(id) && !tries) || !this.db || !ME) return; this.loading.add(id);
+    const again = () => { if(tries < 5) setTimeout(() => this.want(id, tries + 1), 1500 * (tries + 1)); else this.loading.delete(id); };   // uploads can land a moment after the record that points at them
+    this.db.doc('images/' + id).get().then(s => { if(s.exists){ IMG[id] = s.data().data; Store.set('img', id, IMG[id]); this.rerender(true); if(LB) drawLB(); } else again(); }).catch(again); },
   upImg(id, data){ if(!this.db) return; if(data.length > 1000000){ toast('That image is too large to store. Use a smaller photo.'); return; } this.db.doc('images/' + id).set({ data, by:ME?.email || '', ts:Date.now() }).catch(e => toast('Photo upload failed: ' + e.message)); },
   delImg(id){ if(this.db) this.db.doc('images/' + id).delete().catch(() => {}); },
   async fetchAllImgs(){ try { const q = await this.db.collection('images').get(); q.forEach(d => { IMG[d.id] = d.data().data; Store.set('img', d.id, IMG[d.id]); }); } catch(e){} },
@@ -3351,7 +3375,7 @@ const Cloud = {
       if(moved && existed){ try { await this.auth.sendPasswordResetEmail(ne); } catch(e){} }
       if(moved && !existed && old.id!==ME.id) toast(`Sign-in moved to ${ne}`);
       if(moved && existed && old.id!==ME.id) toast(`${ne} already had a sign-in, so a password reset link was emailed to it`);
-      if(moved && old.id===ME.id){ try { await this.accessP; await this.db.waitForPendingWrites(); } catch(e){}
+      if(moved && old.id===ME.id){ try { await this.userP; await this.accessP; await this.db.waitForPendingWrites(); } catch(e){}
         LOGIN_ERR = existed ? `Your sign-in email is now ${esc(ne)}. That email already had a password, so a reset link was emailed to it. Open the email, set the new password, then sign in.` : `Your sign-in email is now ${esc(ne)}. Sign in with it and the new password.`;
         this.stop(); await this.auth.signOut(); } };
     /* one-time: move the admin sign-in to the group's admin email */
