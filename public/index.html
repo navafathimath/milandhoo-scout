@@ -2810,65 +2810,59 @@ VIEWS.sessions = () => { const tab = R.tab || 'upcoming'; const t = TODAY();
       <div class="row" style="gap:6px">${s.syllabus.map(id => S.syllabus.find(i=>i.id===id)).filter(Boolean).map(i => chip(ic('map','sm')+' '+esc(i.topic))).join('')}${s.badges.map(badge).filter(Boolean).map(b => chip(ic(b.icon,'sm')+' '+esc(b.name),'gold')).join('')}</div>
       ${!s.template ? `<div class="row small muted" style="gap:12px;margin-top:auto">${reg ? `<span>${ic('clipboard','sm')} ${regCounts(reg).pct}% attended</span>` : ''}${s.reflection ? `<span>${ic('edit','sm')} Reflection</span>` : ''}${s.photos.length ? `<span>${ic('image','sm')} ${s.photos.length} photos</span>` : ''}<span>${s.materials.filter(m=>m.done).length}/${s.materials.length} materials ready</span></div>` : ''}</button>`; }).join('') || empty('fire', tab==='templates' ? 'No templates yet' : 'No sessions here', can('session.edit') ? 'Plan a session to get started.' : '')}</div>`; };
 /* Printable session plan: details, objectives, timeline, materials checklist, risk notes and space for notes. */
-A.sessionPDF = el => withPDF(async () => { el.closest('details')?.removeAttribute('open'); const s = S.sessions.find(x => x.id===el.dataset.id); if(!s) return;
-  const when = s.template ? 'Session template' : `${fmtD(s.date,'long')}  ·  ${fmtT(s.time)} – ${fmtT(s.end)}`;
-  const ctx = await pdfDoc(s.title, when), { doc } = ctx, H = doc.internal.pageSize.getHeight(), X = 32, W = 531;
-  const room = n => { if(ctx.y + n > H - 46){ doc.addPage(); ctx.y = 44; } };
-  const para = (t, size=10, col=[19,40,58]) => { doc.setFont('helvetica','normal'); doc.setFontSize(size); doc.setTextColor(...col);
-    doc.splitTextToSize(String(t), W).forEach(l => { room(14); doc.text(l, X, ctx.y); ctx.y += size*1.35; }); ctx.y += 6; };
-  const head = t => { room(40); pdfH(ctx, t); ctx.y += 4; };
-  const leaders = (s.leaders||[]).map(id => user(id)?.name).filter(Boolean).join(', ') || '—';
-  const facts = [['Type', s.type || '—'], ['Date', s.template ? 'Template (no date)' : fmtD(s.date,'long')], ['Time', s.time ? `${fmtT(s.time)} – ${fmtT(s.end)}` : '—'], ['Location', s.location || '—'], ['Leaders', leaders]];
-  doc.setFontSize(10); facts.forEach(([k,v]) => { const ls = doc.splitTextToSize(String(v), W-90); room(ls.length*13+4);
-    doc.setFont('helvetica','bold'); doc.setTextColor(78,101,119); doc.text(k, X, ctx.y); doc.setFont('helvetica','normal'); doc.setTextColor(19,40,58);
-    ls.forEach((l,i) => doc.text(l, X+90, ctx.y + i*13)); ctx.y += ls.length*13 + 4; }); ctx.y += 8;
-  if(s.objectives){ head('Objectives'); para(bulletText(s.objectives)); }
-  const syl = (s.syllabus||[]).map(id => S.syllabus.find(i => i.id===id)).filter(Boolean).map(i => `${i.stage}: ${i.topic}`), bdg = (s.badges||[]).map(id => badge(id)?.name).filter(Boolean);
-  if(syl.length || bdg.length){ head('Syllabus & badges'); if(syl.length) para('Syllabus: ' + syl.join(' · ')); if(bdg.length) para('Badges: ' + bdg.join(' · ')); }
-  if((s.timeline||[]).length){ head('Activity timeline'); const cw = [70,110,W-180];
-    doc.setFillColor(228,240,248); doc.rect(X, ctx.y-2, W, 20, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(10,92,143);
-    ['Time','Part','What happens'].forEach((t,i) => doc.text(t, X + 6 + cw.slice(0,i).reduce((a,b)=>a+b,0), ctx.y+11)); ctx.y += 20;
-    s.timeline.forEach((t, k) => { doc.setFont('helvetica','normal'); doc.setFontSize(9.5); const ls = doc.splitTextToSize(bulletText(t.detail), cw[2]-12), rh = Math.max(1, ls.length)*12 + 10; room(rh);
-      if(k % 2){ doc.setFillColor(244,249,252); doc.rect(X, ctx.y-2, W, rh, 'F'); }
-      doc.setTextColor(19,40,58); doc.setFont('helvetica','bold'); doc.text(t.time ? fmtT(t.time) : '', X+6, ctx.y+11); doc.text(String(t.label||''), X+6+cw[0], ctx.y+11);
-      doc.setFont('helvetica','normal'); ls.forEach((l,i) => doc.text(l, X+6+cw[0]+cw[1], ctx.y+11+i*12)); ctx.y += rh; }); ctx.y += 14; }
-  if((s.materials||[]).length){ head('Materials checklist'); doc.setFont('helvetica','normal'); doc.setFontSize(10); const colW = W/2;
-    s.materials.forEach((m, i) => { const cx = X + (i%2)*colW; if(i%2===0) room(18); doc.setDrawColor(120,140,150); doc.rect(cx, ctx.y-9, 10, 10);
-      if(m.done){ doc.setDrawColor(18,137,68); doc.setLineWidth(1.5); doc.line(cx+2, ctx.y-4, cx+4.5, ctx.y-1.5); doc.line(cx+4.5, ctx.y-1.5, cx+8.5, ctx.y-7); doc.setLineWidth(.5); }
-      doc.setTextColor(19,40,58); doc.text(doc.splitTextToSize(String(m.t), colW-24)[0], cx+16, ctx.y); if(i%2===1 || i===s.materials.length-1) ctx.y += 18; }); ctx.y += 8; }
-  if(s.risk){ head('Risk notes'); para(s.risk); }
-  if(s.reflection){ head('Reflection'); para(s.reflection); }
-  head('Leader notes'); doc.setDrawColor(210,220,228); for(let i=0;i<5;i++){ room(24); ctx.y += 20; doc.line(X, ctx.y, X+W, ctx.y); }
-  doc.setFont('helvetica','normal');
-  await pdfSave(ctx, `session-${(s.title||'plan').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}${s.date ? '-' + s.date : ''}.pdf`); });
-/* Session plan as a picture: the same printable layout drawn as HTML and captured with html2canvas. */
-function sessionSheet(s){ const lg = (S.settings.logo && imgData(S.settings.logo)) || DEFAULT_LOGO, bl = t => { const ls = textLines(t); return ls.length > 1 || /^[-•*·]\s/.test(ls[0]||'') ? `<ul style="margin:4px 0 0;padding-left:18px">${ls.map(l => `<li>${esc(l.replace(/^[-•*·]\s*/, ''))}</li>`).join('')}</ul>` : esc(ls[0]||''); };
-  const leaders = (s.leaders||[]).map(id => user(id)?.name).filter(Boolean).join(', ') || '—';
-  const syl = (s.syllabus||[]).map(id => S.syllabus.find(i => i.id===id)).filter(Boolean).map(i => `${i.stage}: ${i.topic}`), bdg = (s.badges||[]).map(id => badge(id)?.name).filter(Boolean);
-  const H = t => `<h3 style="font:700 17px 'Roboto Slab',Georgia,serif;color:#0A5C8F;margin:18px 0 6px">${t}</h3>`;
-  const facts = [['Type', s.type||'—'], ['Date', s.template ? 'Template (no date)' : fmtD(s.date,'long')], ['Time', s.time ? `${fmtT(s.time)} – ${fmtT(s.end)}` : '—'], ['Location', s.location||'—'], ['Leaders', leaders]];
+A.sessionPDF = el => withPDF(async () => { el.closest('details')?.removeAttribute('open'); const s = S.sessions.find(x => x.id===el.dataset.id); if(!s) return; toast('Preparing the PDF…');
+  const c = await sessionCanvas(s), jsPDF = await getPDF(), doc = new jsPDF({ unit:'pt', format:'a4' }), W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+  const pxPerPt = c.width / W, pageH = Math.floor(H * pxPerPt); let y = 0, first = true;
+  while(y < c.height){ const h2 = Math.min(pageH, c.height - y), part = document.createElement('canvas'); part.width = c.width; part.height = h2; part.getContext('2d').drawImage(c, 0, y, c.width, h2, 0, 0, c.width, h2);
+    if(!first) doc.addPage(); doc.addImage(part.toDataURL('image/jpeg', .92), 'JPEG', 0, 0, W, h2 / pxPerPt); first = false; y += h2; }
+  await saveFile(sessionFile(s, 'pdf'), doc.output('blob')); });
+/* Session plan sheet (design B, "agenda board"): drawn as HTML, captured with html2canvas for the photo and the PDF. */
+const SES_COL = { Attendance:'#1F6FA8', Opening:'#128944', Inspection:'#6B5B9A', Game:'#C2410C', Skills:'#B8860B', Activity:'#2F6F8F', 'Patrol time':'#0F766E', Break:'#7A8D9B', Closing:'#0B3A5C' };
+const SES_PAL = ['#1F6FA8','#128944','#6B5B9A','#C2410C','#B8860B','#0F766E','#0B3A5C','#A0613F'];
+function sessionSheet(s){ const lg = (S.settings.logo && imgData(S.settings.logo)) || DEFAULT_LOGO;
+  const bl = t => { const ls = textLines(t); return ls.length > 1 || /^[-•*·]\s/.test(ls[0]||'') ? `<ul style="margin:3px 0 0;padding-left:18px">${ls.map(l => `<li style="margin:2px 0">${esc(l.replace(/^[-•*·]\s*/, ''))}</li>`).join('')}</ul>` : esc(ls[0]||''); };
+  const min = t => { const m = String(t||'').match(/^(\d{1,2}):(\d{2})/); return m ? +m[1]*60 + +m[2] : null; };
+  const tl = (s.timeline||[]).filter(t => t.time || t.detail), col = (t,i) => SES_COL[t.label] || SES_PAL[i % SES_PAL.length];
+  const durs = tl.map((t,i) => { const a = min(t.time), b = i < tl.length-1 ? min(tl[i+1].time) : min(s.end); return a!=null && b!=null && b > a ? b - a : null; });
+  const total = durs.every(d => d) ? durs.reduce((a,b) => a+b, 0) : 0;
+  const leaders = (s.leaders||[]).map(id => user(id)).filter(u => u && u.role!=='admin').map(u => u.name);
+  const d = s.date && !s.template ? pd(s.date) : null;
+  const syl = (s.syllabus||[]).map(id => S.syllabus.find(i => i.id===id)).filter(Boolean).map(i => i.topic), bdg = (s.badges||[]).map(id => badge(id)?.name).filter(Boolean);
+  const obj = textLines(s.objectives).map(l => l.replace(/^[-•*·]\s*/, ''));
+  const sec = t => `<div style="font:700 12px Inter,Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7A8D9B;margin:14px 0 8px">${t}</div>`;
+  const ticks = total ? (() => { const a = min(tl[0].time), out = []; for(let m = Math.ceil(a/30)*30; m <= a + total; m += 30) out.push([(m - a)/total*100, fmtT(`${pad(Math.floor(m/60))}:${pad(m%60)}`).replace(/ ?[AP]M$/,'')]); return out; })() : [];
   return `<div style="width:794px;background:#fff;color:#13283A;font:14px/1.45 Inter,Arial,sans-serif">
-  <div style="background:#0A5C8F;border-bottom:4px solid #128944;padding:16px 28px;display:flex;align-items:center;gap:14px"><span style="width:52px;height:52px;border-radius:10px;background:#fff;display:grid;place-items:center"><img src="${lg}" style="width:44px;height:44px;object-fit:contain"></span>
-    <div style="color:#fff"><div style="font:700 20px 'Roboto Slab',Georgia,serif">${esc(S.settings.groupName)}</div><div style="font-size:12.5px;opacity:.9">${esc(S.settings.school||'')}${S.settings.school?'  ·  ':''}${esc(S.settings.year||'')}</div></div></div>
-  <div style="padding:20px 28px 26px">
-    <div style="font:700 24px 'Roboto Slab',Georgia,serif">${esc(s.title)}</div><div style="color:#4E6577;margin-bottom:10px">${s.template ? 'Session template' : `${fmtD(s.date,'long')} · ${fmtT(s.time)} – ${fmtT(s.end)}`}</div>
-    <table style="border-collapse:collapse">${facts.map(([k,v]) => `<tr><td style="padding:2px 18px 2px 0;font-weight:700;color:#4E6577">${k}</td><td style="padding:2px 0">${esc(v)}</td></tr>`).join('')}</table>
-    ${s.objectives ? H('Objectives') + `<div>${bl(s.objectives)}</div>` : ''}
-    ${syl.length || bdg.length ? H('Syllabus & badges') + (syl.length ? `<div>Syllabus: ${esc(syl.join(' · '))}</div>` : '') + (bdg.length ? `<div>Badges: ${esc(bdg.join(' · '))}</div>` : '') : ''}
-    ${(s.timeline||[]).length ? H('Activity timeline') + `<table style="width:100%;border-collapse:collapse;font-size:13.5px"><tr style="background:#E4F0F8;color:#0A5C8F;text-align:left"><th style="padding:7px 8px;width:80px">Time</th><th style="padding:7px 8px;width:110px">Part</th><th style="padding:7px 8px">What happens</th></tr>
-      ${s.timeline.map((t,k) => `<tr style="background:${k%2?'#F4F9FC':'#fff'};vertical-align:top"><td style="padding:7px 8px;font-weight:700">${t.time ? fmtT(t.time) : ''}</td><td style="padding:7px 8px;font-weight:700">${esc(t.label||'')}</td><td style="padding:7px 8px">${bl(t.detail)}</td></tr>`).join('')}</table>` : ''}
-    ${(s.materials||[]).length ? H('Materials checklist') + `<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 20px">${s.materials.map(m => `<div style="display:flex;align-items:center;gap:8px"><span style="width:13px;height:13px;border:1.5px solid ${m.done?'#128944':'#7A8D9B'};border-radius:3px;display:grid;place-items:center;color:#128944;font-size:11px;font-weight:800;line-height:1">${m.done?'✓':''}</span>${esc(m.t)}</div>`).join('')}</div>` : ''}
-    ${s.risk ? H('Risk notes') + `<div>${esc(s.risk)}</div>` : ''}${s.reflection ? H('Reflection') + `<div>${esc(s.reflection)}</div>` : ''}
-    <div style="margin-top:22px;font-size:11px;color:#7A8D9B">Generated by Milandhoo Scout Portal on ${fmtD(TODAY())}</div></div></div>`; }
+  <div style="padding:26px 30px 18px;border-bottom:1px solid #E1EAF1;display:flex;gap:18px;align-items:center">
+    <div style="width:86px;flex:none;border-radius:14px;overflow:hidden;text-align:center;border:1px solid #D5E3ED">
+      <div style="background:#B5483F;color:#fff;font:800 12px Inter,Arial;letter-spacing:.1em;padding:4px 0">${d ? MON[d.getMonth()].toUpperCase() : 'PLAN'}</div>
+      <b style="display:block;font:700 34px 'Roboto Slab',Georgia,serif;padding:4px 0 0">${d ? d.getDate() : '📋'}</b><span style="font-size:11px;color:#4E6577;display:block;padding-bottom:6px">${d ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()] : 'Template'}</span></div>
+    <div style="min-width:0"><div style="font:700 30px/1.15 'Roboto Slab',Georgia,serif">${esc(s.title)}</div><div style="color:#4E6577;font-size:13.5px;margin-top:4px">${esc(s.type || 'Session plan')} · ${esc(S.settings.groupName)}</div></div>
+    <div style="margin-left:auto;text-align:center;font-size:11.5px;color:#4E6577;flex:none"><img src="${lg}" style="width:50px;height:50px;object-fit:contain;border-radius:10px"><br>${esc(S.settings.school||'')}</div></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #E1EAF1">${[['Date', d ? fmtD(s.date,'long') : 'Template (no date)'], ['Time', s.time ? `${fmtT(s.time)} – ${fmtT(s.end)}` : '—'], ['Place', s.location||'—']].map(([k,v],i) => `<div style="padding:12px 16px;${i?'border-left:1px solid #E1EAF1':''}"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#7A8D9B;font-weight:700">${k}</div><b style="font-size:14px">${esc(v)}</b></div>`).join('')}</div>
+  <div style="padding:12px 30px;border-bottom:1px solid #E1EAF1;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#7A8D9B;font-weight:700;margin-right:4px">Leaders</span>
+    ${leaders.length ? leaders.map(n => `<span style="display:inline-flex;align-items:center;gap:6px;background:#EEF5FA;border:1px solid #D5E3ED;border-radius:99px;padding:4px 12px 4px 6px;font-weight:600;font-size:13px"><span style="width:22px;height:22px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:13px">👤</span>${esc(n)}</span>`).join('') : '<span style="color:#7A8D9B">Not assigned yet</span>'}</div>
+  ${total ? `<div style="padding:16px 30px 4px"><div style="display:flex;height:26px;border-radius:8px;overflow:hidden">${tl.map((t,i) => `<div style="width:${durs[i]/total*100}%;background:${col(t,i)};color:#fff;font:700 10.5px Inter,Arial;display:flex;align-items:center;justify-content:center;border-right:2px solid #fff;white-space:nowrap;overflow:hidden">${durs[i]/total >= .11 ? esc(t.label||'') : ''}</div>`).join('')}</div>
+    <div style="position:relative;height:16px;font-size:10.5px;color:#7A8D9B;margin-top:3px">${ticks.map(([x,l]) => `<span style="position:absolute;left:${x}%;transform:translateX(${x<2?'0':x>98?'-100%':'-50%'})">${l}</span>`).join('')}</div></div>` : ''}
+  <div style="padding:6px 30px 24px;display:grid;grid-template-columns:1fr 240px;gap:24px">
+    <div>${sec('🧭 Activity timeline')}${tl.map((t,i) => `<div style="display:grid;grid-template-columns:70px 8px 1fr 50px;gap:12px;align-items:stretch;padding:10px 0;border-top:1px solid #EEF3F6">
+      <div style="font:700 15px 'Roboto Slab',Georgia,serif">${t.time ? fmtT(t.time).replace(/ ?[AP]M$/,'') : ''}</div><div style="border-radius:4px;background:${col(t,i)}"></div>
+      <div><div style="font-weight:700;font-size:13.5px;color:${col(t,i)}">${esc(t.label||'')}</div><div style="font-size:13px;color:#2C4357">${bl(t.detail)}</div></div>
+      <div style="font-size:11.5px;color:#7A8D9B;text-align:right;font-weight:600">${durs[i] ? durs[i] + ' min' : ''}</div></div>`).join('') || '<div style="color:#7A8D9B">No timeline yet.</div>'}</div>
+    <div>${obj.length ? sec('🎯 Objectives') + obj.map((o,i) => `<div style="display:flex;gap:8px;margin:6px 0;font-size:13.5px"><span style="flex:none;width:20px;height:20px;border-radius:50%;background:#0977B6;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center">${i+1}</span><span>${esc(o)}</span></div>`).join('') : ''}
+      ${(s.materials||[]).length ? sec('🎒 Checklist') + `<div style="border:1px solid #E1EAF1;border-radius:12px;padding:10px 14px">${s.materials.map(m => `<div style="display:flex;gap:8px;align-items:center;margin:4px 0;font-size:13px"><span style="flex:none;width:14px;height:14px;border-radius:4px;border:1.5px solid ${m.done?'#128944':'#9AA8B2'};background:${m.done?'#128944':'#fff'}"></span>${esc(m.t)}</div>`).join('')}</div>` : ''}
+      ${s.risk ? `<div style="margin-top:12px;background:#FFF8EC;border:1px solid #F0D9A8;border-radius:12px;padding:10px 14px;font-size:13px"><b>⚠️ Safety</b><div style="margin-top:4px">${esc(s.risk)}</div></div>` : ''}
+      ${syl.length || bdg.length ? sec('🗺 Syllabus & badges') + `<div style="font-size:13px">${esc([...syl, ...bdg].join(' · '))}</div>` : ''}
+      ${s.reflection ? sec('📝 Reflection') + `<div style="font-size:13px">${esc(s.reflection)}</div>` : ''}</div></div>
+  <div style="display:flex;justify-content:space-between;padding:10px 30px;background:#F4F8FB;font-size:11px;color:#7A8D9B;border-top:1px solid #E1EAF1"><span>Milandhoo Scout Portal</span><span>Printed ${fmtD(TODAY())}</span></div></div>`; }
+async function sessionCanvas(s){ await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-10000px;top:0;zoom:1'; box.innerHTML = sessionSheet(s); document.body.appendChild(box);
+  try { await Promise.all([...box.querySelectorAll('img')].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
+    return await window.html2canvas(box.firstElementChild, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false }); } finally { box.remove(); } }
+const sessionFile = (s, ext) => `session-${(s.title||'plan').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}${s.date ? '-' + s.date : ''}.${ext}`;
 document.addEventListener('click', e => document.querySelectorAll('details.dd[open]').forEach(d => { if(!d.contains(e.target)) d.removeAttribute('open'); }));
 A.sessionPNG = el => { const s = S.sessions.find(x => x.id===el.dataset.id); if(!s) return; el.closest('details')?.removeAttribute('open'); toast('Preparing the picture…');
-  (async () => { try { await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-    const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-10000px;top:0;zoom:1'; box.innerHTML = sessionSheet(s); document.body.appendChild(box);
-    await Promise.all([...box.querySelectorAll('img')].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
-    const c = await window.html2canvas(box.firstElementChild, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false }); box.remove();
-    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-    await saveFile(`session-${(s.title||'plan').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}${s.date ? '-' + s.date : ''}.png`, blob); }
-  catch(e){ console.error(e); toast('Could not make the picture. Check your connection and try again.'); } })(); };
+  (async () => { try { const c = await sessionCanvas(s); const blob = await new Promise(r => c.toBlob(r, 'image/png')); await saveFile(sessionFile(s, 'png'), blob); }
+    catch(e){ console.error(e); toast('Could not make the picture. Check your connection and try again.'); } })(); };
 VIEWS.session = () => { const s = S.sessions.find(x => x.id===R.id); if(!s) return empty('fire','Session not found'); const ed = can('session.edit');
   const reg = s.registerId && S.registers.find(r => r.id===s.registerId); const past = s.date && s.date <= TODAY();
   const photos = s.photos.map(id => S.photos.find(p=>p.id===id)).filter(Boolean);
