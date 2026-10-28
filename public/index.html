@@ -347,6 +347,7 @@ svg.i.sm{width:16px;height:16px} svg.i.lg{width:26px;height:26px}
 .pop{position:absolute;right:0;top:52px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);min-width:240px;padding:6px;z-index:60}
 .pop-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;border:0;background:none;width:100%;cursor:pointer;text-align:left}
 .pop-item:hover{background:var(--wash)}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 main{padding:24px;width:100%;max-width:none;margin:0;flex:1;min-width:0}
 svg.chart{display:block;max-height:340px}   /* the trend chart keeps a sensible size on very wide screens */   /* desktop: content always uses the full width, at any browser zoom */
 .bnav{display:none}
@@ -2838,7 +2839,7 @@ function sessionSheet(s){ const lg = (S.settings.logo && imgData(S.settings.logo
   const obj = textLines(s.objectives).map(l => l.replace(/^[-•*·]\s*/, ''));
   const sec = t => `<div style="font:700 12px Inter,Arial,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7A8D9B;margin:14px 0 8px">${t}</div>`;
   const ticks = total ? (() => { const a = min(tl[0].time), out = []; for(let m = Math.ceil(a/30)*30; m <= a + total; m += 30) out.push([(m - a)/total*100, fmtT(`${pad(Math.floor(m/60))}:${pad(m%60)}`).replace(/ ?[AP]M$/,'')]); return out; })() : [];
-  return `<div style="width:794px;background:#fff;color:#13283A;font:14px/1.45 Inter,Arial,sans-serif">
+  return `<div style="width:794px;background:#fff;color:#13283A;font:14px/1.45 Inter,Arial,sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%">
   <div style="padding:26px 30px 18px;border-bottom:1px solid #E1EAF1;display:flex;gap:18px;align-items:center">
     <div style="width:86px;flex:none;border-radius:14px;overflow:hidden;text-align:center;border:1px solid #D5E3ED">
       <div style="background:#B5483F;color:#fff;font:800 12px Inter,Arial;letter-spacing:.1em;padding:4px 0">${d ? MON[d.getMonth()].toUpperCase() : 'PLAN'}</div>
@@ -2846,7 +2847,7 @@ function sessionSheet(s){ const lg = (S.settings.logo && imgData(S.settings.logo
     <div style="min-width:0"><div style="font:700 30px/1.15 'Roboto Slab',Georgia,serif">${esc(s.title)}</div><div style="color:#4E6577;font-size:13.5px;margin-top:4px">${esc(s.type || 'Session plan')} · ${esc(S.settings.groupName)}</div></div>
     <div style="margin-left:auto;text-align:center;font-size:11.5px;color:#4E6577;flex:none"><img src="${lg}" style="width:50px;height:50px;object-fit:contain;border-radius:10px"><br>${esc(S.settings.school||'')}</div></div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid #E1EAF1">${[['Date', d ? fmtD(s.date,'long') : 'Template (no date)'], ['Time', s.time ? `${fmtT(s.time)} – ${fmtT(s.end)}` : '—'], ['Place', s.location||'—']].map(([k,v],i) => `<div style="padding:12px 16px;${i?'border-left:1px solid #E1EAF1':''}"><div style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#7A8D9B;font-weight:700">${k}</div><b style="font-size:14px">${esc(v)}</b></div>`).join('')}</div>
-  <div style="padding:9px 30px;border-bottom:1px solid #E1EAF1;font-size:12.5px;color:#2C4357;line-height:1.6"><span style="font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#7A8D9B;font-weight:700;margin-right:8px;white-space:nowrap">👥 Leaders${leaders.length ? ` (${leaders.length})` : ''}</span>${leaders.length ? leaders.map(n => `<span style="font-weight:600;white-space:nowrap">${esc(n)}</span>`).join(' <span style="color:#B9C7D3;margin:0 5px">·</span> ') : '<span style="color:#7A8D9B">Not assigned yet</span>'}</div>
+  <div style="padding:9px 30px;border-bottom:1px solid #E1EAF1;font-size:12.5px;color:#2C4357;line-height:1.6"><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7A8D9B;font-weight:700;margin-right:8px;white-space:nowrap">👥 Leaders${leaders.length ? ` (${leaders.length})` : ''}</span>${leaders.length ? leaders.map(n => `<span style="font-size:11.5px;font-weight:600;white-space:nowrap">${esc(n)}</span>`).join(' <span style="color:#B9C7D3;margin:0 5px">·</span> ') : '<span style="color:#7A8D9B">Not assigned yet</span>'}</div>
   ${total ? `<div style="padding:16px 30px 4px"><div style="display:flex;height:26px;border-radius:8px;overflow:hidden">${tl.map((t,i) => `<div style="width:${durs[i]/total*100}%;background:${col(t,i)};color:#fff;font:700 10.5px Inter,Arial;display:flex;align-items:center;justify-content:center;border-right:2px solid #fff;white-space:nowrap;overflow:hidden">${durs[i]/total >= .11 ? esc(t.label||'') : ''}</div>`).join('')}</div>
     <div style="position:relative;height:16px;font-size:10.5px;color:#7A8D9B;margin-top:3px">${ticks.map(([x,l]) => `<span style="position:absolute;left:${x}%;transform:translateX(${x<2?'0':x>98?'-100%':'-50%'})">${l}</span>`).join('')}</div></div>` : ''}
   <div style="padding:6px 30px 24px;display:grid;grid-template-columns:1fr 240px;gap:24px">
