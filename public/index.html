@@ -797,6 +797,8 @@ textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-t
 .ses-lead{grid-column:1/-1}.ses-lead dd{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .ses-lt{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:600;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:2px 9px 2px 7px;white-space:nowrap}
 .ses-lt::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--primary);opacity:.7}
+/* long e-mail addresses wrap inside their chip instead of running off the card */
+.prof-contact{min-width:0;max-width:100%}.prof-contact .chip{white-space:normal;max-width:100%;border-radius:12px}.prof-contact .chip>span{overflow-wrap:break-word;min-width:0}.prof-contact .chip .ic{flex:none}
 /* small download menu */
 details.dd{position:relative}details.dd>summary{list-style:none;cursor:pointer}details.dd>summary::-webkit-details-marker{display:none}
 .dd-pop{top:calc(100% + 6px);min-width:200px}
@@ -2350,7 +2352,7 @@ VIEWS.leader = () => { const u = user(R.id); if(!seesUser(u)) return empty('shie
   const acts = [...(u.activity||[]), ...S.audit.filter(a => a.user===u.id && !/Signed (in|out)/.test(a.action)).slice(0,6).map(a => ({ date:iso(new Date(a.ts)), text:a.action }))].sort((a,b) => a.date < b.date ? 1 : -1).slice(0,10);
   return `<button class="btn ghost sm" data-a="go" data-r="leaders" style="margin-bottom:10px">${ic('left','sm')} All leaders</button>
   <div class="card" style="margin-bottom:16px"><div class="prof-head"><div class="prof-photo">${av(u,104)}${canEd?`<button class="cam" data-a="photoLeader" data-id="${u.id}" aria-label="Change photo">${ic('camera','sm')}</button>`:''}</div>
-  <div style="flex:1;min-width:200px"><div class="eyebrow">${roleName(u)}</div><h1 style="margin:2px 0 8px">${esc(u.name)}</h1><div class="row small" style="gap:6px">${u.phone?`<span class="chip">${ic('phone','sm')} <span class="num">${esc(u.phone)}</span></span>`:''}<span class="chip">${ic('mail','sm')} ${esc(u.email)}</span></div></div>
+  <div style="flex:1;min-width:min(200px,100%);max-width:100%"><div class="eyebrow">${roleName(u)}</div><h1 style="margin:2px 0 8px;overflow-wrap:anywhere">${esc(u.name)}</h1><div class="row small prof-contact" style="gap:6px">${u.phone?`<span class="chip">${ic('phone','sm')} <span class="num">${esc(u.phone)}</span></span>`:''}<span class="chip">${ic('mail','sm')} <span>${esc(u.email).replace('@','<wbr>@')}</span></span></div></div>
   ${canEd?`<button class="btn" data-a="editUser" data-id="${u.id}">${ic('edit','sm')} Edit</button>`:''}</div></div>
   <div class="grid g2"><div class="card"><div class="card-h"><h2>Qualifications & training</h2></div><div class="list">${u.qualifications.map(q => `<div class="li"><span class="badge-ic" style="width:34px;height:34px">${ic('shield','sm')}</span><span class="grow">${esc(q)}</span></div>`).join('') || empty('shield','None recorded')}</div></div>
   <div class="card"><div class="card-h"><h2>Assigned patrols & scouts</h2></div>${ps.map(p => `<div style="margin-bottom:12px"><div class="row" style="gap:8px;margin-bottom:6px"><span class="emblem" style="background:${p.color};width:30px;height:30px;border-radius:8px">${ic(p.icon,'sm')}</span><b>${esc(p.name)}</b></div><div class="row" style="gap:4px">${sc.filter(s=>s.patrol===p.id).map(s => `<button class="chip" style="border:0;cursor:pointer" data-a="go" data-r="scout" data-id="${s.id}">${esc(s.first)}</button>`).join('')}</div></div>`).join('') || empty('flag','No patrols assigned')}</div>
