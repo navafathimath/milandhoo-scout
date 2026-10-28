@@ -803,10 +803,10 @@ textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-t
 @media (max-width:640px){ .prof-card{position:relative} .prof-card .prof-head>.btn[data-a=editUser]{position:absolute;top:12px;right:12px;height:34px;padding:0 10px;font-size:.8rem} .prof-card .prof-head:has(>.btn[data-a=editUser])>div:nth-child(2){padding-right:72px} }.prof-contact .chip{white-space:normal;max-width:100%;border-radius:12px}.prof-contact .chip>span{overflow-wrap:break-word;min-width:0}.prof-contact .chip .ic{flex:none}
 /* small download menu */
 .bdot{display:inline-block;width:10px;height:10px;border-radius:50%;flex:none}
-.bsw-btn{gap:6px;white-space:nowrap}.bsw-all-s{display:none}.bsw-btn .bdot{margin-right:2px}
+.bsw-btn{gap:6px;white-space:nowrap;font-size:.8rem;height:36px;padding:0 12px}.bic{display:inline-grid;place-items:center;flex:none;color:var(--ink-2)}.bic svg{width:15px;height:15px}.bsw-all-s{display:none}.bsw-btn .bdot{margin-right:2px}
 .bsw-pop{position:absolute;left:0;top:calc(100% + 4px);min-width:100%;width:max-content;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:4px;z-index:60;display:flex;flex-direction:column;gap:2px}
-.bsw-it{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:0;border-radius:8px;background:none;cursor:pointer;font:600 .88rem var(--f-ui);color:var(--ink);text-align:left;white-space:nowrap}
-.bsw-it:hover{background:var(--wash)}.bsw-it.on{background:var(--wash)}.bsw-it .grow{flex:1}.bsw-it .num{color:var(--ink-2);font-weight:500;font-size:.8rem;margin-left:10px}
+.bsw-it{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:0;border-radius:8px;background:none;cursor:pointer;font:600 .8rem var(--f-ui);color:var(--ink);text-align:left;white-space:nowrap}
+.bsw-it:hover{background:var(--wash)}.bsw-it.on{background:var(--wash)}.bsw-it .grow{flex:1}.bsw-it .num{color:var(--ink-2);font-weight:500;font-size:.74rem;margin-left:10px}
 .bstrip{display:none;align-items:center;gap:10px;padding:7px 24px;background:color-mix(in srgb,var(--bc,#9AA8B2) 10%,var(--surface));border-bottom:1px solid var(--line);border-left:4px solid var(--bc,transparent);font-size:.88rem}
 .bstrip.on{display:flex}.bstrip .bs-t{flex:1;min-width:0}.bstrip .bs-n .bdot{margin-right:8px;vertical-align:0}.bsw-m{display:none}
 .syl-plan .inp{height:34px;padding:0 8px;width:150px}.bst{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap}
@@ -814,7 +814,7 @@ textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-t
 @media (max-width:640px){ .syl-plan thead{display:none} .syl-plan,.syl-plan tbody,.syl-plan td{display:block} .syl-plan tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 12px;padding:12px;border-bottom:1px solid var(--line-2)} .syl-plan td{border:0!important;padding:0!important;min-width:0!important} .syl-plan td:first-child{grid-column:1/-1} .syl-plan td[data-l]::before{content:attr(data-l);display:block;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin-bottom:3px} .syl-plan .inp{width:100%} }
 .btag{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--wash);color:var(--ink-2);white-space:nowrap}
 .bsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}.bsum>button{text-align:left;border:1px solid var(--line);border-left:5px solid var(--bc);border-radius:12px;padding:12px 14px;background:var(--surface);cursor:pointer;display:flex;flex-direction:column;gap:4px;color:inherit;font:inherit}
-@media (max-width:900px){ .bsw-top{display:none} .bstrip{padding:5px 12px;gap:8px;font-size:.82rem} .bsw-m{display:block;flex:none} .bsw-m .bsw-btn{height:34px;padding:0 8px;gap:4px;font-size:.8rem} .bsw-m .bsw-all{display:none} .bsw-m .bsw-all-s{display:inline} .top-right{gap:2px} .top .icon-btn{width:38px} .bsw-m .bsw-it{height:32px;font-size:.82rem} .bs-x span{display:none} }
+@media (max-width:900px){ .bsw-top{display:none} .bstrip{padding:5px 12px;gap:8px;font-size:.82rem} .bsw-m{display:block;flex:none} .top{gap:4px} .bsw-m .bsw-btn{height:34px;padding:0 8px;gap:4px;font-size:.76rem} .bsw-m .bsw-all{display:none} .bsw-m .bsw-all-s{display:inline} .top-right{gap:2px} .top .icon-btn{width:38px} .bsw-m .bsw-it{height:32px;font-size:.78rem} .bs-x span{display:none} }
 @media (max-width:380px){ .top{gap:4px;padding:8px 8px} .top .icon-btn{width:34px;height:38px} .top .logo-m{width:30px;height:30px} .bsw-m .bsw-btn>svg:last-child{display:none} .prof-btn{padding:2px} .prof-btn>svg{display:none} }
 @media (max-width:350px){ #theme-btn{display:none} }
 details.dd{position:relative}details.dd>summary{list-style:none;cursor:pointer}details.dd>summary::-webkit-details-marker{display:none}
@@ -1630,13 +1630,13 @@ function renderApp(){ twoTerms(); schoolDays();
   renderMain();
 }
 /* batch switcher: in the top bar on computers, inside the reminder strip under the header on phones */
-function bswSum(){ const b = curBatch(); return `<summary class="btn bsw-btn" aria-label="Choose batch">${b ? `<span class="bdot" style="background:${b.color}"></span>${esc(b.name)}` : `${ic('users','sm')}<span class="bsw-all">All batches</span><span class="bsw-all-s">All</span>`}${ic('down','sm')}</summary>`; }
+function bswSum(){ const b = curBatch(); return `<summary class="btn bsw-btn" aria-label="Choose batch">${b ? `<span class="bic" style="color:${b.color}">${ic('users','sm')}</span>${esc(b.name)}` : `<span class="bic">${ic('users','sm')}</span><span class="bsw-all">All batches</span><span class="bsw-all-s">All</span>`}${ic('down','sm')}</summary>`; }
 function bswPop(){ const cnt = id => activeScouts().filter(s => !id || s.batch===id).length, cb = curBatch()?.id || '';
-  const row = (id, name, col, tip) => `<button class="bsw-it ${cb===id?'on':''}" data-a="setBatch" data-id="${id}" ${tip?`title="${esc(tip)}"`:''}><span class="bdot" style="background:${col}"></span><span class="grow">${esc(name)}</span><span class="num">${cnt(id)}</span></button>`;
+  const row = (id, name, col, tip) => `<button class="bsw-it ${cb===id?'on':''}" data-a="setBatch" data-id="${id}" ${tip?`title="${esc(tip)}"`:''}><span class="bic" style="color:${col}">${ic('users','sm')}</span><span class="grow">${esc(name)}</span><span class="num">${cnt(id)}</span></button>`;
   return `<div class="bsw-pop">${row('', 'All batches', '#9AA8B2')}${batches().map(b => row(b.id, b.name, b.color, b.stage)).join('')}</div>`; }
 function bStrip(){ const b = curBatch(), n = b ? viewScouts().length : 0;
   return `<div class="bstrip ${b?'on':''}" id="bstrip" ${b?`style="--bc:${b.color}"`:''}>
-    <span class="bs-t">${b ? `<span class="bs-n"><span class="bdot" style="background:${b.color}"></span>Showing <b>${esc(b.name)}</b> · </span>${esc(b.stage)} · ${n} scout${n===1?'':'s'}` : '<span class="muted">Showing every batch</span>'}</span>
+    <span class="bs-t">${b ? `<span class="bs-n"><span class="bic" style="color:${b.color};vertical-align:-3px;margin-right:6px">${ic('users','sm')}</span>Showing <b>${esc(b.name)}</b> · </span>${esc(b.stage)} · ${n} scout${n===1?'':'s'}` : '<span class="muted">Showing every batch</span>'}</span>
     ${b ? `<button class="btn sm ghost bs-x" data-a="setBatch" data-id="" aria-label="Show all batches">${ic('x','sm')}<span>Show all</span></button>` : ''}</div>`; }
 A.setBatch = el => { CUR_B = el.dataset.id || ''; try { localStorage.setItem('tm_batch', CUR_B); } catch(e){} el.closest('details')?.removeAttribute('open'); renderApp(); };
 function updateChrome(){
