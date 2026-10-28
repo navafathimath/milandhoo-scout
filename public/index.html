@@ -2814,10 +2814,10 @@ VIEWS.sessions = () => { const tab = R.tab || 'upcoming'; const t = TODAY();
       ${!s.template ? `<div class="row small muted" style="gap:12px;margin-top:auto">${reg ? `<span>${ic('clipboard','sm')} ${regCounts(reg).pct}% attended</span>` : ''}${s.reflection ? `<span>${ic('edit','sm')} Reflection</span>` : ''}${s.photos.length ? `<span>${ic('image','sm')} ${s.photos.length} photos</span>` : ''}<span>${s.materials.filter(m=>m.done).length}/${s.materials.length} materials ready</span></div>` : ''}</button>`; }).join('') || empty('fire', tab==='templates' ? 'No templates yet' : 'No sessions here', can('session.edit') ? 'Plan a session to get started.' : '')}</div>`; };
 /* Printable session plan: details, objectives, timeline, materials checklist, risk notes and space for notes. */
 A.sessionPDF = el => withPDF(async () => { el.closest('details')?.removeAttribute('open'); const s = S.sessions.find(x => x.id===el.dataset.id); if(!s) return; toast('Preparing the PDF…');
-  const c = await sessionCanvas(s), jsPDF = await getPDF(), doc = new jsPDF({ unit:'pt', format:'a4' }), W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+  const c = await sessionCanvas(s, 4), jsPDF = await getPDF(), doc = new jsPDF({ unit:'pt', format:'a4' }), W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
   const pxPerPt = c.width / W, pageH = Math.floor(H * pxPerPt); let y = 0, first = true;
   while(y < c.height){ const h2 = Math.min(pageH, c.height - y), part = document.createElement('canvas'); part.width = c.width; part.height = h2; part.getContext('2d').drawImage(c, 0, y, c.width, h2, 0, 0, c.width, h2);
-    if(!first) doc.addPage(); doc.addImage(part.toDataURL('image/jpeg', .92), 'JPEG', 0, 0, W, h2 / pxPerPt); first = false; y += h2; }
+    if(!first) doc.addPage(); doc.addImage(part, 'PNG', 0, 0, W, h2 / pxPerPt, undefined, 'FAST'); first = false; y += h2; }
   await saveFile(sessionFile(s, 'pdf'), doc.output('blob')); });
 /* Session plan sheet (design B, "agenda board"): drawn as HTML, captured with html2canvas for the photo and the PDF. */
 const SES_COL = { Attendance:'#1F6FA8', Opening:'#128944', Inspection:'#6B5B9A', Game:'#C2410C', Skills:'#B8860B', Activity:'#2F6F8F', 'Patrol time':'#0F766E', Break:'#7A8D9B', Closing:'#0B3A5C' };
@@ -2856,14 +2856,14 @@ function sessionSheet(s){ const lg = (S.settings.logo && imgData(S.settings.logo
       ${syl.length || bdg.length ? sec('🗺 Syllabus & badges') + `<div style="font-size:13px">${esc([...syl, ...bdg].join(' · '))}</div>` : ''}
       ${s.reflection ? sec('📝 Reflection') + `<div style="font-size:13px">${esc(s.reflection)}</div>` : ''}</div></div>
   <div style="display:flex;justify-content:space-between;padding:10px 30px;background:#F4F8FB;font-size:11px;color:#7A8D9B;border-top:1px solid #E1EAF1"><span>Milandhoo Scout Portal</span><span>Printed ${fmtD(TODAY())}</span></div></div>`; }
-async function sessionCanvas(s){ await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+async function sessionCanvas(s, scale=2){ await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
   const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-10000px;top:0;zoom:1'; box.innerHTML = sessionSheet(s); document.body.appendChild(box);
   try { await Promise.all([...box.querySelectorAll('img')].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
-    return await window.html2canvas(box.firstElementChild, { scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false }); } finally { box.remove(); } }
+    return await window.html2canvas(box.firstElementChild, { scale, backgroundColor:'#ffffff', useCORS:true, logging:false }); } finally { box.remove(); } }
 const sessionFile = (s, ext) => `session-${(s.title||'plan').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}${s.date ? '-' + s.date : ''}.${ext}`;
 document.addEventListener('click', e => document.querySelectorAll('details.dd[open]').forEach(d => { if(!d.contains(e.target)) d.removeAttribute('open'); }));
 A.sessionPNG = el => { const s = S.sessions.find(x => x.id===el.dataset.id); if(!s) return; el.closest('details')?.removeAttribute('open'); toast('Preparing the picture…');
-  (async () => { try { const c = await sessionCanvas(s); const blob = await new Promise(r => c.toBlob(r, 'image/png')); await saveFile(sessionFile(s, 'png'), blob); }
+  (async () => { try { const c = await sessionCanvas(s, 3); const blob = await new Promise(r => c.toBlob(r, 'image/png')); await saveFile(sessionFile(s, 'png'), blob); }
     catch(e){ console.error(e); toast('Could not make the picture. Check your connection and try again.'); } })(); };
 VIEWS.session = () => { const s = S.sessions.find(x => x.id===R.id); if(!s) return empty('fire','Session not found'); const ed = can('session.edit');
   const reg = s.registerId && S.registers.find(r => r.id===s.registerId); const past = s.date && s.date <= TODAY();
