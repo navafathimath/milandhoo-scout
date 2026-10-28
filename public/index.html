@@ -2245,7 +2245,7 @@ I.cropZoom = el => { CROP.z = +el.value; drawCrop(); };
 function drawCrop(cv = $('#crop-cv'), size = 640){ const { im, z, x, y } = CROP; const ctx = cv.getContext('2d'); const base = Math.max(size/im.width, size/im.height) * z; const w = im.width*base, h = im.height*base; const k = size/640;
   ctx.fillStyle = '#111'; ctx.fillRect(0,0,size,size); ctx.drawImage(im, (size-w)/2 + x*k, (size-h)/2 + y*k, w, h); }
 A.cropSave = el => { const out = document.createElement('canvas'); out.width = out.height = 400; drawCrop(out, 400); const url = out.toDataURL('image/jpeg', .85);
-  const o = el.dataset.k==='scout' ? scout(el.dataset.id) : user(el.dataset.id); dropImg(o.photo); o.photo = putImg(url); audit(`Updated photo for ${o.name || sname(o)}`); closeModal(); CROP = null; renderApp(); toast('Photo saved'); };
+  const o = el.dataset.k==='scout' ? scout(el.dataset.id) : user(el.dataset.id); dropImg(o.photo); o.photo = putImg(url); audit(`Updated photo for ${o.name || sname(o)}`); save(); closeModal(); CROP = null; renderApp(); toast('Photo saved'); };
 /* ---- bulk profile photos: pick many images, match each to a scout by file name, save all at once ---- */
 let BULK = [];
 const normName = t => String(t||'').toLowerCase().replace(/\.[a-z0-9]+$/,'').replace(/[^a-z0-9]+/g,' ').trim();
