@@ -1293,7 +1293,7 @@ const seesUser = u => u && (u.role!=='admin' || ME?.role==='admin');
 const isScout = () => ME && ME.role==='scout';
 const user = id => S.users.find(u => u.id===id);
 const scout = id => S.scouts.find(s => s.id===id);
-const patrol = id => S.patrols.find(p => p.id===id);
+const patrol = id => id ? S.patrols.find(p => p.id===id) : undefined;
 const badge = id => S.badges.find(b => b.id===id);
 const sname = s => s ? `${s.first} ${s.last}` : '—';
 const activeScouts = () => S.scouts.filter(s => s.status==='Active' || s.status==='Pending');
@@ -1308,6 +1308,10 @@ let CUR_B = (() => { try { return localStorage.getItem('tm_batch') || ''; } catc
 const curBatch = () => !ME || isScout() ? null : batchOf(CUR_B) || null;
 const inBatch = s => { const b = curBatch(); return !b || s.batch===b.id; };
 const viewScouts = () => activeScouts().filter(inBatch);
+/* Patrol points: p.points is the troop total; p.bpts[batchId] is what the patrol earned in each batch.
+   With a batch selected, leaderboards show that batch's points. */
+const ptsOf = p => { const b = curBatch(); return b ? (p.bpts?.[b.id] || 0) : (p.points || 0); };
+function addPts(p, n, bid){ p.points = Math.max(0, (p.points||0) + n); if(bid){ p.bpts = p.bpts || {}; p.bpts[bid] = Math.max(0, (p.bpts[bid]||0) + n); } }
 const isBReg = v => String(v||'').startsWith('b:');
 /* a register is shown for a batch when it is that batch's, the whole troop's, or a patrol with scouts in the batch */
 const regInBatch = r => { const b = curBatch(); return !b || r.patrol==='all' || r.patrol==='b:'+b.id || (!isBReg(r.patrol) && S.scouts.some(s => s.patrol===r.patrol && s.batch===b.id)); };
@@ -1791,7 +1795,7 @@ VIEWS.dashboard = () => {
   const mem = MEMBER_ST.map((st,i) => ({ l:st, v:S.scouts.filter(s => s.status===st).length, c:['#0977B6','#8FA6B6','#128944','#B5483F'][i] }));
   const pRows = S.patrols.map(p => { const ms = S.scouts.filter(s => s.patrol===p.id); const earned = ms.reduce((a,s)=>a+s.badges.length,0);
     return { label:p.name, color:p.color, segs:[{v:earned, c:'var(--gold)', n:'earned'}] }; });
-  const lb = [...S.patrols].sort((a,b) => b.points - a.points);
+  const lb = [...S.patrols].sort((a,b) => ptsOf(b) - ptsOf(a));
   const mo = new Date().getMonth(); const bdays = S.scouts.filter(s => s.status!=='Inactive' && pd(s.dob).getMonth()===mo).sort((a,b) => pd(a.dob).getDate() - pd(b.dob).getDate());
   const latest = [...S.photos].filter(p => !p.private || !isScout()).sort((a,b)=>b.ts-a.ts).slice(0,6);
   const kpis = [
@@ -1834,7 +1838,7 @@ VIEWS.dashboard = () => {
   <div class="grid g2" style="margin-bottom:16px">
     <div class="card"><div class="card-h"><h2>Badges earned by patrol</h2></div>${hbars(pRows)}</div>
     <div class="card"><div class="card-h"><h2>Patrol leaderboard</h2><button class="btn sm ghost" data-a="go" data-r="patrols">All patrols ${ic('right','sm')}</button></div>
-      ${lb.map((p,i) => `<div class="lb-row"><span class="lb-rank ${i===0?'r1':''}">${i+1}</span><span class="emblem" style="background:${p.color};width:36px;height:36px;border-radius:10px">${ic(p.icon,'sm')}</span><div style="flex:1;min-width:0"><b>${esc(p.name)}</b><div class="small muted">${S.scouts.filter(s=>s.patrol===p.id).length} scouts · ${patrolAtt(p.id)}% attendance</div></div><b class="num" style="font-family:var(--f-head);font-size:1.2rem">${p.points}</b><span class="small muted">pts</span></div>`).join('')}</div>
+      ${lb.map((p,i) => `<div class="lb-row"><span class="lb-rank ${i===0?'r1':''}">${i+1}</span><span class="emblem" style="background:${p.color};width:36px;height:36px;border-radius:10px">${ic(p.icon,'sm')}</span><div style="flex:1;min-width:0"><b>${esc(p.name)}</b><div class="small muted">${S.scouts.filter(s=>s.patrol===p.id && inBatch(s)).length} scouts · ${patrolAtt(p.id)}% attendance</div></div><b class="num" style="font-family:var(--f-head);font-size:1.2rem">${ptsOf(p)}</b><span class="small muted">pts</span></div>`).join('')}</div>
   </div>
   <div class="grid g3" style="margin-bottom:16px">
     <div class="card"><div class="card-h"><h2>Upcoming</h2><button class="btn sm ghost" data-a="go" data-r="calendar">Calendar</button></div><div class="list">${up.map(e => `<button class="li" style="border-left:0;border-right:0;border-top:0;background:none;text-align:left;cursor:pointer;width:100%" data-a="openEvent" data-id="${e.id}" data-occ="${e.occ}"><span class="agenda-date" style="width:44px"><span class="small muted">${MON[pd(e.occ).getMonth()]}</span><b style="font-size:1.25rem">${pd(e.occ).getDate()}</b></span><span class="grow"><span class="ttl" style="display:block">${esc(e.title)}</span><span class="small muted">${EVENT_TYPES[e.type].label}${e.start?' · '+fmtT(e.start):''}</span></span><span class="ev-dot" style="background:${EVENT_TYPES[e.type].color}"></span></button>`).join('') || empty('calendar','No upcoming events')}</div></div>
@@ -2595,7 +2599,9 @@ A.regDraft = () => { save(); toast('Draft saved'); };
 A.regFinalize = () => { const r = curReg(); const c = regCounts(r);
   const go2 = () => { r.status = 'final'; r.finalizedAt = Date.now(); r.finalizedBy = ME.id; audit(`Finalized register ${fmtD(r.date)} (${c.pct}% attendance)`);
     lowAttendance().forEach(({ s, a }) => { if(!S.notifications.some(n => n.type==='attendance' && n.link?.id===s.id && Date.now()-n.ts < 14*86400000)) notify('attendance', `Low attendance: ${sname(s)}`, `Attendance is ${a.pct}%, below the ${S.settings.lowAttendance}% threshold.`, { route:'scout', id:s.id }); });
-    S.patrols.forEach(p => { const ids = regScouts(r).filter(s=>s.patrol===p.id); const pres = ids.filter(s => ['P','L'].includes(r.entries[s.id]?.s)).length; if(ids.length && pres===ids.length) { p.points += 10; } });
+    const came = s => ['P','L'].includes(r.entries[s.id]?.s);
+    S.patrols.forEach(p => { const ids = regScouts(r).filter(s=>s.patrol===p.id); if(ids.length && ids.every(came)) p.points += 10;
+      batches().forEach(b => { const bi = ids.filter(s => s.batch===b.id); if(bi.length && bi.every(came)){ p.bpts = p.bpts || {}; p.bpts[b.id] = (p.bpts[b.id]||0) + 10; } }); });
     refresh(); toast('Register finalized and locked'); regSylPrompt(r); };
   if(c.U) confirmBox(`${c.U} scout${c.U>1?'s are':' is'} still unmarked. Finalize anyway? Unmarked scouts are left out of attendance figures.`, go2, 'Finalize'); else confirmBox('Finalize and lock this register? Only the Group Scout Leader can edit it afterwards. Patrols with full attendance earn 10 points.', go2, 'Finalize'); };
 /* After finalizing a register linked to a session with syllabus items: sign off the scouts who came.
@@ -2659,15 +2665,15 @@ A.repPDF = () => withPDF(async () => { const d = repData(); const per = R.q.rp &
 /* ================= Patrols ================= */
 VIEWS.patrols = () => {
   const ed = can('patrol.edit');
-  const ranked = [...S.patrols].sort((a,b) => b.points - a.points || a.name.localeCompare(b.name));
-  const maxP = Math.max(1, ...S.patrols.map(p => p.points)), rankOf = id => ranked.findIndex(p => p.id===id) + 1;
-  const step = (p, cls, n) => p ? `<div class="pt-st ${cls}"><span class="pt-pen" style="background:${p.color}">${ic(p.icon)}</span><b>${esc(p.name)}</b><small>${p.points} point${p.points===1?'':'s'}</small><div class="pt-blk">${n}</div></div>` : '<div class="pt-st"></div>';
+  const ranked = [...S.patrols].sort((a,b) => ptsOf(b) - ptsOf(a) || a.name.localeCompare(b.name));
+  const maxP = Math.max(1, ...S.patrols.map(ptsOf)), noP = S.scouts.filter(s => !patrol(s.patrol) && s.status!=='Inactive' && inBatch(s)).length, rankOf = id => ranked.findIndex(p => p.id===id) + 1;
+  const step = (p, cls, n) => p ? `<div class="pt-st ${cls}"><span class="pt-pen" style="background:${p.color}">${ic(p.icon)}</span><b>${esc(p.name)}</b><small>${ptsOf(p)} point${ptsOf(p)===1?'':'s'}</small><div class="pt-blk">${n}</div></div>` : '<div class="pt-st"></div>';
   return `${pageH('Troop structure', 'Patrols', ed ? `<button class="btn primary" data-a="patrolForm">${ic('plus','sm')} New patrol</button>` : '')}
   ${S.patrols.length ? `<div class="pt-board">
     <div class="pt-pod"><span class="pt-glow"></span><h2>Points leaderboard</h2><p>Full-attendance registers add 10 points · badge awards add 5</p>
       <div class="pt-steps">${step(ranked[1],'g2',2)}${step(ranked[0],'g1',1)}${step(ranked[2],'g3',3)}</div></div>
-    <div class="card pt-all"><h2>All patrols</h2><div class="small muted">${ed ? 'Use ± to add or take away points' : 'Ranked by points'}</div>
-      ${ranked.map((p,i) => `<div class="pt-row"><span class="pt-n">${i+1}</span><span class="emblem" style="background:${p.color}">${ic(p.icon,'sm')}</span><b>${esc(p.name)}</b><span class="pt-bar"><i style="width:${p.points*100/maxP}%;background:${p.color}"></i></span><span class="pt-pt">${p.points}</span>${ed ? `<button class="btn sm" data-a="points" data-id="${p.id}" aria-label="Adjust points for ${esc(p.name)}">±</button>` : ''}</div>`).join('')}</div></div>` : ''}
+    <div class="card pt-all"><h2>${curBatch() ? esc(curBatch().name) + ' points' : 'All patrols'}</h2><div class="small muted">${curBatch() ? `Points earned in ${esc(curBatch().name)} only. ` : ''}${ed ? 'Use ± to add or take away points' : 'Ranked by points'}</div>
+      ${ranked.map((p,i) => `<div class="pt-row"><span class="pt-n">${i+1}</span><span class="emblem" style="background:${p.color}">${ic(p.icon,'sm')}</span><b>${esc(p.name)}</b><span class="pt-bar"><i style="width:${ptsOf(p)*100/maxP}%;background:${p.color}"></i></span><span class="pt-pt">${ptsOf(p)}</span>${ed ? `<button class="btn sm" data-a="points" data-id="${p.id}" aria-label="Adjust points for ${esc(p.name)}">±</button>` : ''}</div>`).join('')}${noP ? `<div class="pt-row pt-nop"><span class="pt-n">–</span><span class="emblem" style="background:#9AA8B2">${ic('users','sm')}</span><b>No patrol <small class="muted" style="font-weight:500">· ${noP} scout${noP>1?'s':''}</small></b><span class="pt-bar"><i style="width:0"></i></span><span class="pt-pt muted">0</span>${ed ? '<span style="width:34px"></span>' : ''}</div>` : ''}</div></div>` : ''}
   ${ed && S.patrols.length ? `<p class="small muted" style="margin-bottom:10px">${ic('grip','sm')} Drag scouts between patrols, or use the move menu on touch screens.</p>` : ''}
   <div class="pt-grid">${S.patrols.map(p => { const ms = S.scouts.filter(s => s.patrol===p.id && inBatch(s)).sort((a,b) => (a.id===p.pl?-2:a.id===p.apl?-1:0) - (b.id===p.pl?-2:b.id===p.apl?-1:0) || sname(a).localeCompare(sname(b)));
     const badgesN = ms.reduce((a,s)=>a+s.badges.length,0), pl = scout(p.pl), lead = p.leaders.map(id => user(id)).filter(u => seesUser(u)).map(u => esc(u.name)).join(', ');
@@ -2694,8 +2700,8 @@ function moveScout(sid, pid){ const s = scout(sid); if(pid==='__none') pid = nul
   if(old){ if(old.pl===sid) old.pl = null; if(old.apl===sid) old.apl = null; } s.patrol = pid; audit(`Moved ${sname(s)} from ${old?.name || 'no patrol'} to ${to}`); refresh(); toast(`${s.first} moved to ${to}`); }
 C.colorCustom = el => $$('input[name=color]').forEach(r => r.checked = false);
 C.moveScout = el => moveScout(el.dataset.sid, el.value);
-A.points = el => { const p = patrol(el.dataset.id); modal({ title:`Adjust points: ${esc(p.name)}`, form:'points', body:`<input type="hidden" name="id" value="${p.id}"><div class="form-grid">${field('Points (use minus to deduct)', inp('n','5','type="number" step="1" required'))}${field('Reason', inp('why','Uniform inspection'))}</div>`, foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Apply</button>` }); };
-F.points = d => { const p = patrol(d.id); const n = parseInt(d.n,10)||0; p.points = Math.max(0, p.points + n); audit(`${n>=0?'Added':'Deducted'} ${Math.abs(n)} points ${n>=0?'to':'from'} ${p.name}: ${d.why}`); closeModal(); refresh(); toast(`${p.name}: ${n>=0?'+':''}${n} points`); };
+A.points = el => { const p = patrol(el.dataset.id); modal({ title:`Adjust points: ${esc(p.name)}${curBatch() ? ' · ' + esc(curBatch().name) : ''}`, form:'points', body:`<input type="hidden" name="id" value="${p.id}"><div class="form-grid">${field('Points (use minus to deduct)', inp('n','5','type="number" step="1" required'))}${field('Reason', inp('why','Uniform inspection'))}</div>`, foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Apply</button>` }); };
+F.points = d => { const p = patrol(d.id); const n = parseInt(d.n,10)||0; addPts(p, n, curBatch()?.id); audit(`${n>=0?'Added':'Deducted'} ${Math.abs(n)} points ${n>=0?'to':'from'} ${p.name}${curBatch() ? ' (' + curBatch().name + ')' : ''}: ${d.why}`); closeModal(); refresh(); toast(`${p.name}: ${n>=0?'+':''}${n} points`); };
 A.patrolForm = el => { const p = el?.dataset?.id ? patrol(el.dataset.id) : { name:'', color:'#4F7A5A', icon:'flag', motto:'', pl:'', apl:'', leaders:[] }; const ms = p.id ? S.scouts.filter(s=>s.patrol===p.id) : [];
   const presets = ['#0977B6','#128944','#0A5C8F','#4A9A6E','#5E9FC8','#6B5B7A','#A0613F','#B5483F'];
   modal({ title: p.id ? 'Edit patrol' : 'New patrol', wide:true, form:'patrol', body:`${p.id?`<input type="hidden" name="id" value="${p.id}">`:''}<div class="form-grid">
@@ -2738,7 +2744,7 @@ function signReq(s, b, i, on){ s.badgeProgress[b.id] = s.badgeProgress[b.id] || 
   audit(`${on?'Signed off':'Cleared'} ${b.name} requirement ${i+1} for ${sname(s)}`); }
 C.reqTick = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); signReq(s, b, +el.dataset.i, el.checked); refresh(); };
 A.bulkAward = el => { const ids = $$('.bulk-award:checked').map(x => x.value); if(!ids.length) return toast('Select scouts who have completed every requirement'); awardTo(ids, el.dataset.bid, TODAY()); refresh(); };
-function awardTo(ids, bid, date){ const b = badge(bid); let n = 0; ids.forEach(id => { const s = scout(id); if(!s || hasBadge(s,bid)) return; s.badges.push({ badgeId:bid, date, by:ME.id }); s.badgeProgress[bid] = Object.fromEntries(b.reqs.map((_,i) => [i, (s.badgeProgress[bid]||{})[i] || { date, by:ME.id }])); const p = patrol(s.patrol); if(p) p.points += 5; n++; });
+function awardTo(ids, bid, date){ const b = badge(bid); let n = 0; ids.forEach(id => { const s = scout(id); if(!s || hasBadge(s,bid)) return; s.badges.push({ badgeId:bid, date, by:ME.id }); s.badgeProgress[bid] = Object.fromEntries(b.reqs.map((_,i) => [i, (s.badgeProgress[bid]||{})[i] || { date, by:ME.id }])); const p = patrol(s.patrol); if(p) addPts(p, 5, batchOf(s.batch)?.id); n++; });
   if(n){ notify('badge', `${b.name} awarded to ${n} scout${n>1?'s':''}`, ids.slice(0,6).map(id => sname(scout(id))).join(', '), { route:'badge', id:bid }); audit(`Awarded ${b.name} to ${n} scout${n>1?'s':''}`); toast(`${b.name} awarded to ${n} scout${n>1?'s':''}`); } else toast('Those scouts already hold this badge'); }
 A.awardBadge = el => { const bid = el?.dataset?.bid || S.badges[0].id; const pre = el?.dataset?.sid;
   modal({ title:'Award badges', wide:true, form:'award', body:`<div class="form-grid"><div class="field"><label>Badge</label>${badgePick(bid)}</div>${field('Date awarded', inp('date', TODAY(), 'type="date"'))}</div>
@@ -3576,7 +3582,7 @@ F.clearScouts = d => { if(String(d.confirm).trim().toUpperCase()!=='DELETE') ret
   S.sessions.forEach(x => x.registerId = null); S.photos.forEach(p => p.tags = []);
   S.users.forEach(u => { if(u.scoutId) u.scoutId = null; });
   S.notifications = S.notifications.filter(x => !(x.link && x.link.route==='scout'));
-  if(d.patrols) S.patrols = []; else S.patrols.forEach(p => { p.pl = null; p.apl = null; p.points = 0; });
+  if(d.patrols) S.patrols = []; else S.patrols.forEach(p => { p.pl = null; p.apl = null; p.points = 0; p.bpts = {}; });
   audit(`Removed all ${n} scouts and their attendance${d.patrols?' and all patrols':''}`); closeModal(); save(); renderApp(); toast(`Removed ${n} scouts`); };
 A.resetDemo = () => confirmBox('Erase everything and reload the sample troop? Download a backup first if you want to keep your data.', async () => { await Store.clear('img'); for(const k in IMG) delete IMG[k]; S = await buildSeed(); ME = S.users.find(u => u.id===ME.id) || S.users[0]; if(Cloud.on) Cloud.afterReplace(); genReminders(); if(!Cloud.on) await Store.set('kv','state', S); R.route = 'dashboard'; renderApp(); toast('Sample data restored'); }, 'Reset');
 
