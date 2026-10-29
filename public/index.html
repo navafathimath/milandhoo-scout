@@ -769,9 +769,13 @@ summary::-webkit-details-marker{display:none}
 .pt-blk{margin-top:10px;border-radius:12px 12px 0 0;display:grid;place-items:center;font:800 1.6rem var(--f-head)}
 .pt-st.g1 .pt-blk{height:118px;background:linear-gradient(#E9C547,#C9A227);color:#5B4300}.pt-st.g2 .pt-blk{height:88px;background:linear-gradient(#E5ECF2,#B9C7D3);color:#3B4B58}.pt-st.g3 .pt-blk{height:64px;background:linear-gradient(#E7B48A,#B87943);color:#4A2A10}
 .pt-all{padding:18px 20px}.pt-all h2{margin:0 0 2px;font-size:1.1rem}.pt-all>.small{margin-bottom:8px}
-.pt-row{display:grid;grid-template-columns:24px 34px minmax(70px,120px) minmax(0,1fr) 40px auto;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line-2)}
-.pt-row .emblem{width:34px;height:34px;border-radius:9px}.pt-n{font-weight:800;color:var(--ink-2);text-align:center}.pt-row b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pt-bar{height:12px;border-radius:99px;background:var(--line-2);overflow:hidden}.pt-bar i{display:block;height:100%;border-radius:99px}.pt-pt{font:700 1.1rem var(--f-head);text-align:right}
+.pt-row{display:grid;grid-template-columns:24px 34px minmax(90px,150px) minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line-2)}
+.pt-row .emblem{width:34px;height:34px;border-radius:9px}.pt-n{font-weight:800;color:var(--ink-2);text-align:center}
+.pt-who2{min-width:0;line-height:1.2}.pt-who2 b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pt-who2 small{font-size:.74rem;color:var(--ink-2)}
+.pt-trk{position:relative;height:28px;border-radius:99px;background:var(--line-2);display:flex;align-items:center;min-width:0}
+.pt-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--c) 65%,#fff),var(--c));color:#fff;font:800 .82rem var(--f-ui);display:flex;align-items:center;justify-content:flex-end;padding-right:10px;min-width:40px;flex:none}
+.pt-zero{font:800 .82rem var(--f-ui);color:var(--ink-2);padding-left:12px}.pt-gap{font-size:.72rem;color:var(--ink-2);margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt-trk.nop{background:repeating-linear-gradient(135deg,var(--line-2) 0 8px,color-mix(in srgb,var(--line-2) 60%,var(--surface)) 8px 16px)}.pt-ph{width:38px}
 .pt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;align-items:start}
 .pt-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-sm,none)}
 .pt-ban{position:relative;min-height:94px;padding:14px 16px 26px;color:#fff;display:flex;gap:12px;align-items:flex-start}
@@ -788,7 +792,7 @@ summary::-webkit-details-marker{display:none}
 .pt-who{flex:1;min-width:0;text-align:left;border:0;background:none;cursor:pointer;padding:0;color:inherit;font:inherit}.pt-who b{display:block;font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pt-who small{display:block;font-size:.72rem;color:var(--ink-2)}
 .pt-m .touch-move{width:auto;height:30px;font-size:.76rem;padding:0 6px}.pt-empty{padding:16px;text-align:center;font-size:.82rem;color:var(--ink-2);border:1px dashed var(--line);border-radius:10px;margin-top:6px}
 @media (max-width:900px){ .pt-board{grid-template-columns:minmax(0,1fr)} }
-@media (max-width:560px){ .pt-row{grid-template-columns:20px 30px minmax(0,1fr) 34px auto;gap:8px} .pt-bar{display:none} .pt-pod{padding:16px 14px 0} .pt-pen{width:46px;height:46px} }
+@media (max-width:560px){ .pt-row{grid-template-columns:14px 30px minmax(64px,92px) minmax(0,1fr) auto;gap:8px} .pt-row .emblem{width:30px;height:30px} .pt-trk{height:24px} .pt-gap{display:none} .pt-fill{min-width:34px;padding-right:8px} .pt-who2 b{font-size:.88rem} .pt-ph{width:32px} .pt-pod{padding:16px 14px 0} .pt-pen{width:46px;height:46px} }
 /* bullet points in session text; growing text boxes */
 .rt .bul{margin:2px 0 0;padding-left:18px}.rt .bul li{margin:1px 0}.rt .bul li::marker{color:var(--primary)}
 textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-top:9px;padding-bottom:9px}
@@ -2673,7 +2677,10 @@ VIEWS.patrols = () => {
     <div class="pt-pod"><span class="pt-glow"></span><h2>Points leaderboard</h2><p>Full-attendance registers add 10 points · badge awards add 5</p>
       <div class="pt-steps">${step(ranked[1],'g2',2)}${step(ranked[0],'g1',1)}${step(ranked[2],'g3',3)}</div></div>
     <div class="card pt-all"><h2>${curBatch() ? esc(curBatch().name) + ' points' : 'All patrols'}</h2><div class="small muted">${curBatch() ? `Points earned in ${esc(curBatch().name)} only. ` : ''}${ed ? 'Use ± to add or take away points' : 'Ranked by points'}</div>
-      ${ranked.map((p,i) => `<div class="pt-row"><span class="pt-n">${i+1}</span><span class="emblem" style="background:${p.color}">${ic(p.icon,'sm')}</span><b>${esc(p.name)}</b><span class="pt-bar"><i style="width:${ptsOf(p)*100/maxP}%;background:${p.color}"></i></span><span class="pt-pt">${ptsOf(p)}</span>${ed ? `<button class="btn sm" data-a="points" data-id="${p.id}" aria-label="Adjust points for ${esc(p.name)}">±</button>` : ''}</div>`).join('')}${noP ? `<div class="pt-row pt-nop"><span class="pt-n">–</span><span class="emblem" style="background:#9AA8B2">${ic('users','sm')}</span><b>No patrol <small class="muted" style="font-weight:500">· ${noP} scout${noP>1?'s':''}</small></b><span class="pt-bar"><i style="width:0"></i></span><span class="pt-pt muted">0</span>${ed ? '<span style="width:34px"></span>' : ''}</div>` : ''}</div></div>` : ''}
+      ${ranked.map((p,i) => { const v = ptsOf(p), top = ptsOf(ranked[0]), n = S.scouts.filter(s => s.patrol===p.id && s.status!=='Inactive' && inBatch(s)).length;
+        return `<div class="pt-row" style="--c:${p.color}"><span class="pt-n">${i+1}</span><span class="emblem" style="background:${p.color}">${ic(p.icon,'sm')}</span><span class="pt-who2"><b>${esc(p.name)}</b><small>${n} scout${n===1?'':'s'}</small></span>
+        <span class="pt-trk">${v ? `<span class="pt-fill" style="width:${Math.max(v*100/maxP, 12)}%">${v}</span>` : '<span class="pt-zero">0</span>'}<span class="pt-gap">${i===0 && v ? '🏆 Leader' : v < top ? `−${top - v} to #1` : ''}</span></span>
+        ${ed ? `<button class="btn sm" data-a="points" data-id="${p.id}" aria-label="Adjust points for ${esc(p.name)}">±</button>` : ''}</div>`; }).join('')}${noP ? `<div class="pt-row pt-nop"><span class="pt-n">–</span><span class="emblem" style="background:#9AA8B2">${ic('users','sm')}</span><span class="pt-who2"><b>No patrol</b><small>${noP} scout${noP>1?'s':''}</small></span><span class="pt-trk nop"><span class="pt-zero">0</span><span class="pt-gap">not in any patrol</span></span>${ed ? '<span class="pt-ph"></span>' : ''}</div>` : ''}</div></div>` : ''}
   ${ed && S.patrols.length ? `<p class="small muted" style="margin-bottom:10px">${ic('grip','sm')} Drag scouts between patrols, or use the move menu on touch screens.</p>` : ''}
   <div class="pt-grid">${S.patrols.map(p => { const ms = S.scouts.filter(s => s.patrol===p.id && inBatch(s)).sort((a,b) => (a.id===p.pl?-2:a.id===p.apl?-1:0) - (b.id===p.pl?-2:b.id===p.apl?-1:0) || sname(a).localeCompare(sname(b)));
     const badgesN = ms.reduce((a,s)=>a+s.badges.length,0), pl = scout(p.pl), lead = p.leaders.map(id => user(id)).filter(u => seesUser(u)).map(u => esc(u.name)).join(', ');
