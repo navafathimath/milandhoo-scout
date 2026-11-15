@@ -2059,13 +2059,14 @@ function scoutFilterSet(el){ R.q[el.dataset.k] = el.value; const keep = document
 I.scoutFilter = scoutFilterSet; C.scoutFilter = scoutFilterSet;
 
 /* ---- scout form ---- */
+const GRADES = Array.from({ length:8 }, (_, i) => 'Grade ' + (i + 5));   // Grade 5 to Grade 12
 function scoutForm(s){
   s = s || { first:'', last:'', dob:'', grade:'Grade 6', section:'A', patrol:'', rank:'Membership', joined:TODAY(), status:'Pending', renewal:iso(addDays(new Date(),365)), fee:'Due', photoConsent:true, guardian:{}, emergency:{}, medical:'' };
   const g = s.guardian||{}, em = s.emergency||{};
   return `<div class="form-grid">
     <div class="full eyebrow">Scout details</div>
     ${field('First name', inp('first', s.first, 'required'))}${field('Last name', inp('last', s.last, 'required'))}
-    ${field('Girl or boy', sel('gender', [['','Choose…'], ...GENDERS.map(([g])=>g)], genderOf(s.gender), 'required'))}${field('Date of birth', inp('dob', s.dob, 'type="date" required'))}${field('Class / grade', sel('grade', ['Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10'], s.grade))}
+    ${field('Girl or boy', sel('gender', [['','Choose…'], ...GENDERS.map(([g])=>g)], genderOf(s.gender), 'required'))}${field('Date of birth', inp('dob', s.dob, 'type="date" required'))}${field('Class / grade', sel('grade', [...new Set([...GRADES, ...(s.grade ? [s.grade] : [])])], s.grade))}
     ${field('Patrol', sel('patrol', [['','No patrol'], ...S.patrols.map(p=>[p.id,p.name])], s.patrol||''))}
     ${field('Batch', sel('batch', [['','No batch'], ...batches().map(b => [b.id, `${b.name} · ${b.stage}`])], s.batch ?? curBatch()?.id ?? ''))}${field('Rank / stage', sel('rank', STAGES, s.rank))}${field('Join date', inp('joined', s.joined, 'type="date"'))}
     <div class="full eyebrow" style="margin-top:6px">Membership</div>
