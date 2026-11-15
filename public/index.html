@@ -128,7 +128,13 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
   .rfoot #reg-left{display:none} }
 
 /* scouts list: same formal template as the register */
-.sstat{position:static;margin-bottom:14px}
+.sstat{position:static;margin-bottom:14px;grid-template-columns:repeat(7,minmax(0,1fr))}.rs-F{color:var(--ink-2)}
+.fm-h,.fm-r{display:grid;grid-template-columns:34px minmax(0,1.4fr) 110px minmax(0,1.2fr) 120px auto;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line-2)}
+.fm-h{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:700;padding-top:8px;padding-bottom:8px}.fm-r{font-size:.86rem}
+.fm-nm{border:0;background:none;padding:0;text-align:left;cursor:pointer;color:inherit;font:inherit;min-width:0}.fm-nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fm-nm small{color:var(--ink-2);font-size:.76rem}.fm-nm .sl-st{font-size:.66rem;padding:1px 6px;margin-right:4px}
+.fm-r .c-show{display:none}
+.fm-ban{flex-basis:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:.86rem}.fm-ban b{display:inline-flex;align-items:center;gap:6px;color:var(--ink-2);letter-spacing:.06em}.fm-ban>span{flex:1;min-width:180px}
+@media (max-width:900px){ .fm-h{display:none} .fm-r{grid-template-columns:34px minmax(0,1fr) auto;gap:10px;padding:10px 12px} .fm-r .c-hide{display:none} .fm-r .c-show{display:inline} }
 .ss-T{--c:var(--primary)}.ss-G{--c:var(--girl)}.ss-B{--c:var(--boy)}
 .sl-r{display:grid;grid-template-columns:36px minmax(0,1.6fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,.8fr) 130px;gap:14px;align-items:center;padding:10px 16px;border:0;border-bottom:1px solid var(--line-2);background:var(--surface);width:100%;font:inherit;color:inherit;text-align:left}
 button.sl-r{cursor:pointer}button.sl-r:hover{background:var(--surface-2)}button.sl-r:hover .sl-nm b{text-decoration:underline}
@@ -141,7 +147,7 @@ button.sl-r{cursor:pointer}button.sl-r:hover{background:var(--surface-2)}button.
 .sl-att{display:flex;align-items:center;gap:8px;justify-content:flex-end}.sl-att b{font-size:.84rem;font-weight:700;min-width:38px;text-align:right}
 .sl-att i{display:block;width:64px;height:6px;border-radius:9px;background:var(--line-2);overflow:hidden}.sl-att u{display:block;height:100%;border-radius:9px}
 .sl-r .c-show{display:none}.sl-r .gset{display:flex;gap:6px;justify-content:flex-end}
-@media (max-width:900px){ .sstat{grid-template-columns:repeat(3,minmax(0,1fr))} .sl-r{grid-template-columns:34px minmax(0,1fr) auto;gap:10px;padding:10px 12px} .sl-r .c-hide{display:none} .sl-r .c-show{display:inline} .sl-att i{width:44px} }
+@media (max-width:900px){ .sstat{grid-template-columns:repeat(4,minmax(0,1fr))} .sstat>*{border-left:1px solid var(--line-2)!important} .sstat>*:nth-child(4n+1){border-left:0!important} .sstat>*:nth-child(n+5){border-top:1px solid var(--line-2)} .sl-r{grid-template-columns:34px minmax(0,1fr) auto;gap:10px;padding:10px 12px} .sl-r .c-hide{display:none} .sl-r .c-show{display:inline} .sl-att i{width:44px} }
 /* Scout Notes hub: banner + picture shelves */
 .nhero{position:relative;overflow:hidden;border-radius:22px;padding:28px 30px;color:#fff;background:linear-gradient(120deg,#0A5C8F,#0D78B6 55%,#128944);margin-bottom:22px}
 .nhero .eyebrow{color:#BFE3F7}.nhero h1{color:#fff;font-size:clamp(1.5rem,3vw,2.1rem);margin:4px 0 6px}.nhero p{margin:0 0 16px;color:#DCEEF8;max-width:60ch}
@@ -1301,6 +1307,16 @@ const patrol = id => id ? S.patrols.find(p => p.id===id) : undefined;
 const badge = id => S.badges.find(b => b.id===id);
 const sname = s => s ? `${s.first} ${s.last}` : '—';
 const activeScouts = () => S.scouts.filter(s => s.status==='Active' || s.status==='Pending');
+/* Inactive and Expired scouts are "former" scouts: kept with all their history, but left out of registers, patrols and the
+   scout list (they show only through the Status filter / Former scouts view). s.left = { date, reason, note } records why and when. */
+const isFormer = s => s.status==='Inactive' || s.status==='Expired';
+const LEAVE_REASONS = ['Graduated (finished school)','Moved school / island','Lost interest','Too busy with studies','Health','Membership not renewed','Other'];
+function setStatus(s, st, info){ const was = isFormer(s); s.status = st;
+  if(isFormer(s)){ if(!was || info) s.left = { date:info?.date || s.left?.date || TODAY(), reason:info?.reason ?? s.left?.reason ?? '', note:info?.note ?? s.left?.note ?? '' };
+    S.patrols.forEach(p => { if(p.pl===s.id) p.pl = null; if(p.apl===s.id) p.apl = null; }); }
+  else if(was){ if(s.left){ s.leftHist = [...(s.leftHist||[]), { ...s.left, back:TODAY() }]; delete s.left; } } }
+const inTroop = s => { const a = pd(s.joined || TODAY()), b = pd(s.left?.date || TODAY()); let m = (b.getFullYear()-a.getFullYear())*12 + b.getMonth()-a.getMonth(); if(b.getDate() < a.getDate()) m--; m = Math.max(0, m);
+  const y = Math.floor(m/12), mo = m % 12; return [y && `${y} yr${y>1?'s':''}`, mo && `${mo} mo${mo>1?'s':''}`].filter(Boolean).join(' ') || 'under a month'; };
 const myScout = () => isScout() ? scout(ME.scoutId) : null;
 /* ---- Batches: each scout belongs to one batch (Batch 1–4), separate from rank. Each batch works on one stage.
    Leaders pick a batch at the top (remembered per device); lists, reports and the syllabus then show only that batch. */
@@ -1335,7 +1351,7 @@ function regCounts(r){ const c = {P:0,L:0,A:0,E:0,U:0}; regScouts(r).forEach(s =
 const REG_PF = {}, REG_SF = {};  // per-register patrol filter and status filter (Present/Late/…/Unmarked)
 function regVisible(r){ const pf = REG_PF[r.id]; return regScouts(r).filter(s => inBatch(s) && (!pf || s.patrol===pf)); }
 function regCountsOf(r, list){ const c = {P:0,L:0,A:0,E:0,U:0}; list.forEach(s => { const e = r.entries[s.id]; if(e && e.s) c[e.s]++; else c.U++; }); return c; }
-function regScouts(r){ return S.scouts.filter(s => (r.patrol==='all' || (isBReg(r.patrol) ? s.batch===r.patrol.slice(2) : s.patrol===r.patrol)) && (s.status!=='Inactive' || r.entries[s.id])).sort((a,b) => (a.patrol+a.first).localeCompare(b.patrol+b.first)); }
+function regScouts(r){ return S.scouts.filter(s => (r.patrol==='all' || (isBReg(r.patrol) ? s.batch===r.patrol.slice(2) : s.patrol===r.patrol)) && (!isFormer(s) || r.entries[s.id])).sort((a,b) => (a.patrol+a.first).localeCompare(b.patrol+b.first)); }
 const regsSorted = () => [...S.registers].sort((a,b) => a.date < b.date ? 1 : -1);
 function badgePct(s, b){ const p = s.badgeProgress[b.id] || {}; return pct(Object.keys(p).length, b.reqs.length); }
 const hasBadge = (s, bid) => s.badges.some(x => x.badgeId===bid);
@@ -1526,7 +1542,7 @@ function regularSession2(){ if(!S?.sessions || S.settings.migRegular2) return;
   S.settings.migRegular2 = true; }
 /* One-time (requested): scouts who joined in 2026 start as Pending. */
 function pending2026(){ if(!S?.scouts || S.settings.migPending2026) return; let n = 0;
-  S.scouts.forEach(s => { if(String(s.joined||'').startsWith('2026') && !['Pending','Inactive'].includes(s.status)){ s.status = 'Pending'; n++; } });
+  S.scouts.forEach(s => { if(String(s.joined||'').startsWith('2026') && s.status!=='Pending' && !isFormer(s)){ s.status = 'Pending'; n++; } });
   if(n) audit(`Set ${n} scouts who joined in 2026 to Pending`); S.settings.migPending2026 = true; }
 /* One-time (requested): the "Regular meeting" session type is now "Regular session", with "Meeting" added after it. */
 function sessionTypes2(){ if(!S?.settings || S.settings.migTypes2) return; const st = S.settings;
@@ -1800,7 +1816,7 @@ VIEWS.dashboard = () => {
   const pRows = S.patrols.map(p => { const ms = S.scouts.filter(s => s.patrol===p.id); const earned = ms.reduce((a,s)=>a+s.badges.length,0);
     return { label:p.name, color:p.color, segs:[{v:earned, c:'var(--gold)', n:'earned'}] }; });
   const lb = [...S.patrols].sort((a,b) => ptsOf(b) - ptsOf(a));
-  const mo = new Date().getMonth(); const bdays = S.scouts.filter(s => s.status!=='Inactive' && pd(s.dob).getMonth()===mo).sort((a,b) => pd(a.dob).getDate() - pd(b.dob).getDate());
+  const mo = new Date().getMonth(); const bdays = S.scouts.filter(s => !isFormer(s) && pd(s.dob).getMonth()===mo).sort((a,b) => pd(a.dob).getDate() - pd(b.dob).getDate());
   const latest = [...S.photos].filter(p => !p.private || !isScout()).sort((a,b)=>b.ts-a.ts).slice(0,6);
   const kpis = [
     ['users', act.length, curBatch() ? `Active scouts · ${esc(curBatch().name)}` : 'Active scouts', `${S.scouts.filter(s=>s.status==='Pending' && inBatch(s)).length} pending`, 'scouts'],
@@ -1814,7 +1830,7 @@ VIEWS.dashboard = () => {
   const chips = [];
   if(can('attendance.take')){ const past = expandEvents(iso(addDays(pd(TODAY()), -7)), TODAY()).filter(e => e.type==='meeting' && (e.occ < TODAY() || (e.start && e.start <= `${pad(new Date().getHours())}:${pad(new Date().getMinutes())}`))).pop();
     if(past && !S.registers.some(r => r.date===past.occ)) chips.push([`📋 Attendance not taken for ${fmtD(past.occ,'dow')}`, 'attendance']); }
-  S.scouts.filter(s => s.status!=='Inactive' && s.dob && s.dob.slice(5)===TODAY().slice(5)).forEach(s => chips.push([`🎂 ${esc(s.first)}’s birthday today`, 'scout', s.id]));
+  S.scouts.filter(s => !isFormer(s) && s.dob && s.dob.slice(5)===TODAY().slice(5)).forEach(s => chips.push([`🎂 ${esc(s.first)}’s birthday today`, 'scout', s.id]));
   if(ren.length) chips.push([`🔄 ${ren.length} renewal${ren.length===1?'':'s'} due`, 'scouts']);
   const qa = [
     can('attendance.take') && ['clipboard','Take attendance','newRegister'],
@@ -1882,7 +1898,7 @@ const arShow = () => R.q.arf || 'g10';
 const AR_SHOW = [['g10','Grade 10 and above'],['all','All scouts'], ...STAGES.map(r => ['r:'+r, r])];
 const arShowLabel = () => (AR_SHOW.find(x => x[0]===arShow()) || AR_SHOW[0])[1];
 const arIn = s => { const f = arShow(); return f==='all' ? true : f.startsWith('r:') ? s.rank===f.slice(2) : arGrade(s) >= 10; };
-function arList(y){ return S.scouts.filter(s => s.status!=='Inactive' && arIn(s)).map(s => ({ s, ...arScore(s, y) }))
+function arList(y){ return S.scouts.filter(s => !isFormer(s) && arIn(s)).map(s => ({ s, ...arScore(s, y) }))
   .sort((a,b) => b.total - a.total || sname(a.s).localeCompare(sname(b.s))); }
 
 const scoutTabs = on => `<div class="tabs">${[['scouts','All scouts'],['allround','Best All-Rounder']].map(([k,l]) => `<button class="tab ${on===k?'on':''}" data-a="go" data-r="${k}">${l}</button>`).join('')}</div>`;
@@ -2003,18 +2019,18 @@ A.arRubricPDF = () => withPDF(async () => {
 VIEWS.scouts = () => {
   const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
   const list = filterScouts(f); const nG = S.scouts.filter(s => genderOf(s.gender)==='Girl').length, nB = S.scouts.filter(s => genderOf(s.gender)==='Boy').length;
-  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import / update</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkActivity">${ic('plus','sm')} Add activity</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPatrol">${ic('flag','sm')} Change patrol</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkBatch">${ic('users','sm')} Change batch</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
+  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import / update</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkActivity">${ic('plus','sm')} Add activity</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPatrol">${ic('flag','sm')} Change patrol</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkBatch">${ic('users','sm')} Change batch</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkLeave">${ic('lock','sm')} Mark inactive</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
   return `${pageH('Members', 'Scouts', acts)}${scoutTabs('scouts')}${scoutSummary()}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
     <div class="field" style="flex:2;min-width:180px"><label for="f_ss">Search</label><input class="inp" id="f_ss" type="search" placeholder="Name or scout ID" value="${esc(f.s)}" data-i="scoutFilter" data-k="s"></div>
     ${field('Patrol', `<select class="inp" data-c="scoutFilter" data-k="p">${opts([['','All patrols'], ...S.patrols.map(p=>[p.id,p.name]), ...(S.scouts.some(s => !patrol(s.patrol)) ? [['none','No patrol']] : [])], f.p)}</select>`, '" style="flex:1;min-width:130px')}
-    ${field('Status', `<select class="inp" data-c="scoutFilter" data-k="st">${opts([['','Any status'], ...MEMBER_ST], f.st)}</select>`, '" style="flex:1;min-width:130px')}
+    ${field('Status', `<select class="inp" data-c="scoutFilter" data-k="st">${opts([['','Current scouts'],['Active','Active'],['Pending','Pending'],['former','Former scouts (Inactive + Expired)'],['Inactive','Inactive'],['Expired','Expired']], f.st)}</select>`, '" style="flex:1;min-width:130px')}
     ${field('Rank', `<select class="inp" data-c="scoutFilter" data-k="rk">${opts([['','Any rank'], ...STAGES], f.rk)}</select>`, '" style="flex:1;min-width:130px')}
   </div></div>
-  <div class="rlist slist2" id="scout-list">${scoutGroups(list)}</div>`;
+  ${['former','Inactive','Expired'].includes(f.st) ? `<div class="rlist" id="scout-list">${formerRows(list)}</div>` : `<div class="rlist slist2" id="scout-list">${scoutGroups(list)}</div>`}`;
 };
 const GENDERS = [['Girl','Girls'], ['Boy','Boys']];
-function filterScouts(f){ return S.scouts.filter(s => inBatch(s) && (!f.s || (sname(s)+' '+s.sid).toLowerCase().includes(f.s.toLowerCase())) && (!f.p || (f.p==='none' ? !patrol(s.patrol) : s.patrol===f.p)) && (!f.st || s.status===f.st) && (!f.rk || s.rank===f.rk)
+function filterScouts(f){ return S.scouts.filter(s => inBatch(s) && (!f.s || (sname(s)+' '+s.sid).toLowerCase().includes(f.s.toLowerCase())) && (!f.p || (f.p==='none' ? !patrol(s.patrol) : s.patrol===f.p)) && (f.st==='former' ? isFormer(s) : f.st ? s.status===f.st : !isFormer(s)) && (!f.rk || s.rank===f.rk)
   && (!f.g || (f.g==='none' ? !genderOf(s.gender) : genderOf(s.gender)===f.g))).sort((a,b) => sname(a).localeCompare(sname(b))); }
 function genderOf(v){ v = String(v||'').trim().toLowerCase(); return ['girl','g','f','female','woman'].includes(v) ? 'Girl' : ['boy','b','m','male','man'].includes(v) ? 'Boy' : ''; }
 /* Tick lists of scouts: Girls, then Boys (then any not set), each A-Z. row(s) returns one row's HTML. */
@@ -2025,15 +2041,37 @@ function pickGroups(list, row){ const by = g => list.filter(s => genderOf(s.gend
 I.pickFind = el => { const q = el.value.trim().toLowerCase(); const box = el.nextElementSibling;
   box.querySelectorAll('.pick-g').forEach(g => { let n = 0; g.querySelectorAll('label').forEach(l => { const hit = !q || l.textContent.toLowerCase().includes(q); l.classList.toggle('hide', !hit); n += hit; }); g.classList.toggle('hide', !n); }); };
 /* Scouts page: girls and boys summary, then one table split into colour-coded GIRLS / BOYS bands. */
-function scoutSummary(){ if(!S.scouts.length) return ''; const q = R.q; const all = S.scouts.filter(inBatch);
+function scoutSummary(){ if(!S.scouts.length) return ''; const q = R.q; const inb = S.scouts.filter(inBatch), all = inb.filter(s => !isFormer(s)), fm = inb.filter(isFormer).length;
   const avg = l => { const a = l.map(s => attOf(s.id)).filter(x => x.total); return a.length ? Math.round(a.reduce((t,x) => t+x.pct, 0)/a.length) : null; };
   const nG = all.filter(s => genderOf(s.gender)==='Girl').length, nB = all.filter(s => genderOf(s.gender)==='Boy').length, av2 = avg(all);
   const box = (cls, k, v, n, l) => { const on = k && (q[k]||'')===v; const dim = k && q[k] && !on;
     return `<button class="${cls} ${on?'on':''} ${dim?'dim':''}" data-a="scoutStat" data-k="${k}" data-v="${v}" aria-pressed="${on}"><b class="num">${n}</b><span>${l}</span></button>`; };
   return `<div class="rstat sstat">${box('ss-T','','',all.length,curBatch() ? esc(curBatch().name) : 'All scouts')}${box('ss-G','g','Girl',nG,'Girls')}${box('ss-B','g','Boy',nB,'Boys')}
     ${box('rs-P','st','Active',all.filter(s=>s.status==='Active').length,'Active')}${box('rs-L','st','Pending',all.filter(s=>s.status==='Pending').length,'Pending')}
-    <div class="rs-T"><b class="num">${av2!=null?av2+'%':'—'}</b><span>Avg attendance</span></div></div>`; }
+    ${box('rs-F','st','former',fm,'Former')}<div class="rs-T"><b class="num">${av2!=null?av2+'%':'—'}</b><span>Attendance</span></div></div>`; }
 A.scoutStat = el => { const k = el.dataset.k; if(!k){ delete R.q.g; delete R.q.st; } else R.q[k] = (R.q[k]||'')===el.dataset.v ? '' : el.dataset.v; renderMain(); };
+/* Former scouts view: when and why each one left, how long they were in the troop, and a Rejoin button. */
+function formerRows(list){ if(!list.length) return empty('users','No former scouts','Scouts marked Inactive or Expired appear here, with their full history kept.');
+  return `<div class="fm-h"><span></span><span>Scout</span><span class="c-hide">Left</span><span class="c-hide">Reason</span><span class="c-hide">In the troop</span><span></span></div>` + [...list].sort((a,b) => (b.left?.date||'').localeCompare(a.left?.date||'') || sname(a).localeCompare(sname(b))).map(s => { const g = genderOf(s.gender), img = s.photo && imgData(s.photo), L = s.left || {};
+    return `<div class="fm-r"><span class="rl-ini ${g==='Girl'?'girl':g==='Boy'?'boy':''}">${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
+      <button class="fm-nm" data-a="go" data-r="scout" data-id="${s.id}"><b>${esc(sname(s))}</b><small><span class="sl-st ${MST_CLS[s.status]}">${esc(s.status)}</span> ${s.grade ? esc(s.grade) + ' · ' : ''}${esc(pName(s.patrol))}<span class="c-show"> · ${L.date ? 'Left ' + fmtD(L.date,'short') : 'Date not recorded'}${L.reason ? ' · ' + esc(L.reason) : ''}</span></small></button>
+      <span class="c-hide">${L.date ? fmtD(L.date) : '<span class="muted">Not recorded</span>'}</span><span class="c-hide">${L.reason ? esc(L.reason) : '<span class="muted">—</span>'}${L.note ? `<small class="muted" style="display:block">${esc(L.note)}</small>` : ''}</span>
+      <span class="c-hide small">${s.joined ? `${inTroop(s)}<small class="muted" style="display:block">Joined ${fmtD(s.joined,'short')}</small>` : '—'}</span>
+      ${can('scout.edit') ? `<button class="btn sm" data-a="rejoin" data-id="${s.id}">${ic('refresh','sm')} Rejoin</button>` : '<span></span>'}</div>`; }).join(''); }
+A.rejoin = el => { const s = scout(el.dataset.id); if(!s) return; confirmBox(`Bring <b>${esc(sname(s))}</b> back as an <b>Active</b> scout? All their old attendance, badges and records are kept.`, () => {
+  setStatus(s, 'Active'); audit(`${sname(s)} rejoined the troop`); renderApp(); save(); toast(`${s.first} is active again`); }, 'Rejoin'); };
+/* Mark several scouts Inactive (or Expired) at once, e.g. everyone finishing Grade 12. */
+A.bulkLeave = () => { const list = S.scouts.filter(s => !isFormer(s) && inBatch(s)).sort((a,b) => (b.grade||'').localeCompare(a.grade||'', undefined, { numeric:true }) || sname(a).localeCompare(sname(b)));
+  modal({ title:'Mark scouts as inactive', wide:true, form:'bulkLeave', body:`<div class="form-grid">${field('Status', sel('st', [['Inactive','Inactive (left the troop)'],['Expired','Expired (membership not renewed)']], 'Inactive'))}${field('Date left', inp('date', TODAY(), 'type="date"'))}${field('Reason', sel('reason', ['', ...LEAVE_REASONS].map(r => [r, r || 'Choose…']), ''))}${field('Note (optional)', inp('note', ''))}</div>
+    <div class="ba-h"><b>Scouts</b><span class="spacer"></span><span class="small muted" id="ba-n">0 selected</span></div>
+    <div class="row" style="gap:8px;margin-bottom:8px"><input class="inp" style="flex:1;min-width:160px" placeholder="Find a scout" data-i="baFind" aria-label="Find a scout"><select class="inp" style="width:auto" data-c="baPatrol" aria-label="Show">${opts([['','Everyone'], ...GRADES.map(g => ['g:'+g, g])], '')}</select></div>
+    <div class="row" style="gap:8px;margin-bottom:8px"><button type="button" class="btn sm" data-a="baAll">Select all shown</button><button type="button" class="btn sm ghost" data-a="baNone">Clear</button></div>
+    <div class="ba-list">${list.map(s => `<label class="check ba-row" data-p="g:${esc(s.grade||'')}" data-n="${esc(sname(s).toLowerCase())}"><input type="checkbox" name="ids" value="${s.id}" data-c="baCount"> ${av(s,26)} <span class="grow">${esc(sname(s))}</span><span class="small muted">${esc(s.grade||'')} · ${esc(pName(s.patrol))}</span></label>`).join('') || empty('users','No current scouts')}</div><div id="ba-err"></div>`,
+    foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn danger">Mark ticked scouts</button>` }); };
+F.bulkLeave = d => { const ids = [].concat(d.ids ?? []);
+  if(!ids.length) return $('#ba-err').innerHTML = `<div class="alert" style="margin-top:10px">${ic('alert','sm')}<span>Tick at least one scout.</span></div>`;
+  ids.forEach(id => { const s = scout(id); if(s) setStatus(s, d.st, { date:d.date || TODAY(), reason:d.reason, note:d.note }); });
+  audit(`Marked ${ids.length} scouts ${d.st}${d.reason ? ' (' + d.reason + ')' : ''}`); closeModal(); renderApp(); save(); toast(`${ids.length} scout${ids.length>1?'s':''} marked ${d.st.toLowerCase()}`); };
 function scoutGroups(list){
   if(!list.length) return scoutRows(list);
   const groups = [['girl', 'Girls', list.filter(s => genderOf(s.gender)==='Girl')], ['boy', 'Boys', list.filter(s => genderOf(s.gender)==='Boy')], ['none', 'Girl or boy not set', list.filter(s => !genderOf(s.gender))]].filter(([,,l]) => l.length);
@@ -2054,7 +2092,7 @@ function scoutRows(list, quickSet, g=''){
 A.setGender = (el, e) => { e?.stopPropagation?.(); const s = scout(el.dataset.id); if(!s) return; s.gender = el.dataset.g; audit(`Set ${sname(s)} as ${s.gender.toLowerCase()}`); refresh();
 }
 function scoutFilterSet(el){ R.q[el.dataset.k] = el.value; const keep = document.activeElement?.id; const cur = el.selectionStart;
-  if(el.dataset.k==='s'){ $('#scout-list').innerHTML = scoutGroups(filterScouts(R.q)); }
+  if(el.dataset.k==='s'){ $('#scout-list').innerHTML = ['former','Inactive','Expired'].includes(R.q.st) ? formerRows(filterScouts(R.q)) : scoutGroups(filterScouts(R.q)); }
   else renderMain(); }
 I.scoutFilter = scoutFilterSet; C.scoutFilter = scoutFilterSet;
 
@@ -2070,7 +2108,11 @@ function scoutForm(s){
     ${field('Patrol', sel('patrol', [['','No patrol'], ...S.patrols.map(p=>[p.id,p.name])], s.patrol||''))}
     ${field('Batch', sel('batch', [['','No batch'], ...batches().map(b => [b.id, `${b.name} · ${b.stage}`])], s.batch ?? curBatch()?.id ?? ''))}${field('Rank / stage', sel('rank', STAGES, s.rank))}${field('Join date', inp('joined', s.joined, 'type="date"'))}
     <div class="full eyebrow" style="margin-top:6px">Membership</div>
-    ${field('Status', sel('status', MEMBER_ST, s.status))}
+    ${field('Status', sel('status', MEMBER_ST, s.status, 'data-c="stLeave"'))}
+    <div class="full form-grid leave-box ${isFormer(s) ? '' : 'hide'}" style="padding:12px;border:1px dashed var(--line);border-radius:12px;background:var(--surface-2)">
+      <div class="full small muted">Inactive and Expired scouts are kept with all their records, but no longer appear in registers, patrols or the scout list.</div>
+      ${field('Date left', inp('left_date', s.left?.date || TODAY(), 'type="date"'))}${field('Reason', sel('left_reason', ['', ...LEAVE_REASONS, ...(s.left?.reason && !LEAVE_REASONS.includes(s.left.reason) ? [s.left.reason] : [])].map(r => [r, r || 'Choose…']), s.left?.reason || ''))}
+      ${field('Note (optional)', inp('left_note', s.left?.note || ''), 'full')}</div>
     ${can('contacts.view') ? `<div class="full eyebrow" style="margin-top:6px">Parent / guardian</div>
     ${field('Name', inp('g_name', g.name))}${field('Relation', sel('g_relation', ['Mother','Father','Guardian','Grandparent','Other'], g.relation))}
     ${field('Phone', inp('g_phone', g.phone, 'type="tel"'))}${field('Email', inp('g_email', g.email, 'type="email"'))}
@@ -2079,13 +2121,15 @@ function scoutForm(s){
     ${can('medical.view') ? `${field('Medical / allergy notes (restricted)', ta('medical', s.medical), 'full')}` : ''}
   </div><div id="sf-err"></div>`;
 }
+C.stLeave = el => el.closest('form').querySelector('.leave-box')?.classList.toggle('hide', !['Inactive','Expired'].includes(el.value));
 A.addScout = () => modal({ title:'Add scout', wide:true, form:'scout', body:scoutForm(), foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Add scout</button>` });
 A.editScout = el => { const s = scout(el.dataset.id); modal({ title:'Edit ' + esc(sname(s)), wide:true, form:'scout', body:`<input type="hidden" name="id" value="${s.id}">` + scoutForm(s), foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Save changes</button>` }); };
 F.scout = d => {
   if(!d.first?.trim() || !d.last?.trim() || !d.dob || !genderOf(d.gender)){ $('#sf-err').innerHTML = `<div class="alert" style="margin-top:12px">${ic('alert','sm')}<span>First name, last name, girl or boy, and date of birth are required.</span></div>`; return; }
   let s = d.id && scout(d.id); const isNew = !s;
   if(isNew){ const y = academicYear().y; const n = S.scouts.length + 1; s = { id:uid('s'), sid:`TM-${y}-${String(n).padStart(3,'0')}`, photo:null, activities:[], syllabus:{}, badgeProgress:{}, badges:[], guardian:{}, emergency:{}, medical:'' }; S.scouts.push(s); }
-  Object.assign(s, { first:d.first.trim(), last:d.last.trim(), gender:genderOf(d.gender), dob:d.dob, grade:d.grade, patrol:d.patrol||null, batch:d.batch||null, rank:d.rank, joined:d.joined, status:d.status });
+  Object.assign(s, { first:d.first.trim(), last:d.last.trim(), gender:genderOf(d.gender), dob:d.dob, grade:d.grade, patrol:d.patrol||null, batch:d.batch||null, rank:d.rank, joined:d.joined });
+  setStatus(s, d.status, ['Inactive','Expired'].includes(d.status) ? { date:d.left_date || TODAY(), reason:d.left_reason || '', note:d.left_note || '' } : null);
   if(can('contacts.view')){ s.guardian = { name:d.g_name, relation:d.g_relation, phone:d.g_phone, email:d.g_email }; s.emergency = { ...(s.emergency||{}), name:d.e_name, phone:d.e_phone }; }
   if(can('medical.view') && d.medical !== undefined) s.medical = d.medical;
   audit(`${isNew?'Added':'Edited'} scout ${sname(s)}`); closeModal(); toast(isNew ? `${sname(s)} added` : 'Changes saved');
@@ -2166,7 +2210,7 @@ A.importDo = () => { const y = academicYear().y; const made = [];
   const P = importPlan(), addNew = !$('#imp-add') || $('#imp-add').checked; let nu = 0;
   P.upd.forEach(({ s, ch }) => { if(!ch.length) return; nu++; ch.forEach(c => {
     if(c.k==='patrol') s.patrol = patrolFor(c.to)?.id || null; else if(c.k==='batch') s.batch = batchFrom(c.to)?.id || null; else if(c.k.startsWith('g.')){ s.guardian = s.guardian||{}; s.guardian[c.k.slice(2)] = c.to; }
-    else if(c.k.startsWith('e.')){ s.emergency = s.emergency||{}; s.emergency[c.k.slice(2)] = c.to; } else s[c.k] = c.to; }); });
+    else if(c.k.startsWith('e.')){ s.emergency = s.emergency||{}; s.emergency[c.k.slice(2)] = c.to; } else if(c.k==='status') setStatus(s, c.to); else s[c.k] = c.to; }); });
   const adds = addNew ? P.add : [];
   adds.forEach(r => { const p = patrolFor(r.patrol);
   S.scouts.push({ id:uid('s'), sid:`TM-${y}-${String(S.scouts.length+1).padStart(3,'0')}`, first:r.first, last:r.last, gender:genderOf(r.gender), dob:normDate(r.dob)||`${y-12}-01-01`, grade:normGrade(r.grade)||'Grade 6', section:r.section||'A', patrol:p ? p.id : null, batch:batchFrom(r.batch)?.id || null, rank:pickOf(STAGES, r.rank)||'Membership', joined:normDate(r.joined)||TODAY(), status:pickOf(MEMBER_ST, r.status)||'Pending', renewal:iso(addDays(new Date(),365)), fee:'Due', photo:null, photoConsent:false,
@@ -2200,6 +2244,8 @@ VIEWS.scout = () => {
     <div class="prof-photo">${av(s, 104)}${can('scout.edit')?`<button class="cam" data-a="photoScout" data-id="${s.id}" aria-label="Change photo">${ic('camera','sm')}</button>`:''}</div>
     <div style="flex:1;min-width:220px"><div class="eyebrow num">${s.sid}</div><h1 style="margin:2px 0 8px">${esc(sname(s))}</h1>
       <div class="row" style="gap:6px">${statusChip(s.status)}<span class="chip">${pDot(p)} ${esc(p?.name||'No patrol')} patrol</span>${chip(esc(s.rank),'gold')}${p && p.pl===s.id ? chip('Patrol Leader','gold') : p && p.apl===s.id ? chip('Assistant PL') : ''}</div></div>
+    ${isFormer(s) && !ro ? `<div class="fm-ban"><b>${ic('lock','sm')} ${esc(s.status.toUpperCase())}</b><span>${s.left?.date ? 'Left ' + fmtD(s.left.date) : 'Date not recorded'}${s.left?.reason ? ' · ' + esc(s.left.reason) : ''}${s.joined ? ' · ' + inTroop(s) + ' in the troop' : ''}${s.left?.note ? `<br><span class="muted">${esc(s.left.note)}</span>` : ''}</span>${can('scout.edit') ? `<button class="btn sm" data-a="rejoin" data-id="${s.id}">${ic('refresh','sm')} Rejoin</button>` : ''}</div>` : ''}
+    ${(s.leftHist||[]).length && !ro ? `<div class="small muted" style="flex-basis:100%">Earlier: ${s.leftHist.map(h => `left ${fmtD(h.date,'short')}${h.reason ? ' (' + esc(h.reason) + ')' : ''}, back ${fmtD(h.back,'short')}`).join('; ')}</div>` : ''}
     <div class="row">${!ro ? `<button class="btn" data-a="profilePDF" data-id="${s.id}">${ic('download','sm')} Profile PDF</button>` : ''}${can('scout.edit')?`<button class="btn" data-a="editScout" data-id="${s.id}">${ic('edit','sm')} Edit</button>`:''}${can('scout.delete')?`<button class="icon-btn" data-a="deleteScout" data-id="${s.id}" aria-label="Delete scout" title="Delete scout">${ic('trash')}</button>`:''}</div>
   </div>
   <div class="grid g4" style="margin-top:18px;gap:10px">
@@ -2266,7 +2312,7 @@ C.baReg = el => { const r = S.registers.find(x => x.id===el.value); if(!r) retur
 A.baAll = () => { baRows().filter(x => !x.hidden).forEach(x => x.querySelector('input').checked = true); baCount(); };
 A.baNone = () => { baRows().forEach(x => x.querySelector('input').checked = false); baCount(); };
 /* Move many scouts into a patrol, or out of every patrol, at once. Uses the same pick list as Add activity. */
-A.bulkPatrol = () => { const list = [...S.scouts].sort((a,b) => pName(a.patrol).localeCompare(pName(b.patrol)) || sname(a).localeCompare(sname(b)));
+A.bulkPatrol = () => { const list = S.scouts.filter(s => !isFormer(s)).sort((a,b) => pName(a.patrol).localeCompare(pName(b.patrol)) || sname(a).localeCompare(sname(b)));
   modal({ title:'Change patrol for several scouts', wide:true, form:'bulkPatrol', body:`${field('Move ticked scouts to', sel('to', [['','No patrol'], ...S.patrols.map(p => [p.id, p.name])], ''))}
     <div class="ba-h"><b>Scouts</b><span class="spacer"></span><span class="small muted" id="ba-n">0 selected</span></div>
     <div class="row" style="gap:8px;margin-bottom:8px"><input class="inp" style="flex:1;min-width:160px" placeholder="Find a scout" data-i="baFind" aria-label="Find a scout"><select class="inp" style="width:auto" data-c="baPatrol" aria-label="Patrol">${opts([['','All patrols'], ...S.patrols.map(p => [p.id, p.name]), ['__none','No patrol']], '')}</select></div>
@@ -2278,7 +2324,7 @@ F.bulkPatrol = d => { const ids = [].concat(d.ids ?? []);
   const to = d.to || null; ids.forEach(id => { const s = scout(id); if(!s || s.patrol===to) return;
     S.patrols.forEach(p => { if(p.id!==to){ if(p.pl===id) p.pl = null; if(p.apl===id) p.apl = null; } }); s.patrol = to; });
   const where = to ? patrol(to).name : 'no patrol'; audit(`Moved ${ids.length} scouts to ${where}`); closeModal(); refresh(); toast(`Moved ${ids.length} scout${ids.length>1?'s':''} to ${where}`); };
-A.bulkBatch = () => { const list = [...S.scouts].sort((a,b) => (bName(a.batch)||'~').localeCompare(bName(b.batch)||'~') || sname(a).localeCompare(sname(b)));
+A.bulkBatch = () => { const list = S.scouts.filter(s => !isFormer(s)).sort((a,b) => (bName(a.batch)||'~').localeCompare(bName(b.batch)||'~') || sname(a).localeCompare(sname(b)));
   modal({ title:'Change batch for several scouts', wide:true, form:'bulkBatch', body:`${field('Move ticked scouts to', sel('to', [...batches().map(b => [b.id, `${b.name} · ${b.stage}`]), ['','No batch']], curBatch()?.id || batches()[0]?.id))}
     <div class="ba-h"><b>Scouts</b><span class="spacer"></span><span class="small muted" id="ba-n">0 selected</span></div>
     <div class="row" style="gap:8px;margin-bottom:8px"><input class="inp" style="flex:1;min-width:160px" placeholder="Find a scout" data-i="baFind" aria-label="Find a scout"><select class="inp" style="width:auto" data-c="baPatrol" aria-label="Show">${opts([['','Everyone'], ['__none','No batch yet'], ...batches().map(b => [b.id, b.name]), ...STAGES.map(st => ['r:'+st, 'Rank: '+st])], '')}</select></div>
@@ -2615,13 +2661,13 @@ A.regFinalize = () => { const r = curReg(); const c = regCounts(r);
 const sylFits = (s, it) => s.rank===it.stage || batchOf(s.batch)?.stage===it.stage;
 function regSylPrompt(r){ const ses = r.sessionId && S.sessions.find(x => x.id===r.sessionId); if(!ses || !can('syllabus.signoff')) return;
   const its = (ses.syllabus||[]).map(id => S.syllabus.find(i => i.id===id)).filter(Boolean), came = s => ['P','L'].includes(r.entries[s.id]?.s);
-  const rows = its.map(it => { const fit = regScouts(r).filter(s => s.status!=='Inactive' && sylFits(s, it)); return { it, pres:fit.filter(s => came(s) && !s.syllabus?.[it.id]).length, abs:fit.filter(s => !came(s) && !s.syllabus?.[it.id]).length }; }).filter(x => x.pres);
+  const rows = its.map(it => { const fit = regScouts(r).filter(s => !isFormer(s) && sylFits(s, it)); return { it, pres:fit.filter(s => came(s) && !s.syllabus?.[it.id]).length, abs:fit.filter(s => !came(s) && !s.syllabus?.[it.id]).length }; }).filter(x => x.pres);
   if(!rows.length) return;
   modal({ title:'Sign off syllabus items?', form:'regSyl', body:`<input type="hidden" name="rid" value="${r.id}"><p style="margin-top:0">This register is linked to <b>${esc(ses.title)}</b>. Sign off the scouts who were present or late for:</p>
     <div class="stack" style="gap:6px">${rows.map(x => `<label class="check" style="align-items:flex-start"><input type="checkbox" name="iids" value="${x.it.id}" checked><span><b>${esc(x.it.topic)}</b> <span class="small muted">${esc(x.it.stage)}</span><span class="small" style="display:block">${x.pres} present to sign off${x.abs ? ` · <span style="color:var(--bad)">${x.abs} absent → catch-up</span>` : ''}</span></span></label>`).join('')}</div>`,
     foot:`<button type="button" class="btn" data-a="closeModal">Not now</button><button class="btn primary">Sign off</button>` }); }
 F.regSyl = d => { const r = S.registers.find(x => x.id===d.rid); if(!r) return closeModal(); const ids = [].concat(d.iids ?? []); let n = 0;
-  ids.map(id => S.syllabus.find(i => i.id===id)).filter(Boolean).forEach(it => regScouts(r).forEach(s => { if(s.status==='Inactive' || !sylFits(s, it) || !['P','L'].includes(r.entries[s.id]?.s)) return;
+  ids.map(id => S.syllabus.find(i => i.id===id)).filter(Boolean).forEach(it => regScouts(r).forEach(s => { if(isFormer(s) || !sylFits(s, it) || !['P','L'].includes(r.entries[s.id]?.s)) return;
     s.syllabus = s.syllabus || {}; if(!s.syllabus[it.id]){ s.syllabus[it.id] = { date:r.date, by:ME.id, note:'Signed off from register' }; n++; } }));
   if(n) audit(`Signed off ${n} syllabus item${n>1?'s':''} from the register of ${fmtD(r.date)}`); closeModal(); refresh(); toast(n ? `${n} sign-off${n>1?'s':''} saved` : 'Nothing to sign off'); };
 A.regUnlock = () => { R.q.unlock = !R.q.unlock; renderMain(); };
@@ -2672,19 +2718,19 @@ A.repPDF = () => withPDF(async () => { const d = repData(); const per = R.q.rp &
 VIEWS.patrols = () => {
   const ed = can('patrol.edit');
   const ranked = [...S.patrols].sort((a,b) => ptsOf(b) - ptsOf(a) || a.name.localeCompare(b.name));
-  const maxP = Math.max(1, ...S.patrols.map(ptsOf)), noP = S.scouts.filter(s => !patrol(s.patrol) && s.status!=='Inactive' && inBatch(s)).length, rankOf = id => ranked.findIndex(p => p.id===id) + 1;
+  const maxP = Math.max(1, ...S.patrols.map(ptsOf)), noP = S.scouts.filter(s => !patrol(s.patrol) && !isFormer(s) && inBatch(s)).length, rankOf = id => ranked.findIndex(p => p.id===id) + 1;
   const step = (p, cls, n) => p ? `<div class="pt-st ${cls}"><span class="pt-pen" style="background:${p.color}">${ic(p.icon)}</span><b>${esc(p.name)}</b><small>${ptsOf(p)} point${ptsOf(p)===1?'':'s'}</small><div class="pt-blk">${n}</div></div>` : '<div class="pt-st"></div>';
   return `${pageH('Troop structure', 'Patrols', ed ? `<button class="btn primary" data-a="patrolForm">${ic('plus','sm')} New patrol</button>` : '')}
   ${S.patrols.length ? `<div class="pt-board">
     <div class="pt-pod"><span class="pt-glow"></span><h2>Points leaderboard</h2><p>Full-attendance registers add 10 points · badge awards add 5</p>
       <div class="pt-steps">${step(ranked[1],'g2',2)}${step(ranked[0],'g1',1)}${step(ranked[2],'g3',3)}</div></div>
     <div class="card pt-all"><h2>${curBatch() ? esc(curBatch().name) + ' points' : 'All patrols'}</h2><div class="small muted">${curBatch() ? `Points earned in ${esc(curBatch().name)} only. ` : ''}${ed ? 'Use ± to add or take away points' : 'Ranked by points'}</div>
-      ${ranked.map((p,i) => { const v = ptsOf(p), top = ptsOf(ranked[0]), n = S.scouts.filter(s => s.patrol===p.id && s.status!=='Inactive' && inBatch(s)).length;
+      ${ranked.map((p,i) => { const v = ptsOf(p), top = ptsOf(ranked[0]), n = S.scouts.filter(s => s.patrol===p.id && !isFormer(s) && inBatch(s)).length;
         return `<div class="pt-row" style="--c:${p.color}"><span class="pt-n">${i+1}</span><span class="emblem" style="background:${p.color}">${ic(p.icon,'sm')}</span><span class="pt-who2"><b>${esc(p.name)}</b><small>${n} scout${n===1?'':'s'}</small></span>
         <span class="pt-trk">${v ? `<span class="pt-fill" style="width:${Math.max(v*100/maxP, 12)}%">${v}</span>` : '<span class="pt-zero">0</span>'}<span class="pt-gap">${i===0 && v ? '🏆 Leader' : v < top ? `−${top - v} to #1` : ''}</span></span>
         ${ed ? `<button class="btn sm" data-a="points" data-id="${p.id}" aria-label="Adjust points for ${esc(p.name)}">±</button>` : ''}</div>`; }).join('')}${noP ? `<div class="pt-row pt-nop"><span class="pt-n">–</span><span class="emblem" style="background:#9AA8B2">${ic('users','sm')}</span><span class="pt-who2"><b>No patrol</b><small>${noP} scout${noP>1?'s':''}</small></span><span class="pt-trk nop"><span class="pt-zero">0</span><span class="pt-gap">not in any patrol</span></span>${ed ? '<span class="pt-ph"></span>' : ''}</div>` : ''}</div></div>` : ''}
   ${ed && S.patrols.length ? `<p class="small muted" style="margin-bottom:10px">${ic('grip','sm')} Drag scouts between patrols, or use the move menu on touch screens.</p>` : ''}
-  <div class="pt-grid">${S.patrols.map(p => { const ms = S.scouts.filter(s => s.patrol===p.id && inBatch(s)).sort((a,b) => (a.id===p.pl?-2:a.id===p.apl?-1:0) - (b.id===p.pl?-2:b.id===p.apl?-1:0) || sname(a).localeCompare(sname(b)));
+  <div class="pt-grid">${S.patrols.map(p => { const ms = S.scouts.filter(s => s.patrol===p.id && !isFormer(s) && inBatch(s)).sort((a,b) => (a.id===p.pl?-2:a.id===p.apl?-1:0) - (b.id===p.pl?-2:b.id===p.apl?-1:0) || sname(a).localeCompare(sname(b)));
     const badgesN = ms.reduce((a,s)=>a+s.badges.length,0), pl = scout(p.pl), lead = p.leaders.map(id => user(id)).filter(u => seesUser(u)).map(u => esc(u.name)).join(', ');
     return `<div class="pt-card" style="--pc:${p.color}"><div class="pt-ban" style="background:${p.color}"><span class="pt-em">${ic(p.icon,'lg')}</span><div class="pt-tt"><h2>${esc(p.name)}</h2>${p.motto ? `<small>“${esc(p.motto)}”</small>` : ''}</div><span class="pt-rank">#${rankOf(p.id)}</span>${ed?`<button class="pt-edit" data-a="patrolForm" data-id="${p.id}" aria-label="Edit patrol">${ic('edit','sm')}</button>`:''}</div>
     <div class="pt-stats">${[[ms.length,'Scouts'],[patrolAtt(p.id)+'%','Attend.'],[badgesN,'Badges']].map(([v,l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>
@@ -2696,7 +2742,7 @@ VIEWS.patrols = () => {
 /* square photo with rounded corners and a girl/boy coloured outline, as on the attendance register */
 function ptIni(s){ const g = genderOf(s.gender), img = s.photo && imgData(s.photo);
   return `<span class="rl-ini ${g==='Girl'?'girl':g==='Boy'?'boy':''}" style="flex:none" ${g?`title="${g}"`:''}>${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>`; }
-function noPatrolCard(ed){ const ms = S.scouts.filter(s => !patrol(s.patrol) && s.status!=='Inactive' && inBatch(s)).sort((a,b) => sname(a).localeCompare(sname(b))); if(!ms.length) return '';
+function noPatrolCard(ed){ const ms = S.scouts.filter(s => !patrol(s.patrol) && !isFormer(s) && inBatch(s)).sort((a,b) => sname(a).localeCompare(sname(b))); if(!ms.length) return '';
   return `<div class="pt-card" style="--pc:#7A8D9B"><div class="pt-ban" style="background:#7A8D9B"><span class="pt-em">${ic('users','lg')}</span><div class="pt-tt"><h2>No patrol</h2><small>Not in any patrol yet</small></div></div>
     <div class="pt-stats"><div><b>${ms.length}</b><span>Scouts</span></div></div>
     <div class="dz pt-mem" data-dz="__none">${ms.map(s => `<div class="drag pt-m" ${ed?'draggable="true"':''} data-drag="${s.id}">${ed?`<span class="muted pt-grip" aria-hidden="true">${ic('grip','sm')}</span>`:''}${ptIni(s)}<button class="pt-who" data-a="go" data-r="scout" data-id="${s.id}"><b>${esc(sname(s))}</b><small>${esc(s.rank||'')}${s.grade ? ' · ' + esc(s.grade) : ''}</small></button>
@@ -3175,7 +3221,7 @@ A.icalSave = () => saveFile(`milandhoo-scout-calendar-${TODAY()}.${window.claude
 A.icalCopy = async () => { try { await navigator.clipboard.writeText(icsText()); toast('iCal text copied'); } catch(e){ toast('Copy is blocked here. Use Save calendar file instead.'); } };
 function genReminders(){ const soon = expandEvents(TODAY(), iso(addDays(new Date(), 2))).filter(e => e.remind); S.reminded = S.reminded || {};
   soon.forEach(e => { const k = e.id + '@' + e.occ; if(S.reminded[k]) return; S.reminded[k] = 1; notify('session', `Reminder: ${e.title} ${e.occ===TODAY()?'today':'on '+fmtD(e.occ,'dow')}`, `${e.start?fmtT(e.start)+' · ':''}${e.location||''}${e.permission?' · Permission slips needed':''}`, { route:'calendar' }); });
-  const mo = new Date(); const bk = `bday-${mo.getFullYear()}-${mo.getMonth()}-${mo.getDate()}`; if(!S.reminded[bk]){ S.reminded[bk] = 1; const td = S.scouts.filter(s => s.status!=='Inactive' && pd(s.dob).getMonth()===mo.getMonth() && pd(s.dob).getDate()===mo.getDate()); if(td.length) notify('birthday', `Happy birthday ${td.map(s=>s.first).join(' and ')}!`, 'Celebrate at the next meeting.', { route:'scout', id:td[0].id }); }
+  const mo = new Date(); const bk = `bday-${mo.getFullYear()}-${mo.getMonth()}-${mo.getDate()}`; if(!S.reminded[bk]){ S.reminded[bk] = 1; const td = S.scouts.filter(s => !isFormer(s) && pd(s.dob).getMonth()===mo.getMonth() && pd(s.dob).getDate()===mo.getDate()); if(td.length) notify('birthday', `Happy birthday ${td.map(s=>s.first).join(' and ')}!`, 'Celebrate at the next meeting.', { route:'scout', id:td[0].id }); }
   const rk = `ren-${TODAY().slice(0,7)}`; if(!S.reminded[rk]){ S.reminded[rk] = 1; const r = renewalsDue(30); if(r.length) notify('renewal', `${r.length} membership${r.length>1?'s':''} due for renewal`, r.slice(0,5).map(sname).join(', '), { route:'scouts' }); } }
 /* ================= Photo highlights ================= */
 const visPhotos = list => list.filter(p => !isScout() || !p.private);
@@ -3579,7 +3625,7 @@ A.termDel = el => { const t = S.settings.terms[+el.dataset.i]; if(!t || S.settin
 A.termAdd = () => { const last = S.settings.terms[S.settings.terms.length-1]; const st = last ? iso(addDays(new Date(last.end+'T00:00'), 1)) : TODAY();
   S.settings.termsSet = true; S.settings.terms.push({ name:`Term ${S.settings.terms.length+1}`, start:st, end:iso(addDays(new Date(st+'T00:00'), 90)) }); refresh(); };
 F.setYear = d => { const n = [].concat(d.tname ?? []), a = [].concat(d.tstart ?? []), b = [].concat(d.tend ?? []); S.settings.terms = n.map((x,i) => ({ name:x, start:a[i], end:b[i] })); S.settings.termsSet = true; S.settings.year = d.year; S.settings.lowAttendance = Math.max(10, Math.min(100, +d.low || 75)); audit('Updated academic year and terms'); refresh(); toast('Saved'); };
-function batchCard(){ const noB = S.scouts.filter(s => s.status!=='Inactive' && !batchOf(s.batch)).length;
+function batchCard(){ const noB = S.scouts.filter(s => !isFormer(s) && !batchOf(s.batch)).length;
   return `<form class="card" data-f="setBatches"><div class="card-h"><h2>Batches</h2><span class="spacer"></span>${can('scout.edit') ? `<button type="button" class="btn sm" data-a="bulkBatch">${ic('users','sm')} Assign scouts</button>` : ''}</div><div class="stack">
     <p class="small muted" style="margin:0">Each scout belongs to one batch. Each batch works on one stage of the syllabus. <b>Promote</b> moves a batch to the next stage.${noB ? ` <b style="color:var(--bad)">${noB} scout${noB>1?'s have':' has'} no batch yet.</b>` : ''}</p>
     ${batches().map((b,i) => { const n = activeScouts().filter(s => s.batch===b.id).length, last = STAGES.indexOf(b.stage) >= STAGES.length-1;
