@@ -2019,7 +2019,9 @@ A.arRubricPDF = () => withPDF(async () => {
 VIEWS.scouts = () => {
   const q = R.q; const f = { s:q.s||'', p:q.p||'', st:q.st||'', rk:q.rk||'', g:q.g||'' };
   const list = filterScouts(f); const nG = S.scouts.filter(s => genderOf(s.gender)==='Girl').length, nB = S.scouts.filter(s => genderOf(s.gender)==='Boy').length;
-  const acts = [ can('import') && `<button class="btn" data-a="importScouts">${ic('upload','sm')} Import / update</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkActivity">${ic('plus','sm')} Add activity</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPatrol">${ic('flag','sm')} Change patrol</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkBatch">${ic('users','sm')} Change batch</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkLeave">${ic('lock','sm')} Mark inactive</button>`, can('scout.edit') && S.scouts.length && `<button class="btn" data-a="bulkPhotos">${ic('camera','sm')} Bulk photos</button>`, can('export') && `<button class="btn" data-a="exportScouts">${ic('download','sm')} Export</button>`, can('scout.add') && `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` ].filter(Boolean).join('');
+  const ed = can('scout.edit') && S.scouts.length, item = (a, icon, label) => `<button class="pop-item" data-a="${a}">${ic(icon)} ${label}</button>`;
+  const menu = [ can('import') && item('importScouts','upload','Import / update'), ed && item('bulkActivity','plus','Add activity'), ed && item('bulkPatrol','flag','Change patrol'), ed && item('bulkBatch','users','Change batch'), ed && item('bulkLeave','lock','Mark inactive'), ed && item('bulkPhotos','camera','Bulk photos'), can('export') && item('exportScouts','download','Export') ].filter(Boolean).join('');
+  const acts = (menu ? `<details class="dd sc-dd"><summary class="btn">${ic('dots','sm')} Actions ${ic('down','sm')}</summary><div class="pop dd-pop">${menu}</div></details>` : '') + (can('scout.add') ? `<button class="btn primary" data-a="addScout">${ic('plus','sm')} Add scout</button>` : '');
   return `${pageH('Members', 'Scouts', acts)}${scoutTabs('scouts')}${scoutSummary()}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
     <div class="field" style="flex:2;min-width:180px"><label for="f_ss">Search</label><input class="inp" id="f_ss" type="search" placeholder="Name or scout ID" value="${esc(f.s)}" data-i="scoutFilter" data-k="s"></div>
@@ -3059,7 +3061,7 @@ async function sessionCanvas(s, scale=2){ await loadScript('https://cdnjs.cloudf
   try { await Promise.all([...box.querySelectorAll('img')].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
     return await window.html2canvas(box.firstElementChild, { scale, backgroundColor:'#ffffff', useCORS:true, logging:false }); } finally { box.remove(); } }
 const sessionFile = (s, ext) => `session-${(s.title||'plan').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}${s.date ? '-' + s.date : ''}.${ext}`;
-document.addEventListener('click', e => document.querySelectorAll('details.dd[open]').forEach(d => { if(!d.contains(e.target)) d.removeAttribute('open'); }));
+document.addEventListener('click', e => document.querySelectorAll('details.dd[open]').forEach(d => { if(!d.contains(e.target) || e.target.closest('.pop-item')) d.removeAttribute('open'); }));
 A.sessionPNG = el => { const s = S.sessions.find(x => x.id===el.dataset.id); if(!s) return; el.closest('details')?.removeAttribute('open'); toast('Preparing the picture…');
   (async () => { try { const c = await sessionCanvas(s, 3); const blob = await new Promise(r => c.toBlob(r, 'image/png')); await saveFile(sessionFile(s, 'png'), blob); }
     catch(e){ console.error(e); toast('Could not make the picture. Check your connection and try again.'); } })(); };
