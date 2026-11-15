@@ -2026,7 +2026,6 @@ VIEWS.scouts = () => {
   <div class="card flat" style="margin-bottom:14px"><div class="row">
     <div class="field" style="flex:2;min-width:180px"><label for="f_ss">Search</label><input class="inp" id="f_ss" type="search" placeholder="Name or scout ID" value="${esc(f.s)}" data-i="scoutFilter" data-k="s"></div>
     ${field('Patrol', `<select class="inp" data-c="scoutFilter" data-k="p">${opts([['','All patrols'], ...S.patrols.map(p=>[p.id,p.name]), ...(S.scouts.some(s => !patrol(s.patrol)) ? [['none','No patrol']] : [])], f.p)}</select>`, '" style="flex:1;min-width:130px')}
-    ${field('Status', `<select class="inp" data-c="scoutFilter" data-k="st">${opts([['','Current scouts'],['Active','Active'],['Pending','Pending'],['former','Former scouts (Inactive + Expired)'],['Inactive','Inactive'],['Expired','Expired']], f.st)}</select>`, '" style="flex:1;min-width:130px')}
     ${field('Rank', `<select class="inp" data-c="scoutFilter" data-k="rk">${opts([['','Any rank'], ...STAGES], f.rk)}</select>`, '" style="flex:1;min-width:130px')}
   </div></div>
   ${['former','Inactive','Expired'].includes(f.st) ? `<div class="rlist" id="scout-list">${formerRows(list)}</div>` : `<div class="rlist slist2" id="scout-list">${scoutGroups(list)}</div>`}`;
