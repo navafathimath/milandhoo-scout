@@ -2575,9 +2575,9 @@ function attRegisters(){
   const list = regsSorted().filter(r => regInBatch(r) && (!mo || r.date.startsWith(mo)) && (!sf || r.status===sf));
   const today = S.registers.find(r => r.date===TODAY());
   return `${!today && can('attendance.take') ? `<div class="alert info" style="margin-bottom:14px;align-items:center">${ic('clipboard','sm')}<span style="flex:1">No register for today yet.</span><button class="btn sm primary" data-a="quickRegister">Start today's register</button></div>` : ''}
-  <div class="card flat" style="margin-bottom:14px"><div class="row">
-    ${field('Month', `<select class="inp" data-c="regFilter" data-k="mo">${opts([['','All months'], ...months.map(m => [m, `${MONL[+m.slice(5)-1]} ${m.slice(0,4)}`])], mo)}</select>`, '" style="flex:1;min-width:160px')}
-    ${field('Status', `<select class="inp" data-c="regFilter" data-k="st">${opts([['','Any'],['draft','Draft'],['final','Finalized']], sf)}</select>`, '" style="flex:1;min-width:120px')}
+  <div class="card flat" style="margin-bottom:14px;width:fit-content;max-width:100%"><div class="row nw">
+    ${field('Month', `<select class="inp" data-c="regFilter" data-k="mo">${opts([['','All months'], ...months.map(m => [m, `${MONL[+m.slice(5)-1]} ${m.slice(0,4)}`])], mo)}</select>`, '" style="width:220px;flex:0 1 auto;min-width:0')}
+    ${field('Status', `<select class="inp" data-c="regFilter" data-k="st">${opts([['','Any'],['draft','Draft'],['final','Finalized']], sf)}</select>`, '" style="width:170px;flex:0 1 auto;min-width:0')}
   </div></div>
   <div class="card" style="padding:6px">${list.map(r => { const c = regCountsB(r); const tot = c.P+c.L+c.A+c.E+c.U || 1;
     return `<button class="rrow" data-a="go" data-r="register" data-id="${r.id}"><span class="agenda-date" style="width:48px"><span class="small muted">${DOW[pd(r.date).getDay()]}</span><b style="font-size:1.3rem">${pd(r.date).getDate()}</b><span class="small muted">${MON[pd(r.date).getMonth()]}</span></span>
