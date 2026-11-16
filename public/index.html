@@ -76,8 +76,11 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
 .ssh-who{display:flex;gap:10px;align-items:center;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;min-width:0}
 .ssh-who b{display:block;font-size:.92rem}.ssh-who small{color:var(--ink-2);font-size:.74rem}.ssh-who:hover b{text-decoration:underline}
 .ssh-sash{display:flex;gap:6px;align-items:center;padding:6px 10px;border-radius:12px;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--ok) 12%,var(--surface)) 0 12px,color-mix(in srgb,var(--ok) 17%,var(--surface)) 12px 24px);min-height:52px;flex-wrap:wrap}
-.ssh-b{display:inline-grid;border-radius:50%}.ssh-b .badge-ic{width:38px;height:38px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
-.ssh-b.hl{outline:3px solid var(--primary);outline-offset:1px}
+.ssh-sash{align-items:flex-start;gap:4px 2px}
+.ssh-b{display:inline-flex;flex-direction:column;align-items:center;gap:3px;width:70px;padding:3px 1px;border-radius:10px}.ssh-b .badge-ic{width:36px;height:36px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.ssh-b small{font-size:.6rem;line-height:1.12;font-weight:600;color:var(--ink);text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:normal;overflow-wrap:normal;letter-spacing:-.01em}
+.ssh-b.hl{outline:2px solid var(--primary);outline-offset:0;background:color-mix(in srgb,var(--primary) 10%,transparent)}
+@media (max-width:560px){ .ssh-b{width:60px} .ssh-b .badge-ic{width:32px;height:32px} .ssh-b small{font-size:.53rem} }
 .ssh-sash em{font-style:normal;color:var(--ok);opacity:.75;font-size:.8rem;font-weight:600}
 .ssh-cnt{text-align:right}.ssh-cnt b{font-size:1.3rem;font-family:"Roboto Slab",serif}.ssh-cnt small{display:block;color:var(--ink-2);font-size:.72rem}
 .ssh-bar{height:6px;border-radius:9px;background:var(--line-2);margin-top:6px;overflow:hidden}.ssh-bar i{display:block;height:100%;background:var(--ok)}
@@ -3014,7 +3017,7 @@ function badgeReports(){ const hb = badge(R.q.hb) ? R.q.hb : '', g = R.q.rg || '
   const held = Object.fromEntries(S.badges.map(b => [b.id, sc.filter(s => hasBadge(s,b.id)).length])), strip = S.badges.slice().filter(b => !bz || !held[b.id]).sort((a,b) => held[b.id] - held[a.id] || a.name.localeCompare(b.name));
   const row = s => { const got = bs.filter(b => hasBadge(s,b.id)); const gd = genderOf(s.gender);
     return `<div class="ssh ${gd==='Girl'?'girl':gd==='Boy'?'boy':''}"><button class="ssh-who" data-a="go" data-r="scout" data-id="${s.id}">${av(s,36)}<div><b>${esc(sname(s))}</b><small>${gd?(gd==='Girl'?'♀ Girl':'♂ Boy')+' · ':''}${esc(pName(s.patrol))}</small></div></button>
-      <div class="ssh-sash">${got.map(b => `<span class="ssh-b ${b.id===hb?'hl':''}" title="${esc(b.name)}">${bArt(b)}</span>`).join('') || '<em>No badges yet — the first one is waiting!</em>'}</div>
+      <div class="ssh-sash">${got.map(b => `<span class="ssh-b ${b.id===hb?'hl':''}" title="${esc(b.name)}">${bArt(b)}<small>${esc(b.name)}</small></span>`).join('') || '<em>No badges yet — the first one is waiting!</em>'}</div>
       <div class="ssh-cnt"><b>${got.length}</b><small>badge${got.length===1?'':'s'} earned</small><div class="ssh-bar"><i style="width:${bs.length ? got.length/bs.length*100 : 0}%"></i></div></div></div>`; };
   /* when ranking by most badges, girls and boys are mixed in one list (each row keeps its girl/boy colour) */
   const groups = most || bf==='some' ? (list.length ? [['Ranked by badges earned', '', list]] : []) : [['Girl','♀ Girls','girl'],['Boy','♂ Boys','boy'],['','No gender set','']].map(([k,l,c]) => [l, c, list.filter(s => genderOf(s.gender)===k)]).filter(x => x[2].length);
