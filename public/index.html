@@ -2861,6 +2861,8 @@ function badgeKPIs(){ const sc = viewScouts(); const hold = S.badges.map(b => [b
     ${box('zero', `<span class="ic" style="background:var(--girl-bg);color:var(--girl)">${hold.filter(h => !h[1]).length}</span><div><b>Not yet earned</b><span>badges nobody holds</span></div>`, 'Show only the badges nobody holds yet')}</div>`; }
 /* summary boxes filter the Reports list (from the Catalogue they open Reports with that filter) */
 A.bkpi = el => { const k = el.dataset.k, q = R.tab==='reports' ? { ...R.q } : { rg:R.q.rg };
+  /* one box at a time: turning a box on switches the other boxes' filters off */
+  const keep = { awarded:'bsort', with:'bf', top:'hb', zero:'bz' }[k]; ['bsort','bf','hb','bz'].forEach(x => { if(x!==keep) delete q[x]; });
   if(k==='awarded') q.bsort = q.bsort==='most' ? '' : 'most';
   else if(k==='with') q.bf = !q.bf ? 'some' : q.bf==='some' ? 'none' : '';
   else if(k==='top'){ if(!el.dataset.id) return; q.hb = q.hb===el.dataset.id ? '' : el.dataset.id; }
@@ -2910,7 +2912,7 @@ function badgeReports(){ const hb = badge(R.q.hb) ? R.q.hb : '', g = R.q.rg || '
   ${hb ? `<div class="rsf-note"><span>Showing the <b>${list.length}</b> scout${list.length===1?'':'s'} who ha${list.length===1?'s':'ve'} <b>${esc(badge(hb).name)}</b></span><button class="btn sm" data-a="sashHL" data-id="${hb}">${ic('x','sm')} Show all</button></div>` : ''}
   ${groups.map(([l,c,ss]) => `<div class="ssh-gh ${c}">${l} <span class="muted">${ss.length}</span></div><div class="ssh-list">${ss.map(row).join('')}</div>`).join('') || empty('users', hb ? `Nobody has ${esc(badge(hb).name)} yet` : bf==='some' ? 'No scout has a badge yet' : bf==='none' ? 'Every scout has at least one badge' : 'No scouts to show')}`; }
 A.sashG = el => { R.q.rg = el.dataset.k; renderMain(); };
-A.sashHL = el => { const x = $('.ssh-strip')?.scrollLeft || 0; R.q.hb = R.q.hb===el.dataset.id ? '' : el.dataset.id; renderMain(); const st = $('.ssh-strip'); if(st) st.scrollLeft = x; };
+A.sashHL = el => { const x = $('.ssh-strip')?.scrollLeft || 0; R.q.hb = R.q.hb===el.dataset.id ? '' : el.dataset.id; if(R.q.hb){ delete R.q.bf; delete R.q.bsort; } renderMain(); const st = $('.ssh-strip'); if(st) st.scrollLeft = x; };
 A.badgeXLSX = () => exportXLSX(`badges-${TODAY()}.xlsx`, [['Holdings', [['Scout','Gender','Patrol', ...S.badges.map(b=>b.name), 'Total'], ...viewScouts().map(s => [sname(s), genderOf(s.gender), pName(s.patrol), ...S.badges.map(b => hasBadge(s,b.id) ? 'Earned' : ''), s.badges.length])]], ['Awards', [['Scout','Badge','Date','Awarded by'], ...S.scouts.flatMap(s => s.badges.map(a => [sname(s), badge(a.badgeId)?.name, a.date, user(a.by)?.name]))]]]);
 
 /* PDF in the same sash design */
