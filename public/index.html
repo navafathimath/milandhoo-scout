@@ -3060,12 +3060,15 @@ A.badgePDF = () => withPDF(async () => { const { list, mixed, label } = R.tab===
       doc.setTextColor(19,40,58); doc.setFont('times','bold'); doc.setFontSize(16); doc.text(String(got.length), x0+w-12, y+22, { align:'right' });
       doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(78,101,119); doc.text('badges earned', x0+w-12, y+32, { align:'right' });
       ctx.y += rh + 6; } ctx.y += 8; }
-  /* badge key */
-  doc.addPage(); ctx.y = 40; pdfH(ctx, 'Badge holders'); ctx.y += 4; const cw = w/3;
-  bs.forEach((b,i) => { const col = i % 3; if(col===0 && i) ctx.y += 34; if(ctx.y > H - 60){ doc.addPage(); ctx.y = 40; } const x = x0 + col*cw, n = sc.filter(s => hasBadge(s,b.id)).length;
-    drawBadge(b, x, ctx.y, 26); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(19,40,58); doc.text(doc.splitTextToSize(b.name, cw-80)[0], x+32, ctx.y+11);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...hexRGB(bCol(b))); doc.text(bCatName(b), x+32, ctx.y+22);
-    doc.setFont('times','bold'); doc.setFontSize(13); doc.setTextColor(10,92,143); doc.text(String(n), x+cw-14, ctx.y+16, { align:'right' }); });
+  /* badge key: most held first, filled down each column (then the next column), page by page */
+  doc.addPage(); ctx.y = 40; pdfH(ctx, 'Badge holders'); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(122,141,155); doc.text('Most held first · read down each column', x0 + 100, ctx.y - 12); ctx.y += 4;
+  const cw = w/3, RH = 34, held = bs.map(b => [b, sc.filter(s => hasBadge(s,b.id)).length]).sort((a,b) => b[1] - a[1] || a[0].name.localeCompare(b[0].name));
+  for(let k = 0; k < held.length;){ const fit = Math.max(1, Math.floor((H - 50 - ctx.y) / RH)), chunk = held.slice(k, k + fit*3), rows = Math.ceil(chunk.length / 3), y0 = ctx.y;
+    chunk.forEach(([b, n], i) => { const x = x0 + Math.floor(i / rows)*cw, y = y0 + (i % rows)*RH;
+      drawBadge(b, x, y, 26); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...(n ? [19,40,58] : [154,168,178])); doc.text(doc.splitTextToSize(b.name, cw-80)[0], x+32, y+11);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...hexRGB(bCol(b))); doc.text(bCatName(b), x+32, y+22);
+      doc.setFont('times','bold'); doc.setFontSize(13); doc.setTextColor(...(n ? [10,92,143] : [185,199,211])); doc.text(String(n), x+cw-14, y+16, { align:'right' }); });
+    k += chunk.length; ctx.y = y0 + rows*RH; if(k < held.length){ doc.addPage(); ctx.y = 40; } }
   await pdfSave(ctx, `badge-report-${TODAY()}.pdf`); });
 A.badgeForm = el => { const b = el?.dataset?.id ? badge(el.dataset.id) : { name:'', icon:'star', category:'interest', reqs:[] };
   modal({ title: b.id ? 'Edit badge' : 'New badge', wide:true, form:'badge', body:`${b.id?`<input type="hidden" name="id" value="${b.id}">`:''}<div class="form-grid">${field('Badge name', inp('name', b.name, 'required'))}${field('Category', sel('category', Object.entries(BADGE_CATS), b.category))}
