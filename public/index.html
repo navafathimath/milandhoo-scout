@@ -3061,7 +3061,7 @@ A.badgePDF = () => withPDF(async () => { const { list, mixed, label } = R.tab===
       doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(78,101,119); doc.text('badges earned', x0+w-12, y+32, { align:'right' });
       ctx.y += rh + 6; } ctx.y += 8; }
   /* badge key: most held first, filled down each column (then the next column), page by page */
-  doc.addPage(); ctx.y = 40; pdfH(ctx, 'Badge holders'); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(122,141,155); doc.text('Most held first · read down each column', x0 + 100, ctx.y - 12); ctx.y += 4;
+  doc.addPage(); ctx.y = 40; pdfH(ctx, 'Badge holders'); ctx.y += 4;
   const cw = w/3, RH = 34, held = bs.map(b => [b, sc.filter(s => hasBadge(s,b.id)).length]).sort((a,b) => b[1] - a[1] || a[0].name.localeCompare(b[0].name));
   for(let k = 0; k < held.length;){ const fit = Math.max(1, Math.floor((H - 50 - ctx.y) / RH)), chunk = held.slice(k, k + fit*3), rows = Math.ceil(chunk.length / 3), y0 = ctx.y;
     chunk.forEach(([b, n], i) => { const x = x0 + Math.floor(i / rows)*cw, y = y0 + (i % rows)*RH;
