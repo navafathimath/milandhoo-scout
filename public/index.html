@@ -2570,14 +2570,13 @@ VIEWS.attendance = () => {
   ${tab==='reports' || tab==='sessions' ? (tab==='sessions' || R.q.rt==='session' ? attSessions() : attReports()) : attRegisters()}`;
 };
 function attRegisters(){
-  const q = R.q; const from = q.from || '', to = q.to || '', pf = q.p || '', sf = q.st || '';
-  const list = regsSorted().filter(r => regInBatch(r) && (!from || r.date >= from) && (!to || r.date <= to) && (!pf || r.patrol===pf) && (!sf || r.status===sf));
+  const q = R.q; const mo = q.mo || '', sf = q.st || '';
+  const months = [...new Set(regsSorted().filter(regInBatch).map(r => r.date.slice(0,7)))];   // newest first
+  const list = regsSorted().filter(r => regInBatch(r) && (!mo || r.date.startsWith(mo)) && (!sf || r.status===sf));
   const today = S.registers.find(r => r.date===TODAY());
   return `${!today && can('attendance.take') ? `<div class="alert info" style="margin-bottom:14px;align-items:center">${ic('clipboard','sm')}<span style="flex:1">No register for today yet.</span><button class="btn sm primary" data-a="quickRegister">Start today's register</button></div>` : ''}
   <div class="card flat" style="margin-bottom:14px"><div class="row">
-    ${field('From', `<input class="inp" type="date" value="${from}" data-c="regFilter" data-k="from">`, '" style="flex:1;min-width:140px')}
-    ${field('To', `<input class="inp" type="date" value="${to}" data-c="regFilter" data-k="to">`, '" style="flex:1;min-width:140px')}
-    ${field('Patrol', `<select class="inp" data-c="regFilter" data-k="p">${opts([['','Any'],['all','Whole troop'], ...batches().map(b => ['b:'+b.id, b.name]), ...S.patrols.map(p=>[p.id,p.name])], pf)}</select>`, '" style="flex:1;min-width:130px')}
+    ${field('Month', `<select class="inp" data-c="regFilter" data-k="mo">${opts([['','All months'], ...months.map(m => [m, `${MONL[+m.slice(5)-1]} ${m.slice(0,4)}`])], mo)}</select>`, '" style="flex:1;min-width:160px')}
     ${field('Status', `<select class="inp" data-c="regFilter" data-k="st">${opts([['','Any'],['draft','Draft'],['final','Finalized']], sf)}</select>`, '" style="flex:1;min-width:120px')}
   </div></div>
   <div class="card" style="padding:6px">${list.map(r => { const c = regCountsB(r); const tot = c.P+c.L+c.A+c.E+c.U || 1;
