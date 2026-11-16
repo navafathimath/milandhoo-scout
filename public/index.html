@@ -40,7 +40,8 @@
 @container (max-width:899px){ .org-lead{margin-bottom:16px} .org-lead .org-vl:last-child{display:none} }
 /* badges: KPIs, gallery and sash report */
 .bkpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
-.bkpi .k{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;min-width:0}
+.bkpi .k{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;min-width:0;font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}
+.bkpi .k:hover{border-color:var(--primary)}.bkpi .k.on{border-color:var(--primary);box-shadow:0 0 0 2px color-mix(in srgb,var(--primary) 25%,transparent);background:color-mix(in srgb,var(--primary) 5%,var(--surface))}
 .bkpi .k>div{min-width:0}.bkpi .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:1rem;flex:none}
 .bkpi .ic .badge-ic{width:34px;height:34px}
 .bkpi b{display:block;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bkpi span{font-size:.78rem;color:var(--ink-2)}
@@ -2851,11 +2852,20 @@ const BCAT_COL = { collective:'#7C3AED', pursuit:'#0D78B6', service:'#C2410C', i
 const bCol = b => BCAT_COL[b.category] || '#6B7C8A';
 const bCatName = b => BADGE_CATS[b.category] || 'Other';
 function badgeKPIs(){ const sc = viewScouts(); const hold = S.badges.map(b => [b, sc.filter(s => hasBadge(s,b.id)).length]); const top = hold.slice().sort((a,b) => b[1]-a[1])[0];
-  const awarded = sc.reduce((a,s) => a + s.badges.length, 0), withB = sc.filter(s => s.badges.length).length;
-  return `<div class="bkpi"><div class="k"><span class="ic" style="background:var(--gold-soft);color:var(--gold-ink)">${awarded}</span><div><b>Badges awarded</b><span>to current scouts</span></div></div>
-    <div class="k"><span class="ic" style="background:var(--wash);color:var(--primary)">${withB}/${sc.length}</span><div><b>Scouts with a badge</b><span>${sc.length-withB} still to earn one</span></div></div>
-    <div class="k"><span class="ic" style="background:var(--surface-2)">${top && top[1] ? bArt(top[0]) : ic('medal')}</span><div><b>${top && top[1] ? esc(top[0].name) : 'No badges yet'}</b><span>${top && top[1] ? `most earned · ${top[1]} scout${top[1]===1?'':'s'}` : 'award the first one'}</span></div></div>
-    <div class="k"><span class="ic" style="background:var(--girl-bg);color:var(--girl)">${hold.filter(h => !h[1]).length}</span><div><b>Not yet earned</b><span>badges nobody holds</span></div></div></div>`; }
+  const awarded = sc.reduce((a,s) => a + s.badges.length, 0), withB = sc.filter(s => s.badges.length).length, rep = R.tab==='reports', q = R.q;
+  const on = k => rep && ({ awarded:q.bsort==='most', with:!!q.bf, top:top && q.hb===top[0].id, zero:!!q.bz })[k] ? 'on' : '';
+  const box = (k, inner, tip) => `<button class="k ${on(k)}" data-a="bkpi" data-k="${k}" ${top && k==='top' ? `data-id="${top[0].id}"` : ''} title="${tip}">${inner}</button>`;
+  return `<div class="bkpi">${box('awarded', `<span class="ic" style="background:var(--gold-soft);color:var(--gold-ink)">${awarded}</span><div><b>Badges awarded</b><span>to current scouts</span></div>`, 'Sort scouts by most badges')}
+    ${box('with', `<span class="ic" style="background:var(--wash);color:var(--primary)">${withB}/${sc.length}</span><div><b>Scouts with a badge</b><span>${sc.length-withB} still to earn one</span></div>`, 'Show scouts with a badge, then those still to earn one')}
+    ${box('top', `<span class="ic" style="background:var(--surface-2)">${top && top[1] ? bArt(top[0]) : ic('medal')}</span><div><b>${top && top[1] ? esc(top[0].name) : 'No badges yet'}</b><span>${top && top[1] ? `most earned · ${top[1]} scout${top[1]===1?'':'s'}` : 'award the first one'}</span></div>`, 'Show the scouts who have this badge')}
+    ${box('zero', `<span class="ic" style="background:var(--girl-bg);color:var(--girl)">${hold.filter(h => !h[1]).length}</span><div><b>Not yet earned</b><span>badges nobody holds</span></div>`, 'Show only the badges nobody holds yet')}</div>`; }
+/* summary boxes filter the Reports list (from the Catalogue they open Reports with that filter) */
+A.bkpi = el => { const k = el.dataset.k, q = R.tab==='reports' ? { ...R.q } : { rg:R.q.rg };
+  if(k==='awarded') q.bsort = q.bsort==='most' ? '' : 'most';
+  else if(k==='with') q.bf = !q.bf ? 'some' : q.bf==='some' ? 'none' : '';
+  else if(k==='top'){ if(!el.dataset.id) return; q.hb = q.hb===el.dataset.id ? '' : el.dataset.id; }
+  else if(k==='zero') q.bz = q.bz ? '' : '1';
+  if(R.tab==='reports'){ R.q = q; renderMain(); } else go('badges', { tab:'reports', q }); };
 
 /* ---- Catalogue: badge gallery ---- */
 function badgeCatalogue(){ const cf = R.q.cat || ''; const q = (R.q.bq||'').toLowerCase(); const sort = R.q.bs || 'most';
@@ -2880,10 +2890,11 @@ C.badgeSort = el => { R.q.bs = el.value; renderMain(); };
 
 /* ---- Reports: scout sash ---- */
 function sashScouts(){ const g = R.q.rg || ''; return viewScouts().filter(s => !g || genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b))); }
-function badgeReports(){ const hb = badge(R.q.hb) ? R.q.hb : '', g = R.q.rg || ''; const sc = viewScouts(), list = sashScouts().filter(s => !hb || hasBadge(s,hb));
+function badgeReports(){ const hb = badge(R.q.hb) ? R.q.hb : '', g = R.q.rg || ''; const sc = viewScouts(), bf = R.q.bf || '', most = R.q.bsort==='most', bz = !!R.q.bz;
+  const list = sashScouts().filter(s => (!hb || hasBadge(s,hb)) && (bf!=='some' || s.badges.length) && (bf!=='none' || !s.badges.length)).sort((a,b) => most ? b.badges.length - a.badges.length || sname(a).localeCompare(sname(b)) : 0);
   const bs = S.badges.slice().sort((a,b) => a.name.localeCompare(b.name));
   /* strip: most-earned badges first (badges nobody has yet come last), ties A-Z */
-  const held = Object.fromEntries(S.badges.map(b => [b.id, sc.filter(s => hasBadge(s,b.id)).length])), strip = S.badges.slice().sort((a,b) => held[b.id] - held[a.id] || a.name.localeCompare(b.name));
+  const held = Object.fromEntries(S.badges.map(b => [b.id, sc.filter(s => hasBadge(s,b.id)).length])), strip = S.badges.slice().filter(b => !bz || !held[b.id]).sort((a,b) => held[b.id] - held[a.id] || a.name.localeCompare(b.name));
   const row = s => { const got = bs.filter(b => hasBadge(s,b.id)); const gd = genderOf(s.gender);
     return `<div class="ssh ${gd==='Girl'?'girl':gd==='Boy'?'boy':''}"><button class="ssh-who" data-a="go" data-r="scout" data-id="${s.id}">${av(s,36)}<div><b>${esc(sname(s))}</b><small>${gd?(gd==='Girl'?'♀ Girl':'♂ Boy')+' · ':''}${esc(pName(s.patrol))}</small></div></button>
       <div class="ssh-sash">${got.map(b => `<span class="ssh-b ${b.id===hb?'hl':''}" title="${esc(b.name)}">${bArt(b)}</span>`).join('') || '<em>No badges yet — the first one is waiting!</em>'}</div>
@@ -2893,8 +2904,11 @@ function badgeReports(){ const hb = badge(R.q.hb) ? R.q.hb : '', g = R.q.rg || '
     <div class="seg">${[['','All scouts'],['Girl','♀ Girls'],['Boy','♂ Boys']].map(([k,l]) => `<button class="${g===k?'on':''}" data-a="sashG" data-k="${k}">${l}</button>`).join('')}</div>
     ${can('export')?`<button class="btn" data-a="badgeXLSX">${ic('download','sm')} Excel</button><button class="btn primary" data-a="badgePDF">${ic('download','sm')} PDF</button>`:''}</div>
   <div class="ssh-strip">${strip.map(b => `<button class="${b.id===hb?'on':''} ${held[b.id]?'':'none'}" data-a="sashHL" data-id="${b.id}" title="${esc(b.name)}">${bArt(b)}<span>${esc(b.name)}</span><u>${held[b.id]}</u></button>`).join('')}</div>
+  ${bz ? `<div class="rsf-note"><span>Showing the <b>${strip.length}</b> badge${strip.length===1?'':'s'} nobody holds yet</span><button class="btn sm" data-a="bkpi" data-k="zero">${ic('x','sm')} Show all badges</button></div>` : ''}
+  ${bf ? `<div class="rsf-note"><span>Showing the <b>${list.length}</b> scout${list.length===1?'':'s'} ${bf==='some' ? 'with at least one badge' : 'still to earn their first badge'}</span><button class="btn sm" data-a="bkpi" data-k="with">${bf==='some' ? 'Show those still to earn one' : `${ic('x','sm')} Show all`}</button></div>` : ''}
+  ${most ? `<div class="rsf-note"><span>Sorted by <b>most badges</b> first</span><button class="btn sm" data-a="bkpi" data-k="awarded">${ic('x','sm')} A–Z</button></div>` : ''}
   ${hb ? `<div class="rsf-note"><span>Showing the <b>${list.length}</b> scout${list.length===1?'':'s'} who ha${list.length===1?'s':'ve'} <b>${esc(badge(hb).name)}</b></span><button class="btn sm" data-a="sashHL" data-id="${hb}">${ic('x','sm')} Show all</button></div>` : ''}
-  ${groups.map(([l,c,ss]) => `<div class="ssh-gh ${c}">${l} <span class="muted">${ss.length}</span></div><div class="ssh-list">${ss.map(row).join('')}</div>`).join('') || empty('users', hb ? `Nobody has ${esc(badge(hb).name)} yet` : 'No scouts to show')}`; }
+  ${groups.map(([l,c,ss]) => `<div class="ssh-gh ${c}">${l} <span class="muted">${ss.length}</span></div><div class="ssh-list">${ss.map(row).join('')}</div>`).join('') || empty('users', hb ? `Nobody has ${esc(badge(hb).name)} yet` : bf==='some' ? 'No scout has a badge yet' : bf==='none' ? 'Every scout has at least one badge' : 'No scouts to show')}`; }
 A.sashG = el => { R.q.rg = el.dataset.k; renderMain(); };
 A.sashHL = el => { const x = $('.ssh-strip')?.scrollLeft || 0; R.q.hb = R.q.hb===el.dataset.id ? '' : el.dataset.id; renderMain(); const st = $('.ssh-strip'); if(st) st.scrollLeft = x; };
 A.badgeXLSX = () => exportXLSX(`badges-${TODAY()}.xlsx`, [['Holdings', [['Scout','Gender','Patrol', ...S.badges.map(b=>b.name), 'Total'], ...viewScouts().map(s => [sname(s), genderOf(s.gender), pName(s.patrol), ...S.badges.map(b => hasBadge(s,b.id) ? 'Earned' : ''), s.badges.length])]], ['Awards', [['Scout','Badge','Date','Awarded by'], ...S.scouts.flatMap(s => s.badges.map(a => [sname(s), badge(a.badgeId)?.name, a.date, user(a.by)?.name]))]]]);
