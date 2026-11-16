@@ -763,7 +763,7 @@ summary::-webkit-details-marker{display:none}
 .logo-tile img{width:86%!important;height:86%!important;object-fit:contain;max-width:none}
 .side .logo-tile,.top .logo-tile{border-radius:22%}
 @media (max-width:900px){
-  .reg-actions{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+  .reg-actions{bottom:calc(72px + env(safe-area-inset-bottom,0px))} .chg-foot{bottom:calc(72px + env(safe-area-inset-bottom,0px))}
   .mob-only{display:inline-grid!important}
   .g21{grid-template-columns:minmax(0,1fr)}
   .srow,.srow.qs{grid-template-columns:40px minmax(0,1fr) auto}
@@ -835,6 +835,12 @@ textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-t
 .rm-who{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--wash);font-size:.85rem;margin-top:8px}
 .rm-card{border-left:4px solid var(--gold)}.rm-it{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}.rm-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .rm-h td{vertical-align:middle}
+.alert.warn{background:#FFF4DC;border:1px solid #F0D9A8;color:#6B4A07}
+.rl-r.chg{background:#FFFBF2;box-shadow:inset 3px 0 0 #B8860B}.chg-was{display:block;font-size:.72rem;font-weight:600;color:#9A6A10}
+.chg-foot{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;margin-top:12px;padding:12px 14px;background:var(--surface);border:1px solid #F0D9A8;border-radius:14px;box-shadow:var(--shadow-lg)}
+.chg-l{font-size:.85rem;margin:5px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.chg-l span{font-size:.72rem;font-weight:700;border-radius:99px;padding:1px 8px;background:var(--wash);color:var(--ink-2)}
+.chg-l .pill-P{background:#E3F0E8;color:#2F6F4F}.chg-l .pill-L{background:#F6EEDC;color:#9A6A10}.chg-l .pill-A{background:#F6E4E4;color:#9B2C2C}.chg-l .pill-E{background:#ECEEF0;color:#55606B}
 .rm-why{margin-top:8px;background:var(--surface-2);border-radius:8px;padding:7px 10px;font-size:.85rem;color:var(--ink-2)}
 .btag{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--wash);color:var(--ink-2);white-space:nowrap}
 .bsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}.bsum>button{text-align:left;border:1px solid var(--line);border-left:5px solid var(--bc);border-radius:12px;padding:12px 14px;background:var(--surface);cursor:pointer;display:flex;flex-direction:column;gap:4px;color:inherit;font:inherit}
@@ -1693,7 +1699,7 @@ function renderMain(){ twoTerms(); schoolDays();
   AFTER[R.route] && AFTER[R.route]();
   updateChrome();
 }
-function go(route, extra={}){ if(route==='calendar' && R.route!=='calendar' && !extra.keepView) CAL.view = 'month'; R.route = route; R.id = extra.id ?? null; R.tab = extra.tab ?? null; R.q = extra.q || {}; if(!extra.fromHistory){ const h = routeHref(route, R.id); if(location.hash !== h) history.pushState(null, '', h); } closePops(); while(modalStack.length) closeModal(); $('#shell')?.classList.remove('drawer'); renderMain(); window.scrollTo(0,0); try { if(!isScout()) localStorage.setItem('tm_route', JSON.stringify({ route, id:R.id })); } catch(e){} }
+function go(route, extra={}){ if(R.route==='register' && (route!=='register' || extra.id!==R.id)) delete CHG[R.id]; if(route==='calendar' && R.route!=='calendar' && !extra.keepView) CAL.view = 'month'; R.route = route; R.id = extra.id ?? null; R.tab = extra.tab ?? null; R.q = extra.q || {}; if(!extra.fromHistory){ const h = routeHref(route, R.id); if(location.hash !== h) history.pushState(null, '', h); } closePops(); while(modalStack.length) closeModal(); $('#shell')?.classList.remove('drawer'); renderMain(); window.scrollTo(0,0); try { if(!isScout()) localStorage.setItem('tm_route', JSON.stringify({ route, id:R.id })); } catch(e){} }
 function refresh(){ save(); renderMain(); }
 function closePops(){ ['#bell-pop','#prof-pop'].forEach(s => { const el = $(s); if(el) el.innerHTML = ''; }); const sr = $('#search-res'); sr && sr.classList.add('hide'); $('#search')?.classList.remove('open'); }
 
@@ -2574,8 +2580,9 @@ A.resetUserPw = el => { const u = user(el.dataset.id); const tmp = 'Trail-' + Ma
 VIEWS.attendance = () => {
   const tab = R.tab || 'registers';
   return `${pageH('Attendance register', 'Attendance', can('attendance.take') ? `<button class="btn primary" data-a="newRegister">${ic('plus','sm')} New register</button>` : '')}
-  <div class="tabs">${[['registers','Registers'],['reports','Reports']].map(([k,l]) => `<button class="tab ${tab===k?'on':''}" data-a="go" data-r="attendance" data-tab="${k}">${l}</button>`).join('')}</div>
-  ${tab==='reports' || tab==='sessions' ? (tab==='sessions' || R.q.rt==='session' ? attSessions() : attReports()) : attRegisters()}`;
+  <div class="tabs">${[['registers','Registers'],['reports','Reports'], ...(isScout() ? [] : [['approvals','Approvals']])].map(([k,l]) => { const n = k==='approvals' ? S.registers.reduce((a, r) => a + (r.chgReq||[]).filter(rmCanApprove).length, 0) : 0;
+    return `<button class="tab ${tab===k?'on':''}" data-a="go" data-r="attendance" data-tab="${k}">${l}${n ? ` <span class="chip gold" style="margin-left:4px;padding:0 7px">${n}</span>` : ''}</button>`; }).join('')}</div>
+  ${tab==='approvals' && !isScout() ? attApprovals() : tab==='reports' || tab==='sessions' ? (tab==='sessions' || R.q.rt==='session' ? attSessions() : attReports()) : attRegisters()}`;
 };
 function attRegisters(){
   const q = R.q; const mo = q.mo || '', sf = q.st || '';
@@ -2609,10 +2616,60 @@ function createRegister(d){
   S.registers.push(r); if(r.sessionId){ const s = S.sessions.find(x => x.id===r.sessionId); if(s) s.registerId = r.id; }
   audit(`Created register ${fmtD(r.date)} (${r.type}, ${pName(r.patrol)})`); save(); go('register', { id:r.id });
 }
-const regLocked = r => r.status==='final' && !(ME.role==='admin' && R.q.unlock);
+const regLocked = r => r.status==='final' && !(!rmPos(ME) && R.q.unlock);
+/* ---- Changing a finalized register needs approval (same chain as badge removal). While asking, the new marks are kept
+   in CHG (not on the register); they are applied only when the request is approved. ---- */
+const CHG = {};
+const chgMode = r => r.status==='final' && R.q.chg && rmPos(ME) && can('attendance.take');
+const chgEntry = (r, sid) => CHG[r.id] && sid in CHG[r.id] ? (CHG[r.id][sid] || {}) : (r.entries[sid] || {});
+const entTxt = e => e && e.s ? ST_LABEL[e.s] + (e.s==='L' && e.time ? ' ' + fmtT(e.time) : '') + (e.s==='E' && e.remark ? ' (' + e.remark + ')' : '') : 'Unmarked';
+const sameEnt = (a, b) => (a?.s||'')===(b?.s||'') && (a?.time||'')===(b?.time||'') && (a?.remark||'')===(b?.remark||'');
+const chgCount = r => Object.keys(CHG[r.id]||{}).length;
+function chgSet(r, sid, e){ const m = CHG[r.id] = CHG[r.id] || {}; if(sameEnt(e, r.entries[sid])) delete m[sid]; else m[sid] = e && e.s ? e : null; }
+function chgFoot(r){ const n = chgCount(r), pos = rmPos(ME);
+  return `<div class="chg-foot"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="chg-reason">Reason (required)</label><input class="inp" id="chg-reason" placeholder="e.g. Hassan brought a medical note"></div>
+    <span class="small muted chg-n" style="flex-basis:100%">${n} change${n===1?'':'s'} · <b style="color:var(--ink)">${esc(rmWho(pos))}</b> (${POSITIONS[pos]}) will be asked to approve</span>
+    <span class="spacer"></span><button class="btn" data-a="chgCancel">Cancel</button><button class="btn primary" data-a="chgSend" ${n?'':'disabled'}>Send for approval</button></div>`; }
+A.chgStart = () => { const r = curReg(); CHG[r.id] = {}; R.q.chg = 1; renderMain(); };
+A.chgCancel = () => { const r = curReg(); delete CHG[r.id]; delete R.q.chg; renderMain(); };
+A.chgSend = () => { const r = curReg(), n = chgCount(r), why = ($('#chg-reason')?.value || '').trim(); if(!n) return toast('Tap the marks you want to change first');
+  if(!why) { $('#chg-reason').focus(); return toast('Write the reason, so the approver knows why'); }
+  const pos = rmPos(ME), ch = Object.fromEntries(Object.entries(CHG[r.id]).map(([sid, to]) => [sid, { from: r.entries[sid] ? JSON.parse(JSON.stringify(r.entries[sid])) : null, to }]));
+  r.chgReq = [...(r.chgReq||[]), { id:uid('cq'), by:ME.id, at:Date.now(), reason:why, pos, ch }];
+  notifyTo(rmApprovers(pos).map(u => u.id), 'approval', `Approval needed: ${n} change${n>1?'s':''} to the ${fmtD(r.date,'short')} register`, `Asked by ${ME.name}: ${why}`, { route:'attendance', tab:'approvals' });
+  audit(`Asked to change ${n} mark${n>1?'s':''} on the finalized register of ${fmtD(r.date)} (needs approval by ${POSITIONS[pos]}): ${why}`);
+  delete CHG[r.id]; delete R.q.chg; refresh(); toast(`Sent for approval to ${rmWho(pos)}`); };
+const chgFind = (rid, id) => { const r = S.registers.find(x => x.id===rid), q = (r?.chgReq||[]).find(x => x.id===id); return { r, q }; };
+const chgDone = (r, q, result, note) => { r.chgReq = (r.chgReq||[]).filter(x => x.id!==q.id); r.chgLog = [...(r.chgLog||[]), { id:q.id, at:Date.now(), by:q.by, reason:q.reason, decidedBy:ME.id, result, note:note||'', ch:q.ch }].slice(-100); };
+A.chgApprove = el => { const { r, q } = chgFind(el.dataset.rid, el.dataset.id); if(!q || !rmCanApprove(q)) return toast('This request is no longer waiting');
+  r.log = r.log || []; Object.entries(q.ch).forEach(([sid, c]) => { const s = scout(sid); if(c.to && c.to.s) r.entries[sid] = JSON.parse(JSON.stringify(c.to)); else delete r.entries[sid]; regOp(r, sid);
+    r.log.push({ ts:Date.now(), user:ME.id, text:`${sname(s)}: ${entTxt(c.from)} → ${entTxt(c.to)} (asked by ${user(q.by)?.name||'a leader'}, approved by ${ME.name})` }); });
+  chgDone(r, q, 'approved'); const n = Object.keys(q.ch).length;
+  notifyTo([q.by], 'approval', `Approved: ${n} change${n>1?'s':''} to the ${fmtD(r.date,'short')} register`, `Approved by ${ME.name}`, { route:'register', id:r.id });
+  audit(`Approved ${n} change${n>1?'s':''} to the finalized register of ${fmtD(r.date)} (asked by ${user(q.by)?.name||'a leader'})`); refresh(); toast('Changes approved and applied'); };
+A.chgDecline = el => { const { r, q } = chgFind(el.dataset.rid, el.dataset.id); if(!q) return;
+  modal({ title:'Decline request', form:'chgDecline', body:`<input type="hidden" name="rid" value="${r.id}"><input type="hidden" name="id" value="${q.id}"><p style="margin-top:0">The ${fmtD(r.date)} register stays as it is. ${esc(user(q.by)?.name||'The leader')} will be told.</p>${field('Note to the leader (optional)', inp('note','', 'placeholder="e.g. No note was given for this absence"'))}`,
+    foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Decline</button>` }); };
+F.chgDecline = d => { const { r, q } = chgFind(d.rid, d.id); closeModal(); if(!q || !rmCanApprove(q)) return; chgDone(r, q, 'declined', d.note);
+  notifyTo([q.by], 'approval', `Declined: changes to the ${fmtD(r.date,'short')} register`, `${ME.name}${d.note ? ': “' + d.note + '”' : ' declined the request'}`, { route:'register', id:r.id });
+  audit(`Declined changes to the finalized register of ${fmtD(r.date)}${d.note ? ': ' + d.note : ''}`); refresh(); toast('Request declined'); };
+A.chgWithdraw = el => { const { r, q } = chgFind(el.dataset.rid, el.dataset.id); if(!q) return; chgDone(r, q, 'cancelled'); audit(`Cancelled a change request for the register of ${fmtD(r.date)}`); refresh(); toast('Request cancelled'); };
+const chgLines = q => Object.entries(q.ch).map(([sid, c]) => `<div class="chg-l">${esc(sname(scout(sid)))} <span class="pill-${c.from?.s||'U'}">${esc(entTxt(c.from))}</span> → <span class="pill-${c.to?.s||'U'}">${esc(entTxt(c.to))}</span></div>`).join('');
+function attApprovals(){ const all = S.registers.flatMap(r => (r.chgReq||[]).map(q => ({ r, q }))), mine = all.filter(({ q }) => rmCanApprove(q)).sort((a,b) => a.q.at - b.q.at), sent = all.filter(({ q }) => q.by===ME.id).sort((a,b) => b.q.at - a.q.at);
+  const hist = S.registers.flatMap(r => (r.chgLog||[]).map(h => ({ r, h }))).sort((a,b) => b.h.at - a.h.at).slice(0, 200), RES = { approved:['Approved','ok'], declined:['Declined','bad'], cancelled:['Cancelled',''] };
+  const head = (r, q) => `<b>Change register · ${fmtD(r.date,'short')} · ${esc(r.type)}</b> <a href="#" data-a="go" data-r="register" data-id="${r.id}" class="small">open</a><div class="small muted">Asked by ${esc(user(q.by)?.name||'a leader')}${user(q.by) ? ` (${esc(roleName(user(q.by)))})` : ''} · ${ago(q.at)}</div>`;
+  return `<div class="card rm-card" style="margin-bottom:16px"><div class="card-h"><h2>Waiting for you</h2>${mine.length ? `<span class="chip gold">${mine.length}</span>` : ''}</div>
+    ${mine.map(({ r, q }) => `<div class="rm-it"><div class="rm-r"><div style="flex:1;min-width:0">${head(r, q)}</div><span class="row nw" style="gap:6px"><button class="btn sm" data-a="chgDecline" data-rid="${r.id}" data-id="${q.id}">Decline</button><button class="btn sm primary" data-a="chgApprove" data-rid="${r.id}" data-id="${q.id}">${ic('check','sm')} Approve</button></span></div>${chgLines(q)}<div class="rm-why">“${esc(q.reason)}”</div></div>`).join('') || `<p class="muted small" style="margin:0">Nothing is waiting for your approval.</p>`}</div>
+  ${rmPos(ME) ? `<div class="card" style="margin-bottom:16px"><div class="card-h"><h2>Sent by you</h2>${sent.length ? `<span class="chip">${sent.length}</span>` : ''}</div>
+    ${sent.map(({ r, q }) => `<div class="rm-it"><div class="rm-r"><div style="flex:1;min-width:0"><b>Change register · ${fmtD(r.date,'short')} · ${esc(r.type)}</b><div class="small muted">Waiting for ${esc(rmWho(q.pos))} · asked ${ago(q.at)}</div></div><button class="btn sm" data-a="chgWithdraw" data-rid="${r.id}" data-id="${q.id}">Cancel request</button></div>${chgLines(q)}</div>`).join('') || `<p class="muted small" style="margin:0">You have no requests waiting. To change a finalized register, open it and tap “Request a change”.</p>`}</div>` : ''}
+  <div class="card"><div class="card-h"><h2>History</h2><span class="small muted">Changes to finalized registers</span></div>
+    ${hist.length ? `<div class="tbl-wrap"><table class="tbl rm-h"><thead><tr><th>Decided</th><th>Register</th><th>Changes</th><th>Asked by</th><th>Decision</th><th>Reason / note</th></tr></thead><tbody>${hist.map(({ r, h }) => { const x = RES[h.result] || [h.result,''];
+      return `<tr><td class="nw">${fmtD(iso(new Date(h.at)),'short')}</td><td class="nw"><a href="#" data-a="go" data-r="register" data-id="${r.id}">${fmtD(r.date,'short')}</a><div class="small muted">${esc(r.type)}</div></td><td class="small">${Object.entries(h.ch||{}).map(([sid, c]) => `${esc(sname(scout(sid)))}: ${esc(entTxt(c.from))} → ${esc(entTxt(c.to))}`).join('<br>')}</td>
+        <td>${esc(user(h.by)?.name||'—')}</td><td>${chip(x[0], x[1])}<div class="small muted">${esc(user(h.decidedBy)?.name||'')}</div></td><td class="small">${esc(h.reason||'')}${h.note ? `<div class="muted">“${esc(h.note)}”</div>` : ''}</td></tr>`; }).join('')}</tbody></table></div>`
+      : `<p class="muted small" style="margin:0">No change requests yet.</p>`}</div>`; }
 VIEWS.register = () => {
   const r = S.registers.find(x => x.id===R.id); if(!r) return empty('clipboard','Register not found');
-  const list = regVisible(r); const locked = regLocked(r) || !can('attendance.take'); const c = regCountsOf(r, list);
+  const list = regVisible(r); const cm = chgMode(r); const locked = !cm && (regLocked(r) || !can('attendance.take')); const c = regCountsOf(r, list);
   const ses = r.sessionId && S.sessions.find(s => s.id===r.sessionId);
   const sf = REG_SF[r.id] || ''; const shown = sf ? list.filter(s => (r.entries[s.id]?.s || 'U')===sf) : list;
   const groups = [['Girl','Girls'],['Boy','Boys'],['','Gender not set']].map(([g,l]) => [l, shown.filter(s => genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b)))]).filter(([,ss]) => ss.length);
@@ -2620,12 +2677,15 @@ VIEWS.register = () => {
   ${pageH('Attendance register', fmtD(r.date,'long'), `<button class="btn" data-a="regExport" data-id="${r.id}">${ic('download','sm')} Export</button>${r.status==='draft' && can('attendance.delete') ? `<button class="icon-btn" data-a="regDelete" data-id="${r.id}" aria-label="Delete register">${ic('trash')}</button>` : ''}`)}
   <div class="rmeta"><div><small>Date</small><b>${fmtD(r.date)}</b></div><div><small>Meeting</small><b>${esc(r.type)}</b></div><div><small>Group</small><b>${esc(pName(r.patrol))}</b></div>
     <div><small>Session</small>${ses ? `<a href="#" data-a="go" data-r="session" data-id="${ses.id}"><b>${esc(ses.title)}</b></a>` : '<b class="muted">—</b>'}</div><div><small>Status</small><span class="rst ${r.status==='final'?'fin':''}">${r.status==='final'?'FINAL':'DRAFT'}</span></div></div>
-  ${r.status==='final' ? `<div class="alert ${ME.role==='admin'?'':'info'}" style="margin-bottom:12px;align-items:center">${ic('lock','sm')}<span style="flex:1">${R.q.unlock ? 'Admin edit mode. Every change is written to the audit log.' : `Finalized ${r.finalizedAt?ago(r.finalizedAt):''}${r.finalizedBy && user(r.finalizedBy) ? ' by '+esc(user(r.finalizedBy).name) : ''}. ${ME.role==='admin' ? 'Only you, as Group Scout Leader, can edit it.' : 'Only the Group Scout Leader can edit it.'}`}</span>${ME.role==='admin' ? `<button class="btn sm" data-a="regUnlock">${R.q.unlock?'Lock again':'Edit register'}</button>` : ''}</div>` : ''}
+  ${r.status==='final' ? (cm ? `<div class="alert warn" style="margin-bottom:12px;align-items:center">${ic('edit','sm')}<span style="flex:1"><b>Change request</b> · tap the marks to change. Nothing changes on the register until it is approved.</span></div>`
+    : `<div class="alert ${!rmPos(ME)?'':'info'}" style="margin-bottom:12px;align-items:center;flex-wrap:wrap">${ic('lock','sm')}<span style="flex:1;min-width:200px">${R.q.unlock ? 'Edit mode. Every change is written to the change log and the audit log.' : `Finalized ${r.finalizedAt?ago(r.finalizedAt):''}${r.finalizedBy && user(r.finalizedBy) ? ' by '+esc(user(r.finalizedBy).name) : ''}.${(r.chgReq||[]).length ? ` <span class="rm-pend" style="margin:0 0 0 4px">⏳ ${r.chgReq.length} change request${r.chgReq.length>1?'s':''} waiting</span>` : ''}`}</span>
+      ${!rmPos(ME) ? `<button class="btn sm" data-a="regUnlock">${R.q.unlock?'Lock again':'Edit register'}</button>` : can('attendance.take') ? ((r.chgReq||[]).some(q => q.by===ME.id) ? `<button class="btn sm" data-a="go" data-r="attendance" data-tab="approvals">See my request</button>` : `<button class="btn sm" data-a="chgStart">${ic('edit','sm')} Request a change</button>`) : ''}</div>`) : ''}
   <div class="rstat" id="reg-counter">${counterHTML(c)}</div>
-  <div class="row" style="margin:0 0 12px">${regPatrolPick(r)}<span class="spacer"></span>${!locked ? `<span class="row" id="mark-all">${markAllHTML(r)}</span>` : ''}</div>
+  <div class="row" style="margin:0 0 12px">${regPatrolPick(r)}<span class="spacer"></span>${!locked && !cm ? `<span class="row" id="mark-all">${markAllHTML(r)}</span>` : ''}</div>
   ${curBatch() && regScouts(r).length > regScouts(r).filter(inBatch).length ? `<div class="rsf-note"><span>Showing <b>${esc(curBatch().name)}</b> scouts only (${regScouts(r).filter(inBatch).length} of ${regScouts(r).length} on this register)</span><button class="btn sm" data-a="setBatch" data-id="">${ic('x','sm')} Show all</button></div>` : ''}
   ${sf ? `<div class="rsf-note"><span>Showing <b>${sf==='U'?'Unmarked':ST_LABEL[sf]}</b> scouts only (${shown.length})</span><button class="btn sm" data-a="regSF" data-k="${sf}">${ic('x','sm')} Show all</button></div>` : ''}
   <div class="rlist" id="reg-list">${!shown.length && list.length ? empty('users', `No ${sf==='U'?'unmarked':ST_LABEL[sf].toLowerCase()} scouts`) : list.length ? `<div class="rl-h"><span></span><span>Scout</span><span>Patrol</span><span>Rank</span><span>Status</span></div>${groups.map(([l,ss]) => `<div class="rl-sh">${l} <span>(${ss.length})</span></div>${ss.map(s => regRow(r, s, locked)).join('')}`).join('')}` : empty('users','No scouts in this patrol')}</div>
+  ${cm ? chgFoot(r) : ''}
   ${!locked && r.status==='draft' ? `<div class="reg-actions rfoot"><span class="small" id="reg-left">${regLeftHTML(c)}</span><span class="spacer"></span><button class="btn" data-a="regDraft">Save draft</button><button class="btn primary" data-a="regFinalize" data-id="${r.id}">${ic('lock','sm')} Finalize register</button></div>` : ''}
   ${(r.log||[]).length ? `<div class="card" style="margin-top:16px"><div class="card-h"><h3>Change log</h3></div><div class="list">${r.log.slice().reverse().map(l => `<div class="li small"><span class="muted num" style="width:120px">${new Date(l.ts).toLocaleString()}</span><span class="grow">${esc(user(l.user)?.name||'')}: ${esc(l.text)}</span></div>`).join('')}</div></div>` : ''}`;
 };
@@ -2634,9 +2694,9 @@ function counterHTML(c){ const t = c.P+c.L+c.A+c.E, sf = REG_SF[R.id] || '';
   const box = (k, n, l) => `<button class="rs-${k} ${sf===k?'on':''} ${sf && sf!==k?'dim':''}" data-a="regSF" data-k="${k}" aria-pressed="${sf===k}" title="${sf===k?'Show all scouts':'Show only '+l.toLowerCase()+' scouts'}"><b class="num">${n}</b><span>${l}</span></button>`;
   return ['P','L','A','E'].map(k => box(k, c[k], ST_LABEL[k])).join('') + box('U', c.U, 'Unmarked') + `<div class="rs-T"><b class="num">${t ? pct(c.P+c.L, t) : 0}%</b><span>Attendance</span></div>`; }
 A.regSF = el => { REG_SF[R.id] = REG_SF[R.id]===el.dataset.k ? '' : el.dataset.k; renderMain(); };
-function regRow(r, s, locked){ const e = r.entries[s.id] || {}; const p = patrol(s.patrol); const g = genderOf(s.gender); const img = s.photo && imgData(s.photo);
-  return `<div class="rl-r" id="rr_${s.id}"><span class="rl-ini ${g==='Girl'?'girl':g==='Boy'?'boy':''}" ${g?`title="${g}"`:''}>${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
-  <div class="rl-nm"><b>${esc(sname(s))}${s.medical?` <span title="Has medical notes" style="color:var(--bad);vertical-align:-2px">${ic('heart','sm')}</span>`:''}</b></div>
+function regRow(r, s, locked){ const cm = chgMode(r), e = cm ? chgEntry(r, s.id) : (r.entries[s.id] || {}); const changed = cm && CHG[r.id] && s.id in CHG[r.id]; const p = patrol(s.patrol); const g = genderOf(s.gender); const img = s.photo && imgData(s.photo);
+  return `<div class="rl-r${changed ? ' chg' : ''}" id="rr_${s.id}"><span class="rl-ini ${g==='Girl'?'girl':g==='Boy'?'boy':''}" ${g?`title="${g}"`:''}>${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>
+  <div class="rl-nm"><b>${esc(sname(s))}${s.medical?` <span title="Has medical notes" style="color:var(--bad);vertical-align:-2px">${ic('heart','sm')}</span>`:''}</b>${changed ? `<small class="chg-was">was ${esc(entTxt(r.entries[s.id]))}</small>` : ''}</div>
   <div class="rl-pt">${p ? `<span class="rl-pill">${pDot(p)}${esc(p.name)}</span>` : ''}</div><div class="rl-rk">${esc(s.rank||'—')}</div>
   <div class="rl-opt" role="radiogroup" aria-label="Attendance for ${esc(sname(s))}">${['P','L','A','E'].map(k => `<button class="${e.s===k?'on':''}" data-s="${k}" role="radio" aria-checked="${e.s===k}" ${locked?'disabled':''} data-a="mark" data-sid="${s.id}" data-k="${k}">${ST_LABEL[k]}</button>`).join('')}</div>
   ${e.s==='L' ? `<div class="rl-x"><label for="lt_${s.id}">Arrival time</label><input id="lt_${s.id}" class="inp" type="time" style="width:130px" value="${esc(e.time||'')}" ${locked?'disabled':''} data-c="regExtra" data-sid="${s.id}" data-k="time"></div>`
@@ -2645,11 +2705,17 @@ function regRow(r, s, locked){ const e = r.entries[s.id] || {}; const p = patrol
 function regOp(r, sid){ if(Cloud.on) Cloud.regOps.push({ rid:r.id, sid, e: r.entries[sid] ? JSON.parse(JSON.stringify(r.entries[sid])) : null }); }
 function curReg(){ return S.registers.find(x => x.id===R.id); }
 function regChanged(r, s, before, after){ if(r.status==='final'){ r.log = r.log || []; const t = `${sname(s)}: ${before ? ST_LABEL[before] : 'unmarked'} → ${after ? ST_LABEL[after] : 'unmarked'}`; r.log.push({ ts:Date.now(), user:ME.id, text:t }); audit(`Edited finalized register ${fmtD(r.date)}: ${t}`); } }
-A.mark = el => { const r = curReg(); if(regLocked(r)) return; const s = scout(el.dataset.sid); const k = el.dataset.k; const e = r.entries[s.id] = r.entries[s.id] || {}; const before = e.s;
+A.mark = el => { const r = curReg();
+  if(chgMode(r)){ const s = scout(el.dataset.sid), k = el.dataset.k, cur = { ...chgEntry(r, s.id) }; cur.s = cur.s===k ? undefined : k;
+    if(cur.s==='L' && !cur.time){ const n = new Date(); cur.time = `${pad(n.getHours())}:${pad(n.getMinutes())}`; } if(cur.s!=='L') delete cur.time; if(cur.s!=='E') delete cur.remark;
+    chgSet(r, s.id, cur.s ? cur : null); $('#rr_'+s.id).outerHTML = regRow(r, s, false); $('.chg-foot').outerHTML = chgFoot(r); return; }
+  if(regLocked(r)) return; const s = scout(el.dataset.sid); const k = el.dataset.k; const e = r.entries[s.id] = r.entries[s.id] || {}; const before = e.s;
   e.s = e.s===k && r.status!=='final' ? undefined : k; if(e.s==='L' && !e.time){ const n = new Date(); e.time = `${pad(n.getHours())}:${pad(n.getMinutes())}`; }
   if(!e.s) delete r.entries[s.id]; if(before!==e.s) regChanged(r, s, before, e.s);
   $('#rr_'+s.id).outerHTML = regRow(r, s, false); regOp(r, s.id); const cc = regCountsOf(r, regVisible(r)); $('#reg-counter').innerHTML = counterHTML(cc); const rl = $('#reg-left'); if(rl) rl.innerHTML = regLeftHTML(cc); const ma = $('#mark-all'); if(ma) ma.innerHTML = markAllHTML(r); save(); };
-C.regExtra = el => { const r = curReg(); const e = r.entries[el.dataset.sid]; if(!e) return; const before = e[el.dataset.k]; e[el.dataset.k] = el.value; regOp(r, el.dataset.sid); if(r.status==='final' && before!==el.value){ r.log = r.log||[]; r.log.push({ ts:Date.now(), user:ME.id, text:`${sname(scout(el.dataset.sid))}: ${el.dataset.k} changed` }); audit(`Edited finalized register ${fmtD(r.date)}: ${el.dataset.k} for ${sname(scout(el.dataset.sid))}`); } save(); };
+C.regExtra = el => { const r = curReg();
+  if(chgMode(r)){ const sid = el.dataset.sid, cur = { ...chgEntry(r, sid) }; if(!cur.s) return; cur[el.dataset.k] = el.value; chgSet(r, sid, cur); const row = $('#rr_'+sid); if(row) row.classList.toggle('chg', !!(CHG[r.id] && sid in CHG[r.id])); const n = $('.chg-foot .chg-n b'); if(n) n.closest('.chg-foot').querySelector('[data-a=chgSend]').disabled = !chgCount(r); const cn = $('.chg-n'); if(cn) cn.firstChild.textContent = `${chgCount(r)} change${chgCount(r)===1?'':'s'} · `; return; }
+  const e = r.entries[el.dataset.sid]; if(!e) return; const before = e[el.dataset.k]; e[el.dataset.k] = el.value; regOp(r, el.dataset.sid); if(r.status==='final' && before!==el.value){ r.log = r.log||[]; r.log.push({ ts:Date.now(), user:ME.id, text:`${sname(scout(el.dataset.sid))}: ${el.dataset.k} changed` }); audit(`Edited finalized register ${fmtD(r.date)}: ${el.dataset.k} for ${sname(scout(el.dataset.sid))}`); } save(); };
 /* One button: "Mark all present" while anyone is unmarked, "Untick all" once everyone is marked (drafts only). */
 function regPatrolPick(r){ const rs = regScouts(r).filter(inBatch), ids = [...new Set(rs.map(s => s.patrol))]; if((r.patrol!=='all' && !isBReg(r.patrol)) || ids.length < 2) return '';
   const pf = REG_PF[r.id] || ''; return `<select class="inp" style="width:auto;min-width:170px" data-c="regPatrol" aria-label="Show patrol">${opts([['','All patrols'], ...S.patrols.filter(p => ids.includes(p.id)).map(p => [p.id, `${p.name} (${rs.filter(s => s.patrol===p.id).length})`])], pf)}</select>`; }
@@ -3676,7 +3742,10 @@ const Cloud = {
     const out = local.map(l => { const r = rmap.get(l.id); if(!r) return l;
       const m = { ...l, entries:{ ...(r.entries||{}) } };
       if(r.status==='final' && l.status!=='final'){ m.status = r.status; m.finalizedAt = r.finalizedAt; m.finalizedBy = r.finalizedBy; }
-      if((r.log||[]).length > (l.log||[]).length) m.log = r.log; return m; });
+      if((r.log||[]).length > (l.log||[]).length) m.log = r.log;
+      /* change requests from several leaders: keep all, drop the ones already decided (their id is in the decision log) */
+      const by = (a, b) => [...new Map([...(a||[]), ...(b||[])].map(x => [x.id, x])).values()];
+      m.chgLog = by(r.chgLog, l.chgLog); const done = new Set(m.chgLog.map(x => x.id)); m.chgReq = by(r.chgReq, l.chgReq).filter(q => !done.has(q.id)); return m; });
     remote.forEach(r => { if(!known.has(r.id) && !out.some(x => x.id===r.id)) out.push(r); });   // created by another leader meanwhile
     this.applyOps(out, ops); return out;
   },
