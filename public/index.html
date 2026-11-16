@@ -2901,7 +2901,8 @@ function badgeReports(){ const hb = badge(R.q.hb) ? R.q.hb : '', g = R.q.rg || '
     return `<div class="ssh ${gd==='Girl'?'girl':gd==='Boy'?'boy':''}"><button class="ssh-who" data-a="go" data-r="scout" data-id="${s.id}">${av(s,36)}<div><b>${esc(sname(s))}</b><small>${gd?(gd==='Girl'?'♀ Girl':'♂ Boy')+' · ':''}${esc(pName(s.patrol))}</small></div></button>
       <div class="ssh-sash">${got.map(b => `<span class="ssh-b ${b.id===hb?'hl':''}" title="${esc(b.name)}">${bArt(b)}</span>`).join('') || '<em>No badges yet — the first one is waiting!</em>'}</div>
       <div class="ssh-cnt"><b>${got.length}</b><small>badge${got.length===1?'':'s'} earned</small><div class="ssh-bar"><i style="width:${bs.length ? got.length/bs.length*100 : 0}%"></i></div></div></div>`; };
-  const groups = [['Girl','♀ Girls','girl'],['Boy','♂ Boys','boy'],['','No gender set','']].map(([k,l,c]) => [l, c, list.filter(s => genderOf(s.gender)===k)]).filter(x => x[2].length);
+  /* when ranking by most badges, girls and boys are mixed in one list (each row keeps its girl/boy colour) */
+  const groups = most || bf==='some' ? (list.length ? [['Ranked by badges earned', '', list]] : []) : [['Girl','♀ Girls','girl'],['Boy','♂ Boys','boy'],['','No gender set','']].map(([k,l,c]) => [l, c, list.filter(s => genderOf(s.gender)===k)]).filter(x => x[2].length);
   return `${badgeKPIs()}<div class="row" style="margin-bottom:10px;gap:8px"><b class="small muted">Tap a badge to show only the scouts who have it</b><span class="spacer"></span>
     <div class="seg">${[['','All scouts'],['Girl','♀ Girls'],['Boy','♂ Boys']].map(([k,l]) => `<button class="${g===k?'on':''}" data-a="sashG" data-k="${k}">${l}</button>`).join('')}</div>
     ${can('export')?`<button class="btn" data-a="badgeXLSX">${ic('download','sm')} Excel</button><button class="btn primary" data-a="badgePDF">${ic('download','sm')} PDF</button>`:''}</div>
