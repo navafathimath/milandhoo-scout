@@ -99,6 +99,9 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
 .rstat>button{cursor:pointer;transition:background .12s,opacity .12s}.rstat>button:hover{background:var(--surface-2)}
 .rstat>button.on{background:color-mix(in srgb,var(--c) 12%,var(--surface))}.rstat>button.on:before{height:5px}.rstat>button.on span{color:var(--ink)}
 .rstat>button.dim{opacity:.55}
+.ses-t .nw{white-space:nowrap}.ses-t .n{text-align:center;font-weight:700;font-variant-numeric:tabular-nums}.ses-t td{vertical-align:middle}.ses-tot td{background:var(--surface-2);border-top:2px solid var(--line)}
+.sesk{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media (max-width:900px){ .ses-t .c-hide{display:none} .ses-t th,.ses-t td{padding-left:6px;padding-right:6px} }
 .rsf-note{display:flex;align-items:center;gap:10px;margin:-4px 0 10px;font-size:.85rem;color:var(--ink-2)}
 .rstat>*:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--c)}
 .rs-P{--c:var(--fm-P)}.rs-L{--c:var(--fm-L)}.rs-A{--c:var(--fm-A)}.rs-E{--c:var(--fm-E)}.rs-U{--c:var(--line)}.rs-T{--c:var(--primary)}
@@ -2563,8 +2566,8 @@ A.resetUserPw = el => { const u = user(el.dataset.id); const tmp = 'Trail-' + Ma
 VIEWS.attendance = () => {
   const tab = R.tab || 'registers';
   return `${pageH('Attendance register', 'Attendance', can('attendance.take') ? `<button class="btn primary" data-a="newRegister">${ic('plus','sm')} New register</button>` : '')}
-  <div class="tabs">${[['registers','Registers'],['reports','Reports']].map(([k,l]) => `<button class="tab ${tab===k?'on':''}" data-a="go" data-r="attendance" data-tab="${k}">${l}</button>`).join('')}</div>
-  ${tab==='reports' ? attReports() : attRegisters()}`;
+  <div class="tabs">${[['registers','Registers'],['sessions','By session'],['reports','Reports']].map(([k,l]) => `<button class="tab ${tab===k?'on':''}" data-a="go" data-r="attendance" data-tab="${k}">${l}</button>`).join('')}</div>
+  ${tab==='reports' ? attReports() : tab==='sessions' ? attSessions() : attRegisters()}`;
 };
 function attRegisters(){
   const q = R.q; const from = q.from || '', to = q.to || '', pf = q.p || '', sf = q.st || '';
@@ -2705,6 +2708,34 @@ function attReports(){
   <div class="card"><div class="card-h"><h2>Individual attendance</h2><span class="small muted">Lowest first</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Scout</th><th>Patrol</th><th>P</th><th>L</th><th>A</th><th>E</th><th style="min-width:150px">Rate</th></tr></thead><tbody>${ind.map(({s,a}) => `<tr class="click" data-a="go" data-r="scout" data-id="${s.id}" data-tab="attendance"><td><span class="row nw">${av(s,28)}${esc(sname(s))}</span></td><td>${esc(pName(s.patrol))}</td><td class="num">${a.P}</td><td class="num">${a.L}</td><td class="num">${a.A}</td><td class="num">${a.E}</td><td><span class="row nw"><span style="width:90px">${bar(a.pct)}</span><b class="num" style="color:${a.pct<S.settings.lowAttendance?'var(--bad)':'inherit'}">${a.pct}%</b></span></td></tr>`).join('')}</tbody></table></div></div>`;
 }
 C.rpFilter = el => { R.q.rp = el.value; renderMain(); };
+/* ---- Session-wise report: every register (session) of an academic year with its Present / Late / Absent / Excused counts ---- */
+function sesRepData(){ const years = [...new Set(S.registers.map(r => academicYear(pd(r.date)).label))].sort().reverse(), cur = academicYear().label;
+  const yr = R.q.sy || (years.includes(cur) ? cur : years[0] || cur), tp = R.q.stp || '';
+  const regs = S.registers.filter(r => regInBatch(r) && academicYear(pd(r.date)).label===yr && (!tp || r.type===tp)).sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  const rows = regs.map((r,i) => { const c = regCountsB(r), ses = r.sessionId && S.sessions.find(x => x.id===r.sessionId); return { r, i:i+1, c, ses }; });
+  const tot = rows.reduce((a,{c}) => { ['P','L','A','E','U'].forEach(k => a[k] += c[k]); return a; }, { P:0, L:0, A:0, E:0, U:0 }); const marked = tot.P+tot.L+tot.A+tot.E;
+  return { years:years.length ? years : [cur], yr, tp, types:[...new Set(S.registers.map(r => r.type))].sort(), rows, tot, avg: rows.length ? Math.round(rows.reduce((a,x) => a + x.c.pct, 0) / rows.length) : 0, overall:pct(tot.P+tot.L, marked) }; }
+function attSessions(){ const d = sesRepData(), { tot } = d, can2 = can('export') || ME.role==='assistant';
+  return `<div class="row" style="margin-bottom:14px;align-items:flex-end">
+    ${field('Academic year', `<select class="inp" data-c="sesRep" data-k="sy">${opts(d.years.map(y => [y, y]), d.yr)}</select>`, '" style="flex:1;min-width:140px;max-width:240px')}
+    ${field('Session type', `<select class="inp" data-c="sesRep" data-k="stp">${opts([['','All types'], ...d.types], d.tp)}</select>`, '" style="flex:1;min-width:130px;max-width:220px')}
+    <span class="spacer"></span>${can2 ? `<span class="row nw" style="gap:8px"><button class="btn" data-a="sesRepXLSX">${ic('download','sm')} Excel</button><button class="btn" data-a="sesRepPDF">${ic('file','sm')} PDF report</button></span>` : ''}</div>
+  <div class="rstat sesk" style="position:static">${[['T', d.rows.length, 'Sessions'], ['P', tot.P, 'Present'], ['L', tot.L, 'Late'], ['A', tot.A, 'Absent'], ['E', tot.E, 'Excused'], ['T', d.overall + '%', 'Attendance']].map(([k,v,l]) => `<div class="rs-${k}"><b class="num">${v}</b><span>${l}</span></div>`).join('')}</div>
+  <div class="card" style="padding:0"><div class="tbl-wrap" style="border:0"><table class="tbl ses-t"><thead><tr><th>#</th><th>Date</th><th>Session</th><th class="c-hide">Who</th><th class="n">P</th><th class="n">L</th><th class="n">A</th><th class="n">E</th><th style="min-width:110px">Attendance</th></tr></thead><tbody>
+    ${d.rows.map(({ r, i, c, ses }) => `<tr class="click" data-a="go" data-r="register" data-id="${r.id}"><td class="num muted">${i}</td><td class="nw">${fmtD(r.date,'short')}<small class="muted" style="display:block">${DOW[pd(r.date).getDay()]}</small></td>
+      <td><b>${esc(r.type)}</b>${ses ? `<small class="muted" style="display:block">${esc(ses.title)}</small>` : ''}${r.status!=='final' ? ` <span class="chip gold" style="font-size:.66rem">Draft</span>` : ''}</td><td class="c-hide">${esc(pName(r.patrol))}</td>
+      <td class="n" style="color:var(--fm-P)">${c.P}</td><td class="n" style="color:var(--fm-L)">${c.L}</td><td class="n" style="color:var(--fm-A)">${c.A}</td><td class="n" style="color:var(--fm-E)">${c.E}</td>
+      <td><div class="row nw" style="gap:8px"><span style="flex:1;min-width:40px">${bar(c.pct)}</span><b class="num small">${c.pct}%</b></div></td></tr>`).join('') || `<tr><td colspan="9">${empty('clipboard','No sessions in this year', 'Registers you take appear here, one row per session.')}</td></tr>`}
+    ${d.rows.length ? `<tr class="ses-tot"><td></td><td colspan="2"><b>Total · ${d.rows.length} session${d.rows.length>1?'s':''}</b></td><td class="c-hide"></td><td class="n">${tot.P}</td><td class="n">${tot.L}</td><td class="n">${tot.A}</td><td class="n">${tot.E}</td><td><b class="num">${d.overall}%</b> <span class="small muted">overall</span></td></tr>` : ''}
+  </tbody></table></div></div>`; }
+C.sesRep = el => { R.q[el.dataset.k] = el.value; renderMain(); };
+const sesRepRows = d => d.rows.map(({ r, i, c, ses }) => [i, fmtD(r.date,'short'), r.type + (ses ? ' · ' + ses.title : ''), pName(r.patrol), c.P, c.L, c.A, c.E, c.pct + '%']);
+A.sesRepXLSX = () => { const d = sesRepData(); exportXLSX(`session-attendance-${d.yr}.xlsx`, [['Sessions', [[`${S.settings.groupName} · Session attendance · ${d.yr}${d.tp ? ' · ' + d.tp : ''}${curBatch() ? ' · ' + curBatch().name : ''}`], [], ['#','Date','Session','Who','Present','Late','Absent','Excused','Attendance'], ...sesRepRows(d), [], ['', 'Total', `${d.rows.length} sessions`, '', d.tot.P, d.tot.L, d.tot.A, d.tot.E, d.overall + '%']]]]); };
+A.sesRepPDF = () => withPDF(async () => { const d = sesRepData();
+  const ctx = await pdfDoc('Session attendance report', `Academic year ${d.yr}${d.tp ? '  ·  ' + d.tp : ''}${curBatch() ? '  ·  ' + curBatch().name : ''}  ·  ${d.rows.length} sessions  ·  ${d.overall}% overall`);
+  pdfTable(ctx, ['Sessions','Present','Late','Absent','Excused','Attendance'], [[d.rows.length, d.tot.P, d.tot.L, d.tot.A, d.tot.E, d.overall + '%']], [88,88,88,88,88,91]);
+  pdfTable(ctx, ['#','Date','Session','Who','P','L','A','E','Att.'], [...sesRepRows(d), ['', 'Total', `${d.rows.length} sessions`, '', d.tot.P, d.tot.L, d.tot.A, d.tot.E, d.overall + '%']], [24,62,165,80,34,34,34,34,44]);
+  await pdfSave(ctx, `session-attendance-${d.yr}.pdf`); });
 A.lowNotify = () => { const low = lowAttendance(); notify('attendance', `${low.length} scouts below ${S.settings.lowAttendance}% attendance`, low.map(x => `${sname(x.s)} (${x.a.pct}%)`).join(', '), { route:'attendance', tab:'reports' }); refresh(); toast('Alert sent to all leaders'); };
 function repData(){ const regs = reportRegs(); const ind = viewScouts().map(s => ({ s, a:attOf(s.id, regs) })).filter(x => x.a.total).sort((a,b) => sname(a.s).localeCompare(sname(b.s)));
   return { regs, rows: ind.map(({s,a}) => [sname(s), s.sid, pName(s.patrol), a.P, a.L, a.A, a.E, a.total, a.pct+'%']),
