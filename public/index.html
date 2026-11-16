@@ -831,6 +831,10 @@ textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-t
 .bst.done{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}.bst.taught{background:color-mix(in srgb,#B8860B 16%,transparent);color:#9A6B00}.bst.late{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}.bst.plan{background:var(--wash);color:var(--ink-2)}.bst.none{color:var(--ink-2)}
 @media (max-width:640px){ .syl-plan thead{display:none} .syl-plan,.syl-plan tbody,.syl-plan td{display:block} .syl-plan tr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 12px;padding:12px;border-bottom:1px solid var(--line-2)} .syl-plan td{border:0!important;padding:0!important;min-width:0!important} .syl-plan td:first-child{grid-column:1/-1} .syl-plan td[data-l]::before{content:attr(data-l);display:block;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);font-weight:700;margin-bottom:3px} .syl-plan .inp{width:100%} }
 .bcol{position:relative;width:38px;height:38px;flex:none;display:grid;place-items:center;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}.bcol:hover{background:var(--wash)}.bcol svg{width:20px;height:20px}.bcol input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0;padding:0}
+.rm-pend{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;color:#9A6A10;background:#FFF4DC;border:1px solid #F0D9A8;border-radius:99px;padding:2px 8px;margin-top:6px;white-space:nowrap}
+.rm-who{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--wash);font-size:.85rem;margin-top:8px}
+.rm-card{border-left:4px solid var(--gold)}.rm-it{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:8px}.rm-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rm-why{margin-top:8px;background:var(--surface-2);border-radius:8px;padding:7px 10px;font-size:.85rem;color:var(--ink-2)}
 .btag{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--wash);color:var(--ink-2);white-space:nowrap}
 .bsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}.bsum>button{text-align:left;border:1px solid var(--line);border-left:5px solid var(--bc);border-radius:12px;padding:12px 14px;background:var(--surface);cursor:pointer;display:flex;flex-direction:column;gap:4px;color:inherit;font:inherit}
 @media (max-width:900px){ .bsw-top{display:none} .bstrip{padding:5px 12px;gap:8px;font-size:.82rem} .bsw-m{display:block;flex:none} .top{gap:4px} .bsw-m .bsw-btn{height:34px;padding:0 8px;gap:4px;font-size:.76rem} .bsw-m .bsw-all{display:none} .bsw-m .bsw-all-s{display:inline} .top-right{gap:2px} .top .icon-btn{width:38px} .bsw-m .bsw-it{height:32px;font-size:.78rem} .bs-x span{display:none} }
@@ -1075,7 +1079,7 @@ const NOTIF_TYPES = {
   session:{label:'Sessions & events', icon:'calendar'}, badge:{label:'Badge completions', icon:'medal'},
   attendance:{label:'Low attendance', icon:'alert'}, renewal:{label:'Renewals', icon:'refresh'},
   birthday:{label:'Birthdays', icon:'cake'}, photo:{label:'New photos', icon:'image'},
-  task:{label:'Assigned tasks', icon:'clipboard'}, announce:{label:'Announcements', icon:'megaphone'} };
+  task:{label:'Assigned tasks', icon:'clipboard'}, approval:{label:'Approvals', icon:'lock'}, announce:{label:'Announcements', icon:'megaphone'} };
 const BADGE_ICONS = ['knot','tent','fire','compass','cross','mountain','leaf','wave','star','axe','binoculars','rope','map','heart'];
 const PATROL_ICONS = ['flag','tent','fire','compass','mountain','leaf','wave','star','binoculars','knot'];
 
@@ -1392,7 +1396,7 @@ function nextUp(){ const t = TODAY(), n = new Date(), hm = `${pad(n.getHours())}
   if(ev) return { kind:'event', title:ev.title, date:ev.occ, time:ev.start, where:ev.location, id:ev.id, type:ev.type, slip:ev.permission };
   return null; }
 function nextSession(){ const t = TODAY(); return S.sessions.filter(s => !s.template && s.date >= t).sort(by('date'))[0]; }
-function visibleNotifs(){ if(!isScout()) return S.notifications; const sc = myScout(); return S.notifications.filter(n => (n.type==='announce' && (!n.to || n.to==='all' || n.to===sc?.patrol)) || (n.type==='session' && n.link?.route==='calendar') || (n.link && n.link.id===sc?.id && ['badge','birthday'].includes(n.type))); }
+function visibleNotifs(){ if(!isScout()) return S.notifications.filter(n => !n.forU || n.forU.includes(ME.id)); const sc = myScout(); return S.notifications.filter(n => (n.type==='announce' && (!n.to || n.to==='all' || n.to===sc?.patrol)) || (n.type==='session' && n.link?.route==='calendar') || (n.link && n.link.id===sc?.id && ['badge','birthday'].includes(n.type))); }
 function readMap(){ S.readBy = S.readBy || {}; S.readBy[ME.id] = S.readBy[ME.id] || {}; return S.readBy[ME.id]; }
 const isRead = n => { const m = readMap(); return n.id in m ? m[n.id] : !!n.read; };
 function setRead(n, v){ readMap()[n.id] = v; }
@@ -1846,7 +1850,7 @@ VIEWS.dashboard = () => {
     can('badge.award') && ['medal','Award badge','awardBadge'],
     can('scout.add') && ['plus','Add scout','addScout'],
   ].filter(Boolean);
-  return `
+  return `${rmCard()}
   <section class="welcome2">
     <div class="w2-l"><div class="eyebrow">${fmtD(TODAY(),'long')}${tw ? ` · ${esc(term.name)} · Week ${tw.w}` : ''}</div><h1>${greet}, ${esc(ME.name.split(' ')[0])}</h1><p>${act.length} active scouts across ${S.patrols.length} patrols</p>
       ${chips.length ? `<div class="w2-chips">${chips.map(([t,r,id]) => `<button data-a="go" data-r="${r}"${id?` data-id="${id}"`:''}>${t}</button>`).join('')}</div>` : ''}
@@ -2273,7 +2277,8 @@ function profOverview(s){ const p = patrol(s.patrol); const leaders = (p?.leader
   <div class="card"><div class="card-h"><h2>Assigned leaders</h2></div><div class="list">${leaders.map(u => `<div class="li">${av(u,42)}<div class="grow"><b class="ttl" style="display:block">${esc(u.name)}</b><span class="small muted">${roleName(u)}</span><div class="row small" style="gap:6px;margin-top:4px">${u.phone?`<a href="tel:${esc(u.phone.replace(/\s/g,''))}" class="chip">${ic('phone','sm')} ${esc(u.phone)}</a>`:''}<a href="mailto:${esc(u.email)}" class="chip">${ic('mail','sm')} Email</a></div></div></div>`).join('') || empty('shield','No leader assigned to this patrol')}</div></div></div>`; }
 function profBadges(s){ const earned = s.badges.map(b => ({ ...b, b:badge(b.badgeId) })).filter(x => x.b).sort((a,b) => a.date < b.date ? 1 : -1);
   return `<div class="card"><div class="card-h"><h2>Earned badges</h2>${can('badge.award')?`<button class="btn sm" data-a="awardBadge" data-sid="${s.id}">${ic('plus','sm')} Award</button>`:''}</div>
-    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">${earned.map(x => `<div style="text-align:center;padding:12px 6px;border:1px solid var(--line);border-radius:12px">${bArt(x.b, 'lg', 'margin:0 auto')}<b style="display:block;margin-top:8px">${esc(x.b.name)}</b><span class="small muted">${fmtD(x.date)}<br>by ${esc(user(x.by)?.name||'—')}</span>${can('badge.award') ? `<button class="btn sm ghost" style="margin-top:6px;color:var(--bad)" data-a="unaward" data-sid="${s.id}" data-bid="${x.b.id}">${ic('x','sm')} Remove</button>` : ''}</div>`).join('') || empty('medal','No badges yet')}</div></div>`; }
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px">${earned.map(x => `<div style="text-align:center;padding:12px 6px;border:1px solid var(--line);border-radius:12px">${bArt(x.b, 'lg', 'margin:0 auto')}<b style="display:block;margin-top:8px">${esc(x.b.name)}</b><span class="small muted">${fmtD(x.date)}<br>by ${esc(user(x.by)?.name||'—')}</span>${(q => q ? `<span class="rm-pend">⏳ Removal requested</span><span class="small muted" style="display:block">Waiting for ${esc(rmWho(q.pos))}</span>${q.by===ME.id || rmCanApprove(q) ? `<button class="btn sm" style="margin-top:6px" data-a="rmCancel" data-sid="${s.id}" data-bid="${x.b.id}">Cancel request</button>` : ''}`
+      : can('badge.award') ? `<button class="btn sm ghost" style="margin-top:6px;color:var(--bad)" data-a="unaward" data-sid="${s.id}" data-bid="${x.b.id}">${ic('x','sm')} Remove</button>` : '')(rmPending(s, x.b.id))}</div>`).join('') || empty('medal','No badges yet')}</div></div>`; }
 function profAttendance(s){
   const f = R.q.af || 'all'; const terms = S.settings.terms;
   const months = [...new Set(S.registers.map(r => r.date.slice(0,7)))].sort().reverse();
@@ -2908,7 +2913,7 @@ VIEWS.badge = () => { const b = badge(R.id); if(!b) return empty('medal','Badge 
   <div class="card" style="margin-bottom:16px"><div class="row" style="gap:16px">${bArt(b, 'lg', 'width:120px;height:120px')}<div style="flex:1;min-width:200px"><div class="eyebrow">${catLabel(b.category)}</div><h1>${esc(b.name)}</h1></div>
   ${can('badge.award')?`<button class="btn" data-a="awardBadge" data-bid="${b.id}">${ic('medal','sm')} Award</button>`:''}${can('badge.catalog')?`<button class="btn" data-a="badgeForm" data-id="${b.id}">${ic('edit','sm')} Edit</button>`:''}</div>
   <h3 style="margin:18px 0 8px">Syllabus</h3>${sylHTML(b)}${noteFor(b.name).length ? `<div class="note-rel"><b>${ic('book','sm')} Study notes</b><div class="row" style="gap:8px">${noteFor(b.name).map(n => noteChip(n)).join('')}</div></div>` : ''}</div>
-  <div><div class="card"><div class="card-h"><span class="row nw" style="gap:8px"><h2>Holders</h2>${chip(holders.length)}</span>${can('badge.award') && holders.length ? `<button class="btn sm ghost" style="color:var(--bad)" data-a="unawardBulk" data-bid="${b.id}">${ic('x','sm')} Remove…</button>` : ''}</div><div class="list">${holders.map(({s,a}) => `<div class="li" style="border-left:0;border-right:0;border-top:0;gap:6px"><button style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;border:0;background:none;text-align:left;cursor:pointer;padding:0;color:inherit;font:inherit" data-a="go" data-r="scout" data-id="${s.id}" data-tab="badges">${av(s,34)}<span class="grow" style="min-width:0"><b class="ttl" style="display:block">${esc(sname(s))}</b><span class="small muted">${fmtD(a.date)} · ${esc(user(a.by)?.name||'')}</span></span></button>${can('badge.award') ? `<button class="icon-btn" data-a="unaward" data-sid="${s.id}" data-bid="${b.id}" aria-label="Remove ${esc(b.name)} from ${esc(sname(s))}" title="Remove badge">${ic('x','sm')}</button>` : ''}</div>`).join('') || empty('medal','Nobody holds this badge yet')}</div></div></div>`; };
+  <div><div class="card"><div class="card-h"><span class="row nw" style="gap:8px"><h2>Holders</h2>${chip(holders.length)}</span>${can('badge.award') && holders.length ? `<button class="btn sm ghost" style="color:var(--bad)" data-a="unawardBulk" data-bid="${b.id}">${ic('x','sm')} Remove…</button>` : ''}</div><div class="list">${holders.map(({s,a}) => `<div class="li" style="border-left:0;border-right:0;border-top:0;gap:6px"><button style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;border:0;background:none;text-align:left;cursor:pointer;padding:0;color:inherit;font:inherit" data-a="go" data-r="scout" data-id="${s.id}" data-tab="badges">${av(s,34)}<span class="grow" style="min-width:0"><b class="ttl" style="display:block">${esc(sname(s))}</b><span class="small muted">${fmtD(a.date)} · ${esc(user(a.by)?.name||'')}</span></span></button>${rmPending(s, b.id) ? `<span class="rm-pend" title="Waiting for ${esc(rmWho(rmPending(s, b.id).pos))}">⏳ Removal requested</span>` : can('badge.award') ? `<button class="icon-btn" data-a="unaward" data-sid="${s.id}" data-bid="${b.id}" aria-label="Remove ${esc(b.name)} from ${esc(sname(s))}" title="Remove badge">${ic('x','sm')}</button>` : ''}</div>`).join('') || empty('medal','Nobody holds this badge yet')}</div></div></div>`; };
 function signReq(s, b, i, on){ s.badgeProgress[b.id] = s.badgeProgress[b.id] || {}; const before = badgePct(s,b);
   if(on) s.badgeProgress[b.id][i] = { date:TODAY(), by:ME.id }; else delete s.badgeProgress[b.id][i];
   if(before < 100 && badgePct(s,b)===100){ notify('badge', `${sname(s)} completed ${b.name}`, 'All requirements are signed off. Ready to award.', { route:'scout', id:s.id }); toast(`${s.first} has completed every ${b.name} requirement`); }
@@ -2916,20 +2921,62 @@ function signReq(s, b, i, on){ s.badgeProgress[b.id] = s.badgeProgress[b.id] || 
 C.reqTick = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); signReq(s, b, +el.dataset.i, el.checked); refresh(); };
 A.bulkAward = el => { const ids = $$('.bulk-award:checked').map(x => x.value); if(!ids.length) return toast('Select scouts who have completed every requirement'); awardTo(ids, el.dataset.bid, TODAY()); refresh(); };
 /* Take back a badge given by mistake: removes the award and the 5 patrol points it gave. Requirement ticks are kept unless asked. */
+/* ---- Badge removal needs approval: Scout Leader -> Leaders In Charge -> LT In Charge -> Group Leader.
+   The Group Leader and the admin remove directly. Requests live on the scout (s.rmReq) so they sync with the scout list. */
+const RM_UP = { sl:'lic', lic:'lt', lt:'gl' }, RM_ORDER = ['lic','lt','gl'];
+const rmPos = u => !u || u.role==='admin' || permKey(u)==='gl' ? null : RM_UP[permKey(u)] || 'lic';
+/* who approves for a position: the leaders holding it; if nobody does, the next position up; finally the admin */
+function rmApprovers(pos){ for(const p of RM_ORDER.slice(RM_ORDER.indexOf(pos))){ const us = S.users.filter(u => u.role==='leader' && permKey(u)===p && !u.disabled); if(us.length) return us; }
+  return S.users.filter(u => u.role==='admin'); }
+const rmWho = pos => { const us = rmApprovers(pos); return us.length ? us.map(u => u.name).join(' or ') : POSITIONS[pos]; };
+const rmCanApprove = q => ME && q.by!==ME.id && (ME.role==='admin' || rmApprovers(q.pos).some(u => u.id===ME.id));
+const rmPending = (s, bid) => (s.rmReq||[]).find(q => q.bid===bid);
+const rmMine = () => S.scouts.flatMap(s => (s.rmReq||[]).map(q => ({ s, q }))).filter(({ q }) => rmCanApprove(q)).sort((a,b) => a.q.at - b.q.at);
+function notifyTo(ids, type, title, body, link){ if(ids.length) S.notifications.unshift({ id:uid('n'), type, title, body, ts:Date.now(), read:false, link, forU:[...new Set(ids)] }); }
+function rmRequest(ids, bid, reason, clear){ const b = badge(bid), pos = rmPos(ME), done = [];
+  ids.forEach(id => { const s = scout(id); if(!s || !hasBadge(s,bid) || rmPending(s,bid)) return; s.rmReq = [...(s.rmReq||[]), { id:uid('rq'), bid, by:ME.id, at:Date.now(), reason, pos, clear:!!clear }]; done.push(s); });
+  const n = done.length;
+  if(n){ notifyTo(rmApprovers(pos).map(u => u.id), 'approval', `Approval needed: remove ${b.name} from ${n===1 ? sname(done[0]) : n + ' scouts'}`, `Asked by ${ME.name}: ${reason}`, { route:'dashboard' });
+    audit(`Asked to remove ${b.name} from ${n} scout${n>1?'s':''} (needs approval by ${POSITIONS[pos]}): ${reason}`); }
+  return n; }
+function rmCard(){ const L = rmMine(); if(!L.length) return '';
+  return `<div class="card rm-card" style="margin-bottom:16px"><div class="card-h"><h2>Waiting for your approval</h2><span class="chip gold">${L.length}</span></div>
+    ${L.map(({ s, q }) => { const b = badge(q.bid), u = user(q.by); return `<div class="rm-it"><div class="rm-r">${b ? bArt(b,'','width:36px;height:36px') : ''}<div style="flex:1;min-width:0"><b>Remove ${esc(b?.name||'badge')}</b> from <a href="#" data-a="go" data-r="scout" data-id="${s.id}" data-tab="badges"><b>${esc(sname(s))}</b></a>
+      <div class="small muted">Asked by ${esc(u?.name||'a leader')}${u ? ` (${esc(roleName(u))})` : ''} · ${ago(q.at)}</div></div>
+      <span class="row nw" style="gap:6px"><button class="btn sm" data-a="rmDecline" data-sid="${s.id}" data-id="${q.id}">Decline</button><button class="btn sm primary" data-a="rmApprove" data-sid="${s.id}" data-id="${q.id}">${ic('check','sm')} Approve</button></span></div>
+      ${q.reason ? `<div class="rm-why">“${esc(q.reason)}”</div>` : ''}</div>`; }).join('')}</div>`; }
+const rmFind = el => { const s = scout(el.dataset.sid), q = (s?.rmReq||[]).find(x => x.id===el.dataset.id); return { s, q }; };
+A.rmApprove = el => { const { s, q } = rmFind(el); if(!q || !rmCanApprove(q)) return toast('This request is no longer waiting'); const b = badge(q.bid);
+  s.rmReq = s.rmReq.filter(x => x.id!==q.id); unawardFrom([s.id], q.bid, q.clear);
+  notifyTo([q.by], 'approval', `Approved: ${b?.name} removed from ${sname(s)}`, `Approved by ${ME.name}`, { route:'scout', id:s.id });
+  audit(`Approved removing ${b?.name} from ${sname(s)} (asked by ${user(q.by)?.name||'a leader'})`); refresh(); toast(`${b?.name} removed from ${s.first}`); };
+A.rmDecline = el => { const { s, q } = rmFind(el); if(!q) return; const b = badge(q.bid);
+  modal({ title:'Decline request', form:'rmDecline', body:`<input type="hidden" name="sid" value="${s.id}"><input type="hidden" name="id" value="${q.id}"><p style="margin-top:0"><b>${esc(b?.name)}</b> stays with <b>${esc(sname(s))}</b>. ${esc(user(q.by)?.name||'The leader')} will be told.</p>${field('Note to the leader (optional)', inp('note','', 'placeholder="e.g. They did complete it at the camp"'))}`,
+    foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Decline</button>` }); };
+F.rmDecline = d => { const s = scout(d.sid), q = (s?.rmReq||[]).find(x => x.id===d.id); closeModal(); if(!q || !rmCanApprove(q)) return; const b = badge(q.bid);
+  s.rmReq = s.rmReq.filter(x => x.id!==q.id); notifyTo([q.by], 'approval', `Declined: ${b?.name} stays with ${sname(s)}`, `${ME.name}${d.note ? ': “' + d.note + '”' : ' declined the request'}`, { route:'scout', id:s.id });
+  audit(`Declined removing ${b?.name} from ${sname(s)}${d.note ? ': ' + d.note : ''}`); refresh(); toast('Request declined'); };
+A.rmCancel = el => { const s = scout(el.dataset.sid), q = s && rmPending(s, el.dataset.bid); if(!q) return; s.rmReq = s.rmReq.filter(x => x.id!==q.id); audit(`Cancelled the request to remove ${badge(q.bid)?.name} from ${sname(s)}`); refresh(); toast('Request cancelled'); };
 function unawardFrom(ids, bid, clearReqs){ let n = 0; ids.forEach(id => { const s = scout(id); if(!s || !hasBadge(s,bid)) return;
-    s.badges = s.badges.filter(x => x.badgeId!==bid); if(clearReqs) delete s.badgeProgress[bid];
+    s.badges = s.badges.filter(x => x.badgeId!==bid); if(s.rmReq) s.rmReq = s.rmReq.filter(q => q.bid!==bid); if(clearReqs) delete s.badgeProgress[bid];
     const p = patrol(s.patrol); if(p) addPts(p, -5, batchOf(s.batch)?.id); n++; });
   return n; }
-A.unaward = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); if(!s || !b || !can('badge.award')) return;
-  modal({ title:'Remove badge', form:'unaward', body:`<input type="hidden" name="ids" value="${s.id}"><input type="hidden" name="bid" value="${b.id}"><p style="margin-top:0">Remove <b>${esc(b.name)}</b> from <b>${esc(sname(s))}</b>? Use this when it was awarded by mistake. The 5 patrol points it gave are taken back.</p>
-    <label class="check"><input type="checkbox" name="clear"> Also untick its requirements</label>`, foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn danger">Remove badge</button>` }); };
-A.unawardBulk = el => { const b = badge(el.dataset.bid); if(!b || !can('badge.award')) return; const hs = S.scouts.filter(s => hasBadge(s,b.id) && inBatch(s));
+const rmAsk = pos => pos ? `${field('Reason (required)', inp('reason','', 'required placeholder="e.g. Awarded by mistake"'), 'full')}
+  <div class="rm-who">${ic('lock','sm')}<span><b>${esc(rmWho(pos))}</b> · ${POSITIONS[pos]} will be asked to approve. The badge stays until then.</span></div>` : '';
+A.unaward = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); if(!s || !b || !can('badge.award')) return; const pos = rmPos(ME), a = s.badges.find(x => x.badgeId===b.id);
+  if(rmPending(s, b.id)) return toast('A removal request for this badge is already waiting');
+  modal({ title: pos ? 'Request badge removal' : 'Remove badge', form:'unaward', body:`<input type="hidden" name="ids" value="${s.id}"><input type="hidden" name="bid" value="${b.id}"><div class="row nw" style="gap:12px;margin-bottom:10px">${bArt(b,'','width:44px;height:44px')}<div>Remove <b>${esc(b.name)}</b> from <b>${esc(sname(s))}</b>?<div class="small muted">${a ? `Awarded ${fmtD(a.date)}${user(a.by) ? ' by ' + esc(user(a.by).name) : ''}` : ''}</div></div></div>
+    ${pos ? '' : '<p class="small muted" style="margin-top:0">Use this when it was awarded by mistake. The 5 patrol points it gave are taken back.</p>'}${rmAsk(pos)}
+    <label class="check" style="margin-top:10px"><input type="checkbox" name="clear"> Also untick its requirements</label><div id="ua-err"></div>`, foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn ${pos ? 'primary' : 'danger'}">${pos ? 'Send for approval' : 'Remove badge'}</button>` }); };
+A.unawardBulk = el => { const b = badge(el.dataset.bid); if(!b || !can('badge.award')) return; const hs = S.scouts.filter(s => hasBadge(s,b.id) && inBatch(s) && !rmPending(s, b.id));
   modal({ title:`Remove ${esc(b.name)}`, wide:true, form:'unaward', body:`<input type="hidden" name="bid" value="${b.id}"><p style="margin-top:0" class="muted">Tick the scouts who were given ${esc(b.name)} by mistake. The 5 patrol points each award gave are taken back.</p>
     <input class="inp" type="search" placeholder="Search scout name" data-i="pickFind" aria-label="Search scout name" style="margin-bottom:6px"><div style="border:1px solid var(--line);border-radius:10px;padding:4px 10px;max-height:340px;overflow:auto">${pickGroups(hs, s => { const a = s.badges.find(x => x.badgeId===b.id); return `<label class="check" style="padding:6px 0;border-bottom:1px solid var(--line-2)"><input type="checkbox" name="ids" value="${s.id}">${av(s,26)}<span style="flex:1">${esc(sname(s))} <span class="small muted">${pName(s.patrol)}</span></span><span class="small muted">${fmtD(a.date,'short')}</span></label>`; }) || empty('users','Nobody holds this badge')}</div>
-    <label class="check" style="margin-top:10px"><input type="checkbox" name="clear"> Also untick its requirements</label><div id="ua-err"></div>`,
-    foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn danger">Remove from ticked scouts</button>` }); };
+    <label class="check" style="margin-top:10px"><input type="checkbox" name="clear"> Also untick its requirements</label>${rmPos(ME) ? `<div style="margin-top:10px">${rmAsk(rmPos(ME))}</div>` : ''}<div id="ua-err"></div>`,
+    foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn ${rmPos(ME) ? 'primary' : 'danger'}">${rmPos(ME) ? 'Send for approval' : 'Remove from ticked scouts'}</button>` }); };
 F.unaward = d => { const ids = [].concat(d.ids ?? []).flatMap(x => String(x).split(',')).filter(Boolean), b = badge(d.bid); if(!b) return closeModal();
   if(!ids.length) return $('#ua-err').innerHTML = `<div class="alert" style="margin-top:10px">${ic('alert','sm')}<span>Tick at least one scout.</span></div>`;
+  if(rmPos(ME)){ if(!String(d.reason||'').trim()) return $('#ua-err').innerHTML = `<div class="alert" style="margin-top:10px">${ic('alert','sm')}<span>Write the reason, so the approver knows why.</span></div>`;
+    const n = rmRequest(ids, b.id, d.reason.trim(), !!d.clear); closeModal(); refresh(); return toast(n ? `Sent for approval to ${rmWho(rmPos(ME))}` : 'A request is already waiting for these scouts'); }
   const n = unawardFrom(ids, b.id, !!d.clear); if(n) audit(`Removed ${b.name} from ${n === 1 ? sname(scout(ids[0])) : n + ' scouts'} (awarded by mistake)`);
   closeModal(); refresh(); toast(n ? `${b.name} removed from ${n} scout${n>1?'s':''}` : 'Nothing removed'); };
 function awardTo(ids, bid, date){ const b = badge(bid); let n = 0; ids.forEach(id => { const s = scout(id); if(!s || hasBadge(s,bid)) return; s.badges.push({ badgeId:bid, date, by:ME.id }); s.badgeProgress[bid] = Object.fromEntries(b.reqs.map((_,i) => [i, (s.badgeProgress[bid]||{})[i] || { date, by:ME.id }])); const p = patrol(s.patrol); if(p) addPts(p, 5, batchOf(s.batch)?.id); n++; });
