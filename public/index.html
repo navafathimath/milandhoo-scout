@@ -3046,14 +3046,16 @@ A.badgePDF = () => withPDF(async () => { const { list, mixed, label } = R.tab===
   const drawBadge = (b, x, y, s) => { if(imgs[b.id]) { try { doc.addImage(imgs[b.id], 'PNG', x, y, s, s); return; } catch(e){} } doc.setFillColor(...hexRGB(bCol(b))); doc.circle(x+s/2, y+s/2, s/2, 'F'); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(s*.42); doc.text(b.name[0]||'?', x+s/2, y+s/2+s*.15, { align:'center' }); };
   const GC = { Girl:[194,65,122], Boy:[13,120,182], '':[107,124,138] };
   const groups = mixed ? (list.length ? [['Ranked by badges earned', [19,40,58], list]] : []) : [['Girl','Girls'],['Boy','Boys'],['','No gender set']].map(([k,l]) => [l, GC[k], list.filter(s => genderOf(s.gender)===k)]).filter(x => x[2].length);
-  const BS = 22, nameW = 150, cntW = 60, sashW = w - nameW - cntW - 24, per = Math.max(1, Math.floor((sashW - 12) / (BS + 4)));
+  /* each earned badge: icon with its name (up to 2 lines) underneath */
+  const BS = 20, CW = 41, CH = 37, nameW = 124, cntW = 60, sashW = w - nameW - cntW - 24, per = Math.max(1, Math.floor((sashW - 8) / CW));
   for(const [l, c, ss] of groups){ need(60); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...c); doc.text(`${l.toUpperCase()}  (${ss.length})`, x0, ctx.y + 4); ctx.y += 12;
-    for(const s of ss){ const got = bs.filter(b => hasBadge(s,b.id)); const lines = Math.max(1, Math.ceil(got.length / per)); const rh = Math.max(44, 16 + lines*(BS+4)); need(rh + 6);
+    for(const s of ss){ const got = bs.filter(b => hasBadge(s,b.id)); const lines = Math.max(1, Math.ceil(got.length / per)); const rh = Math.max(44, 14 + lines*CH); need(rh + 6);
       const y = ctx.y; doc.setDrawColor(213,227,237); doc.setFillColor(255,255,255); doc.roundedRect(x0, y, w, rh, 8, 8, 'FD'); doc.setFillColor(...GC[genderOf(s.gender)]); doc.rect(x0, y+1, 4, rh-2, 'F');
       doc.setTextColor(19,40,58); doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.text(doc.splitTextToSize((mixed ? (ss.indexOf(s)+1) + '. ' : '') + sname(s), nameW-14).slice(0,2), x0+12, y+18);
       doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(78,101,119); doc.text(pName(s.patrol), x0+12, y+rh-10);
       const sx = x0 + nameW, sw = sashW; doc.setFillColor(230,245,236); doc.roundedRect(sx, y+6, sw, rh-12, 6, 6, 'F');
-      if(got.length) got.forEach((b,i) => drawBadge(b, sx + 6 + (i % per)*(BS+4), y + 10 + Math.floor(i/per)*(BS+4), BS));
+      if(got.length) got.forEach((b,i) => { const cx = sx + 4 + (i % per)*CW + CW/2, cy = y + 10 + Math.floor(i/per)*CH; drawBadge(b, cx - BS/2, cy, BS);
+        doc.setFont('helvetica','bold'); doc.setFontSize(5.2); doc.setTextColor(19,40,58); doc.text(doc.splitTextToSize(b.name, CW - 3).slice(0,2), cx, cy + BS + 5.5, { align:'center', lineHeightFactor:1.1 }); });
       else { doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(125,165,140); doc.text('No badges yet', sx+10, y+rh/2+3); }
       doc.setTextColor(19,40,58); doc.setFont('times','bold'); doc.setFontSize(16); doc.text(String(got.length), x0+w-12, y+22, { align:'right' });
       doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor(78,101,119); doc.text('badges earned', x0+w-12, y+32, { align:'right' });
