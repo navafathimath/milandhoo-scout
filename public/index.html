@@ -64,6 +64,7 @@ button.bgl{cursor:pointer}button.bgl:hover .n{text-decoration:underline}
 .bgl .n{flex:1;min-width:0}.bgl .t{font-weight:800;color:var(--primary)}.bgl .dot{width:10px;height:10px;border-radius:50%;flex:none}
 .ssh-strip{display:flex;gap:4px;overflow-x:auto;padding:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;margin-bottom:14px}
 .ssh-strip button{display:flex;flex-direction:column;align-items:center;gap:4px;width:76px;flex:none;padding:6px 2px;border-radius:12px;font:inherit;font-size:.66rem;font-weight:600;text-align:center;color:var(--ink-2);line-height:1.15;background:none;border:0;cursor:pointer}
+.ssh-strip button.none{opacity:.5}.ssh-strip button.none.on,.ssh-strip button.none:hover{opacity:1}
 .ssh-strip button:hover{background:var(--surface-2)}
 .ssh-strip .badge-ic{width:40px;height:40px}.ssh-strip button.on{background:var(--wash);color:var(--primary);box-shadow:inset 0 0 0 2px var(--primary)}
 .ssh-strip u{text-decoration:none;font-weight:800;color:var(--ink)}
@@ -2879,20 +2880,23 @@ C.badgeSort = el => { R.q.bs = el.value; renderMain(); };
 
 /* ---- Reports: scout sash ---- */
 function sashScouts(){ const g = R.q.rg || ''; return viewScouts().filter(s => !g || genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b))); }
-function badgeReports(){ const hb = R.q.hb || '', g = R.q.rg || ''; const sc = viewScouts(), list = sashScouts();
+function badgeReports(){ const hb = badge(R.q.hb) ? R.q.hb : '', g = R.q.rg || ''; const sc = viewScouts(), list = sashScouts().filter(s => !hb || hasBadge(s,hb));
   const bs = S.badges.slice().sort((a,b) => a.name.localeCompare(b.name));
+  /* strip: most-earned badges first (badges nobody has yet come last), ties A-Z */
+  const held = Object.fromEntries(S.badges.map(b => [b.id, sc.filter(s => hasBadge(s,b.id)).length])), strip = S.badges.slice().sort((a,b) => held[b.id] - held[a.id] || a.name.localeCompare(b.name));
   const row = s => { const got = bs.filter(b => hasBadge(s,b.id)); const gd = genderOf(s.gender);
     return `<div class="ssh ${gd==='Girl'?'girl':gd==='Boy'?'boy':''}"><button class="ssh-who" data-a="go" data-r="scout" data-id="${s.id}">${av(s,36)}<div><b>${esc(sname(s))}</b><small>${gd?(gd==='Girl'?'♀ Girl':'♂ Boy')+' · ':''}${esc(pName(s.patrol))}</small></div></button>
       <div class="ssh-sash">${got.map(b => `<span class="ssh-b ${b.id===hb?'hl':''}" title="${esc(b.name)}">${bArt(b)}</span>`).join('') || '<em>No badges yet — the first one is waiting!</em>'}</div>
       <div class="ssh-cnt"><b>${got.length}</b><small>badge${got.length===1?'':'s'} earned</small><div class="ssh-bar"><i style="width:${bs.length ? got.length/bs.length*100 : 0}%"></i></div></div></div>`; };
   const groups = [['Girl','♀ Girls','girl'],['Boy','♂ Boys','boy'],['','No gender set','']].map(([k,l,c]) => [l, c, list.filter(s => genderOf(s.gender)===k)]).filter(x => x[2].length);
-  return `${badgeKPIs()}<div class="row" style="margin-bottom:10px;gap:8px"><b class="small muted">Tap a badge to highlight who has it</b><span class="spacer"></span>
+  return `${badgeKPIs()}<div class="row" style="margin-bottom:10px;gap:8px"><b class="small muted">Tap a badge to show only the scouts who have it</b><span class="spacer"></span>
     <div class="seg">${[['','All scouts'],['Girl','♀ Girls'],['Boy','♂ Boys']].map(([k,l]) => `<button class="${g===k?'on':''}" data-a="sashG" data-k="${k}">${l}</button>`).join('')}</div>
     ${can('export')?`<button class="btn" data-a="badgeXLSX">${ic('download','sm')} Excel</button><button class="btn primary" data-a="badgePDF">${ic('download','sm')} PDF</button>`:''}</div>
-  <div class="ssh-strip">${bs.map(b => `<button class="${b.id===hb?'on':''}" data-a="sashHL" data-id="${b.id}" title="${esc(b.name)}">${bArt(b)}<span>${esc(b.name)}</span><u>${sc.filter(s => hasBadge(s,b.id)).length}</u></button>`).join('')}</div>
-  ${groups.map(([l,c,ss]) => `<div class="ssh-gh ${c}">${l} <span class="muted">${ss.length}</span></div><div class="ssh-list">${ss.map(row).join('')}</div>`).join('') || empty('users','No scouts to show')}`; }
+  <div class="ssh-strip">${strip.map(b => `<button class="${b.id===hb?'on':''} ${held[b.id]?'':'none'}" data-a="sashHL" data-id="${b.id}" title="${esc(b.name)}">${bArt(b)}<span>${esc(b.name)}</span><u>${held[b.id]}</u></button>`).join('')}</div>
+  ${hb ? `<div class="rsf-note"><span>Showing the <b>${list.length}</b> scout${list.length===1?'':'s'} who ha${list.length===1?'s':'ve'} <b>${esc(badge(hb).name)}</b></span><button class="btn sm" data-a="sashHL" data-id="${hb}">${ic('x','sm')} Show all</button></div>` : ''}
+  ${groups.map(([l,c,ss]) => `<div class="ssh-gh ${c}">${l} <span class="muted">${ss.length}</span></div><div class="ssh-list">${ss.map(row).join('')}</div>`).join('') || empty('users', hb ? `Nobody has ${esc(badge(hb).name)} yet` : 'No scouts to show')}`; }
 A.sashG = el => { R.q.rg = el.dataset.k; renderMain(); };
-A.sashHL = el => { R.q.hb = R.q.hb===el.dataset.id ? '' : el.dataset.id; renderMain(); };
+A.sashHL = el => { const x = $('.ssh-strip')?.scrollLeft || 0; R.q.hb = R.q.hb===el.dataset.id ? '' : el.dataset.id; renderMain(); const st = $('.ssh-strip'); if(st) st.scrollLeft = x; };
 A.badgeXLSX = () => exportXLSX(`badges-${TODAY()}.xlsx`, [['Holdings', [['Scout','Gender','Patrol', ...S.badges.map(b=>b.name), 'Total'], ...viewScouts().map(s => [sname(s), genderOf(s.gender), pName(s.patrol), ...S.badges.map(b => hasBadge(s,b.id) ? 'Earned' : ''), s.badges.length])]], ['Awards', [['Scout','Badge','Date','Awarded by'], ...S.scouts.flatMap(s => s.badges.map(a => [sname(s), badge(a.badgeId)?.name, a.date, user(a.by)?.name]))]]]);
 
 /* PDF in the same sash design */
