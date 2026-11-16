@@ -2731,10 +2731,50 @@ function attSessions(){ const d = sesRepData(), { tot } = d, can2 = can('export'
 C.sesRep = el => { R.q[el.dataset.k] = el.value; renderMain(); };
 const sesRepRows = d => d.rows.map(({ r, i, c, ses }) => [i, fmtD(r.date,'short'), r.type + (ses ? ' · ' + ses.title : ''), pName(r.patrol), c.P, c.L, c.A, c.E, c.pct + '%']);
 A.sesRepXLSX = () => { const d = sesRepData(); exportXLSX(`session-attendance-${d.yr}.xlsx`, [['Sessions', [[`${S.settings.groupName} · Session attendance · ${d.yr}${d.tp ? ' · ' + d.tp : ''}${curBatch() ? ' · ' + curBatch().name : ''}`], [], ['#','Date','Session','Who','Present','Late','Absent','Excused','Attendance'], ...sesRepRows(d), [], ['', 'Total', `${d.rows.length} sessions`, '', d.tot.P, d.tot.L, d.tot.A, d.tot.E, d.overall + '%']]]]); };
+/* Session attendance PDF (design A): colour summary boxes, then one row per session grouped by month,
+   with P / L / A / E in soft colour pills and an attendance bar that goes green, amber or red. */
 A.sesRepPDF = () => withPDF(async () => { const d = sesRepData();
-  const ctx = await pdfDoc('Session attendance report', `Academic year ${d.yr}${d.tp ? '  ·  ' + d.tp : ''}${curBatch() ? '  ·  ' + curBatch().name : ''}  ·  ${d.rows.length} sessions  ·  ${d.overall}% overall`);
-  pdfTable(ctx, ['Sessions','Present','Late','Absent','Excused','Attendance'], [[d.rows.length, d.tot.P, d.tot.L, d.tot.A, d.tot.E, d.overall + '%']], [88,88,88,88,88,91]);
-  pdfTable(ctx, ['#','Date','Session','Who','P','L','A','E','Att.'], [...sesRepRows(d), ['', 'Total', `${d.rows.length} sessions`, '', d.tot.P, d.tot.L, d.tot.A, d.tot.E, d.overall + '%']], [24,62,165,80,34,34,34,34,44]);
+  const ctx = await pdfDoc('Session attendance report', `Academic year ${d.yr}  ·  ${d.tp || 'All session types'}${curBatch() ? '  ·  ' + curBatch().name : ''}  ·  ${d.rows.length} session${d.rows.length===1?'':'s'}`);
+  const { doc, W } = ctx, H = doc.internal.pageSize.getHeight(), x0 = 32, w = W - 64;
+  const K = { P:[47,111,79], L:[154,106,16], A:[155,44,44], E:[85,96,107], T:[10,92,143] }, INK = [19,40,58], MUTED = [122,141,155], LINE = [225,234,241];
+  const tint = (c, k=.12) => c.map(v => Math.round(255 - (255 - v) * k)), rate = p => p >= 90 ? K.P : p >= 75 ? [94,143,62] : p >= 60 ? [184,134,11] : p > 0 ? K.A : [185,199,211];
+  /* summary boxes */
+  const box = [['T', d.rows.length, 'SESSIONS'], ['P', d.tot.P, 'PRESENT'], ['L', d.tot.L, 'LATE'], ['A', d.tot.A, 'ABSENT'], ['E', d.tot.E, 'EXCUSED'], ['T', d.overall + '%', 'ATTENDANCE']], gap = 8, bw = (w - gap*5) / 6;
+  box.forEach(([k, v, l], i) => { const x = x0 + i*(bw+gap), y = ctx.y; doc.setDrawColor(...LINE); doc.setFillColor(255,255,255); doc.roundedRect(x, y, bw, 46, 6, 6, 'FD');
+    doc.setFillColor(...K[k]); doc.roundedRect(x, y, bw, 4, 2, 2, 'F'); doc.rect(x, y+2, bw, 2, 'F');
+    doc.setFont('times','bold'); doc.setFontSize(17); doc.setTextColor(...K[k]); doc.text(String(v), x+9, y+25);
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.8); doc.setTextColor(78,101,119); doc.text(l, x+9, y+38); });
+  ctx.y += 62;
+  /* table */
+  const cols = [['#',18],['DATE',70],['SESSION',150],['WHO',75],['P',36],['L',36],['A',36],['E',36],['ATTENDANCE',74]], X = []; cols.reduce((x, [,cw], i) => (X[i] = x, x + cw), x0);
+  const head = () => { doc.setFont('helvetica','bold'); doc.setFontSize(7.2); doc.setTextColor(78,101,119);
+    cols.forEach(([h, cw], i) => doc.text(h, i>=4 && i<=7 ? X[i] + cw/2 : X[i] + 4, ctx.y + 10, i>=4 && i<=7 ? { align:'center' } : undefined));
+    doc.setDrawColor(...INK); doc.setLineWidth(1.4); doc.line(x0, ctx.y + 15, x0 + w, ctx.y + 15); doc.setLineWidth(.6); ctx.y += 19; };
+  const room = h => { if(ctx.y + h > H - 46){ doc.addPage(); ctx.y = 40; head(); } };
+  head(); let mon = '';
+  d.rows.forEach(({ r, i, c, ses }) => { const m = r.date.slice(0,7);
+    if(m !== mon){ mon = m; room(40); doc.setFillColor(244,248,251); doc.rect(x0, ctx.y, w, 16, 'F'); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(...K.T);
+      doc.text(`${MONL[+m.slice(5)-1]} ${m.slice(0,4)}`.toUpperCase(), x0 + 4, ctx.y + 11); ctx.y += 16; }
+    const sub = ses ? doc.splitTextToSize(ses.title, cols[2][1]-8)[0] : '', rh = sub ? 28 : 21; room(rh); const y = ctx.y, mid = y + rh/2;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTED); doc.text(String(i), X[0] + 4, mid + 3);
+    const dt = fmtD(r.date,'short'); doc.setFont('helvetica','bold'); doc.setTextColor(...INK); doc.text(dt, X[1] + 4, mid + 3);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTED); doc.text(DOW[pd(r.date).getDay()], X[1] + 6 + doc.setFontSize(8.5).setFont('helvetica','bold').getTextWidth(dt), mid + 3);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(...INK); doc.text(doc.splitTextToSize(r.type + (r.status!=='final' ? ' (draft)' : ''), cols[2][1]-8)[0], X[2] + 4, sub ? y + 12 : mid + 3);
+    if(sub){ doc.setFontSize(7.3); doc.setTextColor(...MUTED); doc.text(sub, X[2] + 4, y + 22); }
+    const who = pName(r.patrol); doc.setFontSize(7.3); const ww = Math.min(cols[3][1]-8, doc.getTextWidth(who) + 12); doc.setFillColor(238,243,247); doc.roundedRect(X[3] + 4, mid - 6, ww, 12, 6, 6, 'F');
+    doc.setFont('helvetica','bold'); doc.setTextColor(78,101,119); doc.text(doc.splitTextToSize(who, ww-8)[0], X[3] + 10, mid + 2.5);
+    ['P','L','A','E'].forEach((k, j) => { const v = c[k], cx = X[4+j] + cols[4+j][1]/2; doc.setFontSize(8.3);
+      if(v){ const pw = Math.max(20, doc.getTextWidth(String(v)) + 10); doc.setFillColor(...tint(K[k])); doc.roundedRect(cx - pw/2, mid - 6.5, pw, 13, 6.5, 6.5, 'F'); doc.setFont('helvetica','bold'); doc.setTextColor(...K[k]); }
+      else { doc.setFont('helvetica','normal'); doc.setTextColor(185,199,211); }
+      doc.text(String(v), cx, mid + 3, { align:'center' }); });
+    const bx = X[8] + 4, bwid = 36; doc.setFillColor(238,243,246); doc.roundedRect(bx, mid - 2.5, bwid, 5, 2.5, 2.5, 'F');
+    if(c.pct){ doc.setFillColor(...rate(c.pct)); doc.roundedRect(bx, mid - 2.5, Math.max(5, bwid * c.pct / 100), 5, 2.5, 2.5, 'F'); }
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.3); doc.setTextColor(...INK); doc.text(c.pct + '%', x0 + w - 2, mid + 3, { align:'right' });
+    doc.setDrawColor(238,243,246); doc.line(x0, y + rh, x0 + w, y + rh); ctx.y += rh; });
+  if(d.rows.length){ room(24); const y = ctx.y; doc.setDrawColor(...INK); doc.setLineWidth(1.4); doc.line(x0, y, x0 + w, y); doc.setLineWidth(.6); doc.setFillColor(244,248,251); doc.rect(x0, y + .7, w, 21, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.8); doc.setTextColor(...INK); doc.text(`Total · ${d.rows.length} session${d.rows.length===1?'':'s'}`, X[1] + 4, y + 14);
+    ['P','L','A','E'].forEach((k, j) => doc.text(String(d.tot[k]), X[4+j] + cols[4+j][1]/2, y + 14, { align:'center' })); doc.text(d.overall + '%', x0 + w - 2, y + 14, { align:'right' }); ctx.y += 30; }
+  else { doc.setFont('helvetica','italic'); doc.setFontSize(10); doc.setTextColor(...MUTED); doc.text('No sessions in this year yet.', x0, ctx.y + 16); }
   await pdfSave(ctx, `session-attendance-${d.yr}.pdf`); });
 A.lowNotify = () => { const low = lowAttendance(); notify('attendance', `${low.length} scouts below ${S.settings.lowAttendance}% attendance`, low.map(x => `${sname(x.s)} (${x.a.pct}%)`).join(', '), { route:'attendance', tab:'reports' }); refresh(); toast('Alert sent to all leaders'); };
 function repData(){ const regs = reportRegs(); const ind = viewScouts().map(s => ({ s, a:attOf(s.id, regs) })).filter(x => x.a.total).sort((a,b) => sname(a.s).localeCompare(sname(b.s)));
