@@ -1375,7 +1375,8 @@ function regCountsB(r){ if(!curBatch()) return regCounts(r); const c = regCounts
 const sesInBatch = s => { const b = curBatch(); return !b || s.template || !(s.forBatches||[]).length || s.forBatches.includes(b.id); };
 const sesFor = s => (s.forBatches||[]).map(bName).filter(Boolean).join(', ') || 'Whole troop';
 
-function audit(action){ S.audit.unshift({ ts:Date.now(), user:ME?.id, action }); if(S.audit.length>400) S.audit.length = 400; }
+const AUDIT_MAX = 3000;   // newest entries kept (about 300 KB, well under the 1 MB limit)
+function audit(action){ S.audit.unshift({ ts:Date.now(), user:ME?.id, action }); if(S.audit.length>AUDIT_MAX) S.audit.length = AUDIT_MAX; }
 function notify(type, title, body, link){ S.notifications.unshift({ id:uid('n'), type, title, body, ts:Date.now(), read:false, link }); }
 
 /* ---- stats ---- */
@@ -3791,6 +3792,7 @@ const Cloud = {
     this.keys().forEach(k => { const j = this.ser(k); if(j === this.sent[k]) return;
       if(k==='registers' && !this.regReplace && this.sent[k] !== undefined) return this.saveRegs();
       if(k==='users' && this.sent[k] !== undefined) return this.saveUsers();
+      if(k==='audit' && this.sent[k] !== undefined) return this.saveAudit();
       if(k==='registers'){ this.regReplace = false; this.regOps = []; }
       if(j.length > 1000000){ toast(`The ${k} data is too large to save (1 MB limit per area). Delete old records or photos.`); return; }
       this.sent[k] = j;
@@ -3817,6 +3819,19 @@ const Cloud = {
     .then(({ merged, j }) => { this.sent.users = j; this.adoptUsers(merged); if(this.role==='admin') this.syncAccess(); this.rerender(true); })
     .catch(e => { toast('Accounts not saved yet, retrying… ' + (e.code==='permission-denied' ? '(your role cannot change this)' : '')); setTimeout(() => this.schedule(), 4000); })
     .finally(() => { this.userBusy = false; if(this.userAgain){ this.userAgain = false; this.schedule(); } });
+  },
+  /* The audit log is merged, never replaced: every leader's device adds its own entries to what is already saved,
+     so entries written at the same time on different devices (e.g. sign-ins) are all kept. */
+  auditKey(a){ return a.ts + '|' + (a.user||'') + '|' + a.action; },
+  mergeAudit(...lists){ const m = new Map(); lists.flat().forEach(a => { if(a && a.ts) m.set(this.auditKey(a), a); });
+    return [...m.values()].sort((a,b) => b.ts - a.ts).slice(0, AUDIT_MAX); },
+  saveAudit(){
+    if(this.audBusy){ this.audAgain = true; return; } this.audBusy = true; const ref = this.db.doc('portal/audit');
+    this.db.runTransaction(async t => { const d = await t.get(ref); const remote = d.exists ? JSON.parse(d.data().json) : [];
+      const merged = this.mergeAudit(remote, S.audit); const j = JSON.stringify(merged); t.set(ref, { json:j, by:ME.email, ts:Date.now() }); return { merged, j }; })
+    .then(({ merged, j }) => { this.sent.audit = j; S.audit = this.mergeAudit(merged, S.audit); if(R.route==='audit') this.rerender(false); })
+    .catch(() => setTimeout(() => this.schedule(), 4000))
+    .finally(() => { this.audBusy = false; if(this.audAgain){ this.audAgain = false; this.schedule(); } });
   },
   /* Registers are saved in a transaction: other leaders' marks already on the server are kept and this
      leader's own changes (regOps) are applied on top, so several leaders can mark one register at once. */
@@ -3864,6 +3879,7 @@ const Cloud = {
   stop(){ this.unsubs.forEach(f => { try { f(); } catch(e){} }); this.unsubs = []; },
   applyRemote(k, j){
     if(j === this.sent[k]) return;
+    if(k==='audit'){ const remote = JSON.parse(j); S.audit = this.mergeAudit(remote, S.audit); this.sent.audit = j; if(JSON.stringify(S.audit) !== j) this.schedule(); if(R.route==='audit') this.rerender(false); return; }
     if(k==='users' && this.sent.users !== undefined){ const base = this.sent.users; this.sent.users = j; this.adoptUsers(this.mergeUsers(base, S.users, JSON.parse(j))); if(this.ser('users') !== j) this.schedule(); this.rerender(true); return; }
     if(this.ser(k) !== (this.sent[k] ?? this.ser(k))) return;   // local unsaved edit wins; it is about to be written
     this.sent[k] = j; const v = JSON.parse(j);
@@ -4025,7 +4041,9 @@ VIEWS.audit = () => { if(ME.role!=='admin') return empty('lock','Only the admin 
   const list = S.audit.filter(a => (!uf || a.user===uf) && (!q || a.action.toLowerCase().includes(q)));
   return `${pageH('Administration', 'Audit log', can('export')?`<button class="btn" data-a="auditExport">${ic('download','sm')} Export CSV</button>`:'')}
   <div class="row" style="margin-bottom:14px"><select class="inp" style="width:auto" data-c="auditU" aria-label="Filter by person">${opts([['','Everyone'], ...S.users.map(u=>[u.id,u.name])], uf)}</select><input class="inp" type="search" style="flex:1;min-width:180px" placeholder="Search actions" value="${esc(R.q.s||'')}" data-c="auditS" aria-label="Search actions"></div>
-  <div class="card" style="padding:6px 14px"><div class="list">${list.slice(0,300).map(a => `<div class="li">${av(user(a.user)||{name:'System'},32)}<div class="grow"><span>${esc(a.action)}</span><div class="small muted">${esc(user(a.user)?.name||'System')} · ${new Date(a.ts).toLocaleString()}</div></div></div>`).join('') || empty('history','No matching entries')}</div></div>`; };
+  <div class="card" style="padding:6px 14px"><div class="list">${list.slice(0, +R.q.n || 300).map(a => `<div class="li">${av(user(a.user)||{name:'System'},32)}<div class="grow"><span>${esc(a.action)}</span><div class="small muted">${esc(user(a.user)?.name||'System')} · ${new Date(a.ts).toLocaleString()}</div></div></div>`).join('') || empty('history','No matching entries')}</div>
+  ${list.length > (+R.q.n || 300) ? `<div class="row" style="justify-content:center;padding:10px 0"><button class="btn" data-a="auditMore">Show more (${list.length - (+R.q.n || 300)} older)</button></div>` : ''}</div>`; };
+A.auditMore = () => { R.q.n = (+R.q.n || 300) + 300; renderMain(); };
 C.auditU = el => { R.q.u = el.value; renderMain(); };
 C.auditS = el => { R.q.s = el.value; renderMain(); };
 A.auditExport = () => saveFile(`milandhoo-scout-audit-${TODAY()}.csv`, csvOf([['time','user','action'], ...S.audit.map(a => [new Date(a.ts).toISOString(), user(a.user)?.name||'', a.action])]));
