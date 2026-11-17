@@ -2987,9 +2987,9 @@ function signReq(s, b, i, on){ s.badgeProgress[b.id] = s.badgeProgress[b.id] || 
 C.reqTick = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); signReq(s, b, +el.dataset.i, el.checked); refresh(); };
 A.bulkAward = el => { const ids = $$('.bulk-award:checked').map(x => x.value); if(!ids.length) return toast('Select scouts who have completed every requirement'); awardTo(ids, el.dataset.bid, TODAY()); refresh(); };
 /* Take back a badge given by mistake: removes the award and the 5 patrol points it gave. Requirement ticks are kept unless asked. */
-/* ---- Badge removal (and changing a finalized register) needs approval: Scout Leader -> Leaders In Charge -> LT In Charge -> Group Leader,
-   and the Group Leader -> Leaders In Charge. Only the admin changes directly. Requests live on the scout (s.rmReq) so they sync with the scout list. */
-const RM_UP = { sl:'lic', lic:'lt', lt:'gl', gl:'lic' }, RM_ORDER = ['lic','lt','gl'];
+/* ---- Badge removal (and changing a finalized register) needs approval: Scout Leader, LT In Charge and Group Leader ask the
+   Leaders In Charge; the Leaders In Charge ask the LT In Charge. Only the admin changes directly. Requests live on the scout (s.rmReq) so they sync with the scout list. */
+const RM_UP = { sl:'lic', lic:'lt', lt:'lic', gl:'lic' }, RM_ORDER = ['lic','lt','gl'];
 const rmPos = u => !u || u.role==='admin' ? null : RM_UP[permKey(u)] || 'lic';
 /* who approves for a position: the leaders holding it; if nobody does, the next position up; finally the admin */
 function rmApprovers(pos){ for(const p of RM_ORDER.slice(RM_ORDER.indexOf(pos))){ const us = S.users.filter(u => u.role==='leader' && permKey(u)===p && !u.disabled); if(us.length) return us; }
