@@ -850,6 +850,11 @@ textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-t
 .chg-ini{width:26px;height:26px;flex:none;border-radius:7px;border:2px solid var(--line);display:inline-grid;place-items:center;font:700 .6rem var(--f-ui);color:var(--ink-2);background:var(--surface);overflow:hidden}.chg-ini img{width:100%;height:100%;object-fit:cover}.chg-ini.girl{border-color:var(--girl)}.chg-ini.boy{border-color:var(--boy)}
 .chg-c{margin:3px 0}.chg-why{margin-top:10px;background:var(--surface-2);border-radius:10px;padding:8px 12px;font-size:.85rem;color:var(--ink-2)}.chg-why b{font-size:.66rem;letter-spacing:.08em;opacity:.75;margin-right:8px}
 @media (max-width:560px){ .chg-rw{grid-template-columns:auto 14px auto 1fr;gap:6px 6px;padding:8px 10px} .chg-rw .nm{grid-column:1/-1} .cp{max-width:100%;overflow:hidden;text-overflow:ellipsis} }
+.rm-r.rm-badge .rm-act .primary{order:1}
+/* phones: badge on the right, Approve above Decline, so the text keeps the full width on the left */
+@media (max-width:560px){ .rm-r.rm-badge{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:start}
+  .rm-r.rm-badge .rm-txt{grid-column:1;grid-row:1 / span 2} .rm-r.rm-badge .rm-art{grid-column:2;grid-row:1;justify-self:end}
+  .rm-r.rm-badge .rm-act{grid-column:2;grid-row:2;flex-direction:column;align-items:stretch} .rm-r.rm-badge .rm-act .primary{order:-1} }
 .rm-why{margin-top:8px;background:var(--surface-2);border-radius:8px;padding:7px 10px;font-size:.85rem;color:var(--ink-2)}
 .btag{display:inline-flex;align-items:center;gap:5px;font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--wash);color:var(--ink-2);white-space:nowrap}
 .bsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}.bsum>button{text-align:left;border:1px solid var(--line);border-left:5px solid var(--bc);border-radius:12px;padding:12px 14px;background:var(--surface);cursor:pointer;display:flex;flex-direction:column;gap:4px;color:inherit;font:inherit}
@@ -3026,7 +3031,7 @@ function rmRequest(ids, bid, reason, clear){ const b = badge(bid), pos = rmPos(M
     audit(`Asked to remove ${b.name} from ${n} scout${n>1?'s':''} (needs approval by ${rmPosName(pos)}): ${reason}`); }
   return n; }
 /* Badge work -> Approvals: requests waiting for me, my own requests still waiting, and the history of decisions */
-const rmRow = (s, q, b, inner, actions) => `<div class="rm-it"><div class="rm-r">${b ? bArt(b,'','width:36px;height:36px') : ''}<div style="flex:1;min-width:0">${inner}</div>${actions ? `<span class="row nw" style="gap:6px">${actions}</span>` : ''}</div>${q.reason ? `<div class="rm-why">“${esc(q.reason)}”</div>` : ''}</div>`;
+const rmRow = (s, q, b, inner, actions) => `<div class="rm-it"><div class="rm-r rm-badge">${b ? `<span class="rm-art">${bArt(b,'','width:36px;height:36px')}</span>` : ''}<div class="rm-txt" style="flex:1;min-width:0">${inner}</div>${actions ? `<span class="row nw rm-act" style="gap:6px">${actions}</span>` : ''}</div>${q.reason ? `<div class="rm-why">“${esc(q.reason)}”</div>` : ''}</div>`;
 /* "Sent by you" ticket (design B): yellow edge, waiting label, reason in italics, Cancel at the side */
 const sentTicket = (art, title, at, reason, extra, cancel) => `<div class="st-t">${art ? `<span class="st-art">${art}</span>` : ''}<div class="st-in"><div class="st-ttl">${title}</div>
   <span class="sent-wait">⏳ Waiting for Approval · ${ago(at)}</span>${extra || ''}${reason ? `<div class="st-q">“${esc(reason)}”</div>` : ''}</div>${cancel}</div>`;
