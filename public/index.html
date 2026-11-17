@@ -2628,7 +2628,7 @@ const chgCount = r => Object.keys(CHG[r.id]||{}).length;
 function chgSet(r, sid, e){ const m = CHG[r.id] = CHG[r.id] || {}; if(sameEnt(e, r.entries[sid])) delete m[sid]; else m[sid] = e && e.s ? e : null; }
 function chgFoot(r){ const n = chgCount(r), pos = rmPos(ME);
   return `<div class="chg-foot"><div class="field" style="flex:1;min-width:200px;margin:0"><label for="chg-reason">Reason (required)</label><input class="inp" id="chg-reason" placeholder="e.g. Hassan brought a medical note"></div>
-    <span class="small muted chg-n" style="flex-basis:100%">${n} change${n===1?'':'s'} · <b style="color:var(--ink)">${esc(rmWho(pos))}</b> (${POSITIONS[pos]}) will be asked to approve</span>
+    <span class="small muted chg-n" style="flex-basis:100%">${n} change${n===1?'':'s'} · <b style="color:var(--ink)">${esc(rmWho(pos))}</b> (${rmPosName(pos)}) can approve</span>
     <span class="spacer"></span><button class="btn" data-a="chgCancel">Cancel</button><button class="btn primary" data-a="chgSend" ${n?'':'disabled'}>Send for approval</button></div>`; }
 A.chgStart = () => { const r = curReg(); CHG[r.id] = {}; R.q.chg = 1; renderMain(); };
 A.chgCancel = () => { const r = curReg(); delete CHG[r.id]; delete R.q.chg; renderMain(); };
@@ -2637,7 +2637,7 @@ A.chgSend = () => { const r = curReg(), n = chgCount(r), why = ($('#chg-reason')
   const pos = rmPos(ME), ch = Object.fromEntries(Object.entries(CHG[r.id]).map(([sid, to]) => [sid, { from: r.entries[sid] ? JSON.parse(JSON.stringify(r.entries[sid])) : null, to }]));
   r.chgReq = [...(r.chgReq||[]), { id:uid('cq'), by:ME.id, at:Date.now(), reason:why, pos, ch }];
   notifyTo(rmApprovers(pos).map(u => u.id), 'approval', `Approval needed: ${n} change${n>1?'s':''} to the ${fmtD(r.date,'short')} register`, `Asked by ${ME.name}: ${why}`, { route:'attendance', tab:'approvals' });
-  audit(`Asked to change ${n} mark${n>1?'s':''} on the finalized register of ${fmtD(r.date)} (needs approval by ${POSITIONS[pos]}): ${why}`);
+  audit(`Asked to change ${n} mark${n>1?'s':''} on the finalized register of ${fmtD(r.date)} (needs approval by ${rmPosName(pos)}): ${why}`);
   delete CHG[r.id]; delete R.q.chg; refresh(); toast(`Sent for approval to ${rmWho(pos)}`); };
 const chgFind = (rid, id) => { const r = S.registers.find(x => x.id===rid), q = (r?.chgReq||[]).find(x => x.id===id); return { r, q }; };
 const chgDone = (r, q, result, note) => { r.chgReq = (r.chgReq||[]).filter(x => x.id!==q.id); r.chgLog = [...(r.chgLog||[]), { id:q.id, at:Date.now(), by:q.by, reason:q.reason, decidedBy:ME.id, result, note:note||'', ch:q.ch }].slice(-100); };
@@ -2987,14 +2987,18 @@ function signReq(s, b, i, on){ s.badgeProgress[b.id] = s.badgeProgress[b.id] || 
 C.reqTick = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); signReq(s, b, +el.dataset.i, el.checked); refresh(); };
 A.bulkAward = el => { const ids = $$('.bulk-award:checked').map(x => x.value); if(!ids.length) return toast('Select scouts who have completed every requirement'); awardTo(ids, el.dataset.bid, TODAY()); refresh(); };
 /* Take back a badge given by mistake: removes the award and the 5 patrol points it gave. Requirement ticks are kept unless asked. */
-/* ---- Badge removal (and changing a finalized register) needs approval: Scout Leader, LT In Charge and Group Leader ask the
-   Leaders In Charge; the Leaders In Charge ask the LT In Charge. Only the admin changes directly. Requests live on the scout (s.rmReq) so they sync with the scout list. */
-const RM_UP = { sl:'lic', lic:'lt', lt:'lic', gl:'lic' }, RM_ORDER = ['lic','lt','gl'];
-const rmPos = u => !u || u.role==='admin' ? null : RM_UP[permKey(u)] || 'lic';
-/* who approves for a position: the leaders holding it; if nobody does, the next position up; finally the admin */
-function rmApprovers(pos){ for(const p of RM_ORDER.slice(RM_ORDER.indexOf(pos))){ const us = S.users.filter(u => u.role==='leader' && permKey(u)===p && !u.disabled); if(us.length) return us; }
-  return S.users.filter(u => u.role==='admin'); }
-const rmWho = pos => { const us = rmApprovers(pos); return us.length ? us.map(u => u.name).join(' or ') : POSITIONS[pos]; };
+/* ---- Badge removal (and changing a finalized register) needs approval. Any one leader in the listed positions can approve:
+   Scout Leader -> Leaders In Charge, LT In Charge or Group Leader; LT In Charge -> Leaders In Charge or Group Leader;
+   Group Leader -> Leaders In Charge or LT In Charge; Leaders In Charge -> LT In Charge or Group Leader.
+   Only the admin changes directly (and can approve anything). Requests live on the scout / register so they sync. */
+const RM_APPROVE = { sl:['lic','lt','gl'], lt:['lic','gl'], gl:['lic','lt'], lic:['lt','gl'] };
+const rmPos = u => !u || u.role==='admin' ? null : RM_APPROVE[permKey(u)] || RM_APPROVE.sl;
+const posList = pos => [].concat(pos || []);   // older requests saved a single position
+const rmPosName = pos => posList(pos).map(p => POSITIONS[p]).join(' / ');
+/* who approves: every leader holding one of the positions; if nobody holds any of them, the admin */
+function rmApprovers(pos){ const ps = posList(pos), us = S.users.filter(u => u.role==='leader' && ps.includes(permKey(u)) && !u.disabled);
+  return us.length ? us : S.users.filter(u => u.role==='admin'); }
+const rmWho = pos => { const us = rmApprovers(pos); return us.length ? us.map(u => u.name).join(' or ') : rmPosName(pos); };
 const rmCanApprove = q => ME && q.by!==ME.id && (ME.role==='admin' || rmApprovers(q.pos).some(u => u.id===ME.id));
 const rmPending = (s, bid) => (s.rmReq||[]).find(q => q.bid===bid);
 const rmMine = () => S.scouts.flatMap(s => (s.rmReq||[]).map(q => ({ s, q }))).filter(({ q }) => rmCanApprove(q)).sort((a,b) => a.q.at - b.q.at);
@@ -3003,7 +3007,7 @@ function rmRequest(ids, bid, reason, clear){ const b = badge(bid), pos = rmPos(M
   ids.forEach(id => { const s = scout(id); if(!s || !hasBadge(s,bid) || rmPending(s,bid)) return; s.rmReq = [...(s.rmReq||[]), { id:uid('rq'), bid, by:ME.id, at:Date.now(), reason, pos, clear:!!clear }]; done.push(s); });
   const n = done.length;
   if(n){ notifyTo(rmApprovers(pos).map(u => u.id), 'approval', `Approval needed: remove ${b.name} from ${n===1 ? sname(done[0]) : n + ' scouts'}`, `Asked by ${ME.name}: ${reason}`, { route:'badges', tab:'approvals' });
-    audit(`Asked to remove ${b.name} from ${n} scout${n>1?'s':''} (needs approval by ${POSITIONS[pos]}): ${reason}`); }
+    audit(`Asked to remove ${b.name} from ${n} scout${n>1?'s':''} (needs approval by ${rmPosName(pos)}): ${reason}`); }
   return n; }
 /* Badge work -> Approvals: requests waiting for me, my own requests still waiting, and the history of decisions */
 const rmRow = (s, q, b, inner, actions) => `<div class="rm-it"><div class="rm-r">${b ? bArt(b,'','width:36px;height:36px') : ''}<div style="flex:1;min-width:0">${inner}</div>${actions ? `<span class="row nw" style="gap:6px">${actions}</span>` : ''}</div>${q.reason ? `<div class="rm-why">“${esc(q.reason)}”</div>` : ''}</div>`;
@@ -3043,7 +3047,7 @@ function unawardFrom(ids, bid, clearReqs){ let n = 0; ids.forEach(id => { const 
     const p = patrol(s.patrol); if(p) addPts(p, -5, batchOf(s.batch)?.id); n++; });
   return n; }
 const rmAsk = pos => pos ? `${field('Reason (required)', inp('reason','', 'required placeholder="e.g. Awarded by mistake"'), 'full')}
-  <div class="rm-who">${ic('lock','sm')}<span><b>${esc(rmWho(pos))}</b> · ${POSITIONS[pos]} will be asked to approve. The badge stays until then.</span></div>` : '';
+  <div class="rm-who">${ic('lock','sm')}<span><b>${esc(rmWho(pos))}</b> (${rmPosName(pos)}) can approve. The badge stays until then.</span></div>` : '';
 A.unaward = el => { const s = scout(el.dataset.sid), b = badge(el.dataset.bid); if(!s || !b || !can('badge.award')) return; const pos = rmPos(ME), a = s.badges.find(x => x.badgeId===b.id);
   if(rmPending(s, b.id)) return toast('A removal request for this badge is already waiting');
   modal({ title: pos ? 'Request badge removal' : 'Remove badge', form:'unaward', body:`<input type="hidden" name="ids" value="${s.id}"><input type="hidden" name="bid" value="${b.id}"><div class="row nw" style="gap:12px;margin-bottom:10px">${bArt(b,'','width:44px;height:44px')}<div>Remove <b>${esc(b.name)}</b> from <b>${esc(sname(s))}</b>?<div class="small muted">${a ? `Awarded ${fmtD(a.date)}${user(a.by) ? ' by ' + esc(user(a.by).name) : ''}` : ''}</div></div></div>
