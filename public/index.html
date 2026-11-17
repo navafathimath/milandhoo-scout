@@ -1384,7 +1384,9 @@ function regCounts(r){ const c = {P:0,L:0,A:0,E:0,U:0}; regScouts(r).forEach(s =
 const REG_PF = {}, REG_SF = {};  // per-register patrol filter and status filter (Present/Late/…/Unmarked)
 function regVisible(r){ const pf = REG_PF[r.id]; return regScouts(r).filter(s => inBatch(s) && (!pf || s.patrol===pf)); }
 function regCountsOf(r, list){ const c = {P:0,L:0,A:0,E:0,U:0}; list.forEach(s => { const e = r.entries[s.id]; if(e && e.s) c[e.s]++; else c.U++; }); return c; }
-function regScouts(r){ return S.scouts.filter(s => (r.patrol==='all' || (isBReg(r.patrol) ? s.batch===r.patrol.slice(2) : s.patrol===r.patrol)) && (!isFormer(s) || r.entries[s.id])).sort((a,b) => (a.patrol+a.first).localeCompare(b.patrol+b.first)); }
+/* a register linked to a session plan that is for certain batches lists only those batches' scouts (anyone already marked stays) */
+const regSesBatches = r => { const ses = r.sessionId && S.sessions.find(x => x.id===r.sessionId); return (ses?.forBatches||[]).filter(batchOf); };
+function regScouts(r){ const fb = regSesBatches(r); return S.scouts.filter(s => (r.patrol==='all' || (isBReg(r.patrol) ? s.batch===r.patrol.slice(2) : s.patrol===r.patrol)) && (!fb.length || fb.includes(s.batch) || r.entries[s.id]) && (!isFormer(s) || r.entries[s.id])).sort((a,b) => (a.patrol+a.first).localeCompare(b.patrol+b.first)); }
 const regsSorted = () => [...S.registers].sort((a,b) => a.date < b.date ? 1 : -1);
 function badgePct(s, b){ const p = s.badgeProgress[b.id] || {}; return pct(Object.keys(p).length, b.reqs.length); }
 const hasBadge = (s, bid) => s.badges.some(x => x.badgeId===bid);
@@ -2620,8 +2622,11 @@ const whoOpts = () => [['all','Whole troop'], ...batches().map(b => ['b:'+b.id, 
 A.newRegister = () => modal({ title:'New attendance register', form:'newRegister', body:`<div class="form-grid">
   ${field('Date', inp('date', TODAY(), 'type="date" required'))}${field('Session type', sel('type', S.settings.sessionTypes, 'Regular session'))}
   ${field('Who', sel('patrol', whoOpts(), curBatch() ? 'b:'+curBatch().id : 'all'), 'full')}
-  ${field('Link to session plan (optional)', sel('sessionId', [['','None'], ...S.sessions.filter(s=>!s.template).sort((a,b)=>a.date<b.date?1:-1).slice(0,15).map(s=>[s.id, `${fmtD(s.date,'short')} · ${s.title}`])], nextSession()?.date===TODAY()?nextSession().id:''), 'full')}</div>`,
+  ${field('Link to session plan (optional)', sel('sessionId', [['','None'], ...S.sessions.filter(s=>!s.template).sort((a,b)=>a.date<b.date?1:-1).slice(0,15).map(s=>[s.id, `${fmtD(s.date,'short')} · ${s.title}${(s.forBatches||[]).length ? ' (' + sesFor(s) + ')' : ''}`])], nextSession()?.date===TODAY()?nextSession().id:'', 'data-c="regSes"'), 'full')}</div>`,
   foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Open register</button>` });
+/* picking a session plan that is for one batch sets "Who" to that batch (several batches: the register lists only them) */
+C.regSes = el => { const ses = S.sessions.find(x => x.id===el.value), fb = (ses?.forBatches||[]).filter(batchOf), who = el.form.querySelector('[name=patrol]');
+  if(who && fb.length===1) who.value = 'b:' + fb[0]; else if(who && fb.length > 1) who.value = 'all'; };
 F.newRegister = d => { closeModal(); createRegister(d); };
 function createRegister(d){
   const ex = S.registers.find(r => r.date===d.date && r.type===d.type && r.patrol===d.patrol);
@@ -2696,7 +2701,7 @@ VIEWS.register = () => {
   const groups = [['Girl','Girls'],['Boy','Boys'],['','Gender not set']].map(([g,l]) => [l, shown.filter(s => genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b)))]).filter(([,ss]) => ss.length);
   return `<button class="btn ghost sm" data-a="go" data-r="attendance" style="margin-bottom:10px">${ic('left','sm')} All registers</button>
   ${pageH('Attendance register', fmtD(r.date,'long'), `<button class="btn" data-a="regExport" data-id="${r.id}">${ic('download','sm')} Export</button>${r.status==='draft' && can('attendance.delete') ? `<button class="icon-btn" data-a="regDelete" data-id="${r.id}" aria-label="Delete register">${ic('trash')}</button>` : ''}`)}
-  <div class="rmeta"><div><small>Date</small><b>${fmtD(r.date)}</b></div><div><small>Meeting</small><b>${esc(r.type)}</b></div><div><small>Group</small><b>${esc(pName(r.patrol))}</b></div>
+  <div class="rmeta"><div><small>Date</small><b>${fmtD(r.date)}</b></div><div><small>Meeting</small><b>${esc(r.type)}</b></div><div><small>Group</small><b>${esc(regSesBatches(r).length && r.patrol==='all' ? regSesBatches(r).map(bName).join(', ') : pName(r.patrol))}</b></div>
     <div><small>Session</small>${ses ? `<a href="#" data-a="go" data-r="session" data-id="${ses.id}"><b>${esc(ses.title)}</b></a>` : '<b class="muted">—</b>'}</div><div><small>Status</small><span class="rst ${r.status==='final'?'fin':''}">${r.status==='final'?'FINAL':'DRAFT'}</span></div></div>
   ${r.status==='final' ? (cm ? `<div class="alert warn" style="margin-bottom:12px;align-items:center">${ic('edit','sm')}<span style="flex:1"><b>Change request</b> · tap the marks to change. Nothing changes on the register until it is approved.</span></div>`
     : `<div class="alert ${!rmPos(ME)?'':'info'}" style="margin-bottom:12px;align-items:center;flex-wrap:wrap">${ic('lock','sm')}<span style="flex:1;min-width:200px">${R.q.unlock ? 'Edit mode. Every change is written to the change log and the audit log.' : `Finalized ${r.finalizedAt?ago(r.finalizedAt):''}${r.finalizedBy && user(r.finalizedBy) ? ' by '+esc(user(r.finalizedBy).name) : ''}.${(r.chgReq||[]).length ? ` <span class="rm-pend" style="margin:0 0 0 4px">⏳ ${r.chgReq.length} change request${r.chgReq.length>1?'s':''} waiting</span>` : ''}`}</span>
