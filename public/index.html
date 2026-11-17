@@ -844,6 +844,7 @@ textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-t
 .chg-foot{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px 10px;margin-top:12px;padding:12px 14px;background:var(--surface);border:1px solid #F0D9A8;border-radius:14px;box-shadow:var(--shadow-lg)}
 .cp{display:inline-block;font-size:.72rem;font-weight:700;border-radius:99px;padding:2px 9px;white-space:nowrap;background:var(--surface-2);color:var(--ink-2)}
 .cp-P{background:#E3F0E8;color:#2F6F4F}.cp-L{background:#F6EEDC;color:#9A6A10}.cp-A{background:#F6E4E4;color:#9B2C2C}.cp-E{background:#ECEEF0;color:#55606B}.cp-U{background:#EAF3FA;color:#4E6577}.cp.old{text-decoration:line-through;opacity:.55}
+.chg-det{display:grid;gap:5px;margin:8px 0 4px;font-size:.85rem}.chg-det b{display:inline-block;min-width:96px;color:var(--ink-2);font-size:.78rem}.chg-det .ar{opacity:.6}
 .chg-sum{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 8px}.chg-sum .cp{border-radius:8px;padding:3px 9px}
 .chg-rows{display:grid;gap:6px}.chg-rw{display:grid;grid-template-columns:minmax(0,1fr) auto 18px auto;gap:8px;align-items:center;padding:7px 10px;border-radius:10px;background:var(--surface-2);font-size:.86rem}
 .chg-rw .nm{display:flex;align-items:center;gap:8px;min-width:0}.chg-rw .ar,.chg-c .ar{color:var(--ink-2);opacity:.6;text-align:center}
@@ -2621,15 +2622,38 @@ function attRegisters(){
 }
 C.regFilter = el => { R.q[el.dataset.k] = el.value; renderMain(); };
 A.quickRegister = () => createRegister({ date:TODAY(), type:'Regular session', patrol:'all', forBatches:curBatch() ? [curBatch().id] : [] });
-A.newRegister = () => modal({ title:'New attendance register', form:'newRegister', body:`<div class="form-grid">
-  ${field('Date', inp('date', TODAY(), 'type="date" required'))}${field('Session type', sel('type', S.settings.sessionTypes, 'Regular session'))}
-  <div class="field full"><label>Batches (leave all unticked for the whole troop)</label><div class="row" id="reg-fb">${batches().map(b => `<label class="check"><input type="checkbox" name="forBatches" value="${b.id}" ${curBatch()?.id===b.id ? 'checked' : ''}> <span class="bic" style="color:${b.color}">${ic('users','sm')}</span> ${esc(b.name)} <span style="font-size:.72rem;color:#9AA8B2;font-weight:500">(${bCount(b.id)} ${bCount(b.id)===1 ? 'Scout' : 'Scouts'})</span></label>`).join('')}</div></div>
-  ${field('Link to session plan (optional)', sel('sessionId', [['','None'], ...S.sessions.filter(s=>!s.template).sort((a,b)=>a.date<b.date?1:-1).slice(0,15).map(s=>[s.id, `${fmtD(s.date,'short')} · ${s.title}${(s.forBatches||[]).length ? ' (' + sesFor(s) + ')' : ''}`])], nextSession()?.date===TODAY()?nextSession().id:'', 'data-c="regSes"'), 'full')}</div>`,
+/* the register form (new and edit): date, session type, batches to tick, linked session plan */
+const regForm = v => `<div class="form-grid">
+  ${field('Date', inp('date', v.date, 'type="date" required'))}${field('Session type', sel('type', [...new Set([...S.settings.sessionTypes, v.type])], v.type))}
+  <div class="field full"><label>Batches (leave all unticked for the whole troop)</label><div class="row" id="reg-fb">${batches().map(b => `<label class="check"><input type="checkbox" name="forBatches" value="${b.id}" ${v.fb.includes(b.id) ? 'checked' : ''}> <span class="bic" style="color:${b.color}">${ic('users','sm')}</span> ${esc(b.name)} <span style="font-size:.72rem;color:#9AA8B2;font-weight:500">(${bCount(b.id)} ${bCount(b.id)===1 ? 'Scout' : 'Scouts'})</span></label>`).join('')}</div></div>
+  ${field('Link to session plan (optional)', sel('sessionId', [['','None'], ...S.sessions.filter(s=>!s.template).sort((a,b)=>a.date<b.date?1:-1).filter((s,i) => i < 15 || s.id===v.sessionId).map(s=>[s.id, `${fmtD(s.date,'short')} · ${s.title}${(s.forBatches||[]).length ? ' (' + sesFor(s) + ')' : ''}`])], v.sessionId||'', 'data-c="regSes"'), 'full')}</div>`;
+A.newRegister = () => modal({ title:'New attendance register', form:'newRegister', body:regForm({ date:TODAY(), type:'Regular session', fb:curBatch() ? [curBatch().id] : [], sessionId:nextSession()?.date===TODAY() ? nextSession().id : '' }),
   foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Open register</button>` });
 /* picking a session plan that is for one batch sets "Who" to that batch (several batches: the register lists only them) */
 C.regSes = el => { const ses = S.sessions.find(x => x.id===el.value); if(!ses) return; const fb = (ses.forBatches||[]).filter(batchOf);
   el.form.querySelectorAll('[name=forBatches]').forEach(x => x.checked = fb.includes(x.value)); };
 F.newRegister = d => { closeModal(); createRegister(d); };
+/* Edit a register's details. A draft (or the admin) changes straight away; a finalized register needs approval, like changing marks. */
+const regDet = r => ({ date:r.date, type:r.type, forBatches:(r.forBatches||[]).filter(batchOf).slice().sort(), sessionId:r.sessionId||null });
+const detTxt = (k, v) => k==='date' ? fmtD(v) : k==='forBatches' ? (v.length ? v.map(bName).join(', ') : 'Whole troop') : k==='sessionId' ? (S.sessions.find(x => x.id===v)?.title || 'None') : v;
+const DET_LBL = { date:'Date', type:'Session type', forBatches:'Batches', sessionId:'Session plan' };
+const detDiff = (a, b) => Object.keys(DET_LBL).filter(k => JSON.stringify(a[k]) !== JSON.stringify(b[k]));
+function applyDet(r, to){ if(r.sessionId!==to.sessionId){ S.sessions.forEach(x => { if(x.registerId===r.id) x.registerId = null; }); const ns = S.sessions.find(x => x.id===to.sessionId); if(ns) ns.registerId = r.id; }
+  Object.assign(r, { date:to.date, type:to.type, forBatches:to.forBatches, sessionId:to.sessionId }); if(r.forBatches.length && isBReg(r.patrol)) r.patrol = 'all'; }
+A.regEdit = el => { const r = S.registers.find(x => x.id===el.dataset.id); if(!r || !can('attendance.take')) return; const ask = r.status==='final' && rmPos(ME);
+  if(ask && (r.chgReq||[]).some(q => q.by===ME.id)) return toast('You already have a change waiting for this register');
+  modal({ title: ask ? 'Request register change' : 'Edit register', form:'regEdit', body:`<input type="hidden" name="rid" value="${r.id}">${regForm({ date:r.date, type:r.type, fb:regBatches(r), sessionId:r.sessionId })}
+    ${ask ? `${field('Reason (required)', inp('reason','', 'required placeholder="e.g. Wrong date was picked"'))}<div class="rm-who">${ic('lock','sm')}<span>This register is finalized. <b>${esc(rmWho(rmPos(ME)))}</b> (${rmPosName(rmPos(ME))}) can approve the change.</span></div>` : ''}<div id="re-err"></div>`,
+    foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">${ask ? 'Send for approval' : 'Save changes'}</button>` }); };
+F.regEdit = d => { const r = S.registers.find(x => x.id===d.rid); if(!r) return closeModal();
+  const to = { date:d.date || r.date, type:d.type || r.type, forBatches:[].concat(d.forBatches ?? []).filter(batchOf).sort(), sessionId:d.sessionId || null }, from = regDet(r), diff = detDiff(from, to);
+  if(!diff.length){ closeModal(); return toast('Nothing changed'); }
+  if(r.status==='final' && rmPos(ME)){ const why = String(d.reason||'').trim(); if(!why) return $('#re-err').innerHTML = `<div class="alert" style="margin-top:10px">${ic('alert','sm')}<span>Write the reason, so the approver knows why.</span></div>`;
+    const pos = rmPos(ME); r.chgReq = [...(r.chgReq||[]), { id:uid('cq'), by:ME.id, at:Date.now(), reason:why, pos, ch:{}, det:{ from, to } }];
+    notifyTo(rmApprovers(pos).map(u => u.id), 'approval', `Approval needed: change the ${fmtD(r.date,'short')} register details`, `Asked by ${ME.name}: ${why}`, { route:'attendance', tab:'approvals' });
+    audit(`Asked to change the details of the finalized register of ${fmtD(r.date)} (${diff.map(k => DET_LBL[k]).join(', ')}): ${why}`); closeModal(); refresh(); return toast(`Sent for approval to ${rmWho(pos)}`); }
+  if(r.status==='final'){ r.log = r.log || []; diff.forEach(k => r.log.push({ ts:Date.now(), user:ME.id, text:`${DET_LBL[k]}: ${detTxt(k, from[k])} → ${detTxt(k, to[k])}` })); }
+  applyDet(r, to); audit(`Edited register ${fmtD(r.date)}: ${diff.map(k => `${DET_LBL[k]} ${detTxt(k, from[k])} → ${detTxt(k, to[k])}`).join('; ')}`); closeModal(); refresh(); toast('Register updated'); };
 function createRegister(d){ const fb = [].concat(d.forBatches ?? []).filter(batchOf).sort(), patrol = d.patrol || 'all';
   const ex = S.registers.find(r => r.date===d.date && r.type===d.type && r.patrol===patrol && (r.forBatches||[]).slice().sort().join()===fb.join());
   if(ex){ toast('A register for that session already exists. Opening it.'); return go('register', { id:ex.id }); }
@@ -2661,11 +2685,12 @@ A.chgSend = () => { const r = curReg(), n = chgCount(r), why = ($('#chg-reason')
   audit(`Asked to change ${n} mark${n>1?'s':''} on the finalized register of ${fmtD(r.date)} (needs approval by ${rmPosName(pos)}): ${why}`);
   delete CHG[r.id]; delete R.q.chg; refresh(); toast(`Sent for approval to ${rmWho(pos)}`); };
 const chgFind = (rid, id) => { const r = S.registers.find(x => x.id===rid), q = (r?.chgReq||[]).find(x => x.id===id); return { r, q }; };
-const chgDone = (r, q, result, note) => { r.chgReq = (r.chgReq||[]).filter(x => x.id!==q.id); r.chgLog = [...(r.chgLog||[]), { id:q.id, at:Date.now(), by:q.by, reason:q.reason, decidedBy:ME.id, result, note:note||'', ch:q.ch }].slice(-100); };
+const chgDone = (r, q, result, note) => { r.chgReq = (r.chgReq||[]).filter(x => x.id!==q.id); r.chgLog = [...(r.chgLog||[]), { id:q.id, at:Date.now(), by:q.by, reason:q.reason, decidedBy:ME.id, result, note:note||'', ch:q.ch, det:q.det||null }].slice(-100); };
 A.chgApprove = el => { const { r, q } = chgFind(el.dataset.rid, el.dataset.id); if(!q || !rmCanApprove(q)) return toast('This request is no longer waiting');
-  r.log = r.log || []; Object.entries(q.ch).forEach(([sid, c]) => { const s = scout(sid); if(c.to && c.to.s) r.entries[sid] = JSON.parse(JSON.stringify(c.to)); else delete r.entries[sid]; regOp(r, sid);
+  r.log = r.log || []; if(q.det){ detDiff(q.det.from, q.det.to).forEach(k => r.log.push({ ts:Date.now(), user:ME.id, text:`${DET_LBL[k]}: ${detTxt(k, q.det.from[k])} → ${detTxt(k, q.det.to[k])} (asked by ${user(q.by)?.name||'a leader'}, approved by ${ME.name})` })); applyDet(r, q.det.to); }
+  Object.entries(q.ch).forEach(([sid, c]) => { const s = scout(sid); if(c.to && c.to.s) r.entries[sid] = JSON.parse(JSON.stringify(c.to)); else delete r.entries[sid]; regOp(r, sid);
     r.log.push({ ts:Date.now(), user:ME.id, text:`${sname(s)}: ${entTxt(c.from)} → ${entTxt(c.to)} (asked by ${user(q.by)?.name||'a leader'}, approved by ${ME.name})` }); });
-  chgDone(r, q, 'approved'); const n = Object.keys(q.ch).length;
+  chgDone(r, q, 'approved'); const n = Object.keys(q.ch).length + (q.det ? detDiff(q.det.from, q.det.to).length : 0);
   notifyTo([q.by], 'approval', `Approved: ${n} change${n>1?'s':''} to the ${fmtD(r.date,'short')} register`, `Approved by ${ME.name}`, { route:'register', id:r.id });
   audit(`Approved ${n} change${n>1?'s':''} to the finalized register of ${fmtD(r.date)} (asked by ${user(q.by)?.name||'a leader'})`); refresh(); toast('Changes approved and applied'); };
 A.chgDecline = el => { const { r, q } = chgFind(el.dataset.rid, el.dataset.id); if(!q) return;
@@ -2678,7 +2703,9 @@ A.chgWithdraw = el => { const { r, q } = chgFind(el.dataset.rid, el.dataset.id);
 /* change list (design C): a summary of the new marks, then one soft row per scout - initials box, old mark faded and crossed out, new mark bold */
 const chgPill = (e, old) => `<span class="cp cp-${e?.s||'U'}${old ? ' old' : ''}">${esc(entTxt(e))}</span>`;
 const chgIni = s => { const g = genderOf(s?.gender), img = s?.photo && imgData(s.photo); return `<span class="chg-ini ${g==='Girl'?'girl':g==='Boy'?'boy':''}">${img ? `<img src="${img}" alt="">` : esc(sname(s).split(' ').map(w => w[0]).slice(0,2).join(''))}</span>`; };
-function chgLines(q, compact){ const L = Object.entries(q.ch||{});
+const detLines = q => q.det ? `<div class="chg-det">${detDiff(q.det.from, q.det.to).map(k => `<div><b>${DET_LBL[k]}</b> <span class="cp old">${esc(detTxt(k, q.det.from[k]))}</span> <span class="ar">→</span> <span class="cp cp-P">${esc(detTxt(k, q.det.to[k]))}</span></div>`).join('')}</div>` : '';
+function chgLines(q, compact){ if(!Object.keys(q.ch||{}).length) return detLines(q); return detLines(q) + chgLines0(q, compact); }
+function chgLines0(q, compact){ const L = Object.entries(q.ch||{});
   if(compact) return L.map(([sid, c]) => `<div class="chg-c">${esc(sname(scout(sid)))} ${chgPill(c.from, true)} <span class="ar">→</span> ${chgPill(c.to)}</div>`).join('');
   const n = {}; L.forEach(([, c]) => { const k = c.to?.s || 'U'; n[k] = (n[k]||0) + 1; });
   return `<div class="chg-sum">${['P','L','A','E','U'].filter(k => n[k]).map(k => `<span class="cp cp-${k}">${n[k]} → ${k==='U' ? 'Unmarked' : ST_LABEL[k]}</span>`).join('')}<span class="cp">${L.length} scout${L.length===1?'':'s'}</span></div>
@@ -2702,7 +2729,7 @@ VIEWS.register = () => {
   const sf = REG_SF[r.id] || ''; const shown = sf ? list.filter(s => (r.entries[s.id]?.s || 'U')===sf) : list;
   const groups = [['Girl','Girls'],['Boy','Boys'],['','Gender not set']].map(([g,l]) => [l, shown.filter(s => genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b)))]).filter(([,ss]) => ss.length);
   return `<button class="btn ghost sm" data-a="go" data-r="attendance" style="margin-bottom:10px">${ic('left','sm')} All registers</button>
-  ${pageH('Attendance register', fmtD(r.date,'long'), `<button class="btn" data-a="regExport" data-id="${r.id}">${ic('download','sm')} Export</button>${r.status==='draft' && can('attendance.delete') ? `<button class="icon-btn" data-a="regDelete" data-id="${r.id}" aria-label="Delete register">${ic('trash')}</button>` : ''}`)}
+  ${pageH('Attendance register', fmtD(r.date,'long'), `${can('attendance.take') && !chgMode(r) ? `<button class="btn" data-a="regEdit" data-id="${r.id}">${ic('edit','sm')} Edit</button>` : ''}<button class="btn" data-a="regExport" data-id="${r.id}">${ic('download','sm')} Export</button>${r.status==='draft' && can('attendance.delete') ? `<button class="icon-btn" data-a="regDelete" data-id="${r.id}" aria-label="Delete register">${ic('trash')}</button>` : ''}`)}
   <div class="rmeta"><div><small>Date</small><b>${fmtD(r.date)}</b></div><div><small>Meeting</small><b>${esc(r.type)}</b></div><div><small>Group</small><b>${esc(regWho(r))}</b></div>
     <div><small>Session</small>${ses ? `<a href="#" data-a="go" data-r="session" data-id="${ses.id}"><b>${esc(ses.title)}</b></a>` : '<b class="muted">—</b>'}</div><div><small>Status</small><span class="rst ${r.status==='final'?'fin':''}">${r.status==='final'?'FINAL':'DRAFT'}</span></div></div>
   ${r.status==='final' ? (cm ? `<div class="alert warn" style="margin-bottom:12px;align-items:center">${ic('edit','sm')}<span style="flex:1"><b>Change request</b> · tap the marks to change. Nothing changes on the register until it is approved.</span></div>`
