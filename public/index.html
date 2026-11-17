@@ -1375,7 +1375,7 @@ function regCountsB(r){ if(!curBatch()) return regCounts(r); const c = regCounts
 const sesInBatch = s => { const b = curBatch(); return !b || s.template || !(s.forBatches||[]).length || s.forBatches.includes(b.id); };
 const sesFor = s => (s.forBatches||[]).map(bName).filter(Boolean).join(', ') || 'Whole troop';
 
-const AUDIT_MAX = 3000;   // newest entries kept (about 300 KB, well under the 1 MB limit)
+const AUDIT_MAX = 1500;   // newest entries kept (about 150-200 KB); older ones drop off, use Export CSV to keep a copy
 function audit(action){ S.audit.unshift({ ts:Date.now(), user:ME?.id, action }); if(S.audit.length>AUDIT_MAX) S.audit.length = AUDIT_MAX; }
 function notify(type, title, body, link){ S.notifications.unshift({ id:uid('n'), type, title, body, ts:Date.now(), read:false, link }); }
 
@@ -3711,6 +3711,8 @@ const Cloud = {
   on: (() => { try { const c = window.TRAILMARK_FIREBASE; return !!(c && c.apiKey && c.projectId && !/PASTE|YOUR/i.test(c.apiKey + c.projectId)); } catch(e){ return false; } })(),
   auth:null, db:null, role:null, members:{}, sent:{}, priv:{}, unsubs:[], timer:null, loading:new Set(), renderT:null, regOps:[], regBusy:false, regAgain:false, regReplace:false,
   keys(){ return this.role==='scout' ? CLOUD_KEYS : [...CLOUD_KEYS, 'private']; },
+  /* what this device downloads and follows live: the audit log only on the admin's device (others just add their own entries) */
+  liveKeys(){ return this.keys().filter(k => k!=='audit' || this.role==='admin'); },
 
   async start(){
     this.splash('Loading Milandhoo Scout Portal…');
@@ -3739,9 +3741,10 @@ const Cloud = {
     this.members = acc.data().members || {}; const role = this.members[email];
     if(!role){ LOGIN_ERR = `${esc(u.email)} is not on the portal yet. Ask the admin to add you in Leaders → Add user.`; await this.auth.signOut(); return; }
     this.role = role;
-    const keys = this.keys(); const st = { resets:{} };
+    const keys = this.liveKeys(); const st = { resets:{} };
     const snaps = await Promise.all(keys.map(k => this.db.doc('portal/' + k).get().catch(() => null)));
     snaps.forEach((s, i) => { if(s && s.exists){ const j = s.data().json; this.sent[keys[i]] = j; st[keys[i]] = JSON.parse(j); } });
+    if(!keys.includes('audit')){ st.audit = []; this.sent.audit = '[]'; }   // only the admin downloads the audit log
     S = this.assemble(st);
     ME = this.findMe();
     /* only one admin: once the admin sign-in has moved to ADMIN_EMAIL, an old admin email is turned away and its stray record removed */
@@ -3792,7 +3795,7 @@ const Cloud = {
     this.keys().forEach(k => { const j = this.ser(k); if(j === this.sent[k]) return;
       if(k==='registers' && !this.regReplace && this.sent[k] !== undefined) return this.saveRegs();
       if(k==='users' && this.sent[k] !== undefined) return this.saveUsers();
-      if(k==='audit' && this.sent[k] !== undefined) return this.saveAudit();
+      if(k==='audit') return this.saveAudit();
       if(k==='registers'){ this.regReplace = false; this.regOps = []; }
       if(j.length > 1000000){ toast(`The ${k} data is too large to save (1 MB limit per area). Delete old records or photos.`); return; }
       this.sent[k] = j;
@@ -3826,10 +3829,12 @@ const Cloud = {
   mergeAudit(...lists){ const m = new Map(); lists.flat().forEach(a => { if(a && a.ts) m.set(this.auditKey(a), a); });
     return [...m.values()].sort((a,b) => b.ts - a.ts).slice(0, AUDIT_MAX); },
   saveAudit(){
-    if(this.audBusy){ this.audAgain = true; return; } this.audBusy = true; const ref = this.db.doc('portal/audit');
+    if(this.audBusy){ this.audAgain = true; return; } this.audBusy = true; const ref = this.db.doc('portal/audit'), mine = S.audit.slice();
     this.db.runTransaction(async t => { const d = await t.get(ref); const remote = d.exists ? JSON.parse(d.data().json) : [];
-      const merged = this.mergeAudit(remote, S.audit); const j = JSON.stringify(merged); t.set(ref, { json:j, by:ME.email, ts:Date.now() }); return { merged, j }; })
-    .then(({ merged, j }) => { this.sent.audit = j; S.audit = this.mergeAudit(merged, S.audit); if(R.route==='audit') this.rerender(false); })
+      const merged = this.mergeAudit(remote, mine); const j = JSON.stringify(merged); t.set(ref, { json:j, by:ME.email, ts:Date.now() }); return { merged, j }; })
+    .then(({ merged, j }) => {
+      if(this.role==='admin'){ this.sent.audit = j; S.audit = this.mergeAudit(merged, S.audit); if(R.route==='audit') this.rerender(false); }
+      else { const done = new Set(mine.map(a => this.auditKey(a))); S.audit = S.audit.filter(a => !done.has(this.auditKey(a))); this.sent.audit = JSON.stringify(S.audit); } })   // keep only entries not saved yet
     .catch(() => setTimeout(() => this.schedule(), 4000))
     .finally(() => { this.audBusy = false; if(this.audAgain){ this.audAgain = false; this.schedule(); } });
   },
@@ -3870,7 +3875,7 @@ const Cloud = {
   /* ---- live updates from other leaders ---- */
   subscribe(){
     this.stop();
-    this.keys().forEach(k => this.unsubs.push(this.db.doc('portal/' + k).onSnapshot(s => { if(!s.exists || s.metadata.hasPendingWrites) return; this.applyRemote(k, s.data().json); }, () => {})));
+    this.liveKeys().forEach(k => this.unsubs.push(this.db.doc('portal/' + k).onSnapshot(s => { if(!s.exists || s.metadata.hasPendingWrites) return; this.applyRemote(k, s.data().json); }, () => {})));
     this.unsubs.push(this.db.doc('portal/access').onSnapshot(s => { if(!s.exists || !this.auth.currentUser) return; this.members = s.data().members || {};
       const r = this.members[(this.auth.currentUser?.email||'').toLowerCase()];
       if(!r){ LOGIN_ERR = 'Your access to the portal was removed.'; this.auth.signOut(); return; }
