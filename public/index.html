@@ -1367,7 +1367,7 @@ const ptsOf = p => { const b = curBatch(); return b ? (p.bpts?.[b.id] || 0) : (p
 function addPts(p, n, bid){ p.points = Math.max(0, (p.points||0) + n); if(bid){ p.bpts = p.bpts || {}; p.bpts[bid] = Math.max(0, (p.bpts[bid]||0) + n); } }
 const isBReg = v => String(v||'').startsWith('b:');
 /* a register is shown for a batch when it is that batch's, the whole troop's, or a patrol with scouts in the batch */
-const regInBatch = r => { const b = curBatch(); return !b || r.patrol==='all' || r.patrol==='b:'+b.id || (!isBReg(r.patrol) && S.scouts.some(s => s.patrol===r.patrol && s.batch===b.id)); };
+const regInBatch = r => { const b = curBatch(); if(!b) return true; const fb = regBatches(r); if(fb.length) return fb.includes(b.id); return r.patrol==='all' || (!isBReg(r.patrol) && S.scouts.some(s => s.patrol===r.patrol && s.batch===b.id)); };
 function regCountsB(r){ if(!curBatch()) return regCounts(r); const c = regCountsOf(r, regScouts(r).filter(inBatch)); const t = c.P+c.L+c.A+c.E; return { ...c, marked:t, pct:pct(c.P+c.L, t) }; }
 /* sessions with no batch ticked are for the whole troop */
 const sesInBatch = s => { const b = curBatch(); return !b || s.template || !(s.forBatches||[]).length || s.forBatches.includes(b.id); };
@@ -1384,9 +1384,11 @@ function regCounts(r){ const c = {P:0,L:0,A:0,E:0,U:0}; regScouts(r).forEach(s =
 const REG_PF = {}, REG_SF = {};  // per-register patrol filter and status filter (Present/Late/…/Unmarked)
 function regVisible(r){ const pf = REG_PF[r.id]; return regScouts(r).filter(s => inBatch(s) && (!pf || s.patrol===pf)); }
 function regCountsOf(r, list){ const c = {P:0,L:0,A:0,E:0,U:0}; list.forEach(s => { const e = r.entries[s.id]; if(e && e.s) c[e.s]++; else c.U++; }); return c; }
-/* a register linked to a session plan that is for certain batches lists only those batches' scouts (anyone already marked stays) */
+/* a register's batches: the ones ticked when it was made, else its session plan's; it lists only those batches' scouts (anyone already marked stays) */
 const regSesBatches = r => { const ses = r.sessionId && S.sessions.find(x => x.id===r.sessionId); return (ses?.forBatches||[]).filter(batchOf); };
-function regScouts(r){ const fb = regSesBatches(r); return S.scouts.filter(s => (r.patrol==='all' || (isBReg(r.patrol) ? s.batch===r.patrol.slice(2) : s.patrol===r.patrol)) && (!fb.length || fb.includes(s.batch) || r.entries[s.id]) && (!isFormer(s) || r.entries[s.id])).sort((a,b) => (a.patrol+a.first).localeCompare(b.patrol+b.first)); }
+const regBatches = r => { const own = (r.forBatches||[]).filter(batchOf); return own.length ? own : isBReg(r.patrol) ? [r.patrol.slice(2)].filter(batchOf) : regSesBatches(r); };
+const regWho = r => { const fb = regBatches(r); return fb.length && !isBReg(r.patrol) ? fb.map(bName).join(', ') : pName(r.patrol); };
+function regScouts(r){ const fb = regBatches(r); return S.scouts.filter(s => (r.patrol==='all' || (isBReg(r.patrol) ? s.batch===r.patrol.slice(2) : s.patrol===r.patrol)) && (!fb.length || fb.includes(s.batch) || r.entries[s.id]) && (!isFormer(s) || r.entries[s.id])).sort((a,b) => (a.patrol+a.first).localeCompare(b.patrol+b.first)); }
 const regsSorted = () => [...S.registers].sort((a,b) => a.date < b.date ? 1 : -1);
 function badgePct(s, b){ const p = s.badgeProgress[b.id] || {}; return pct(Object.keys(p).length, b.reqs.length); }
 const hasBadge = (s, bid) => s.badges.some(x => x.badgeId===bid);
@@ -2612,28 +2614,27 @@ function attRegisters(){
   </div></div>
   <div class="card" style="padding:6px">${list.map(r => { const c = regCountsB(r); const tot = c.P+c.L+c.A+c.E+c.U || 1;
     return `<button class="rrow" data-a="go" data-r="register" data-id="${r.id}"><span class="agenda-date" style="width:48px"><span class="small muted">${DOW[pd(r.date).getDay()]}</span><b style="font-size:1.3rem">${pd(r.date).getDate()}</b><span class="small muted">${MON[pd(r.date).getMonth()]}</span></span>
-    <span style="min-width:0"><b style="display:block">${esc(r.type)}</b><span class="small muted">${pName(r.patrol)} · ${c.marked} marked</span>
+    <span style="min-width:0"><b style="display:block">${esc(r.type)}</b><span class="small muted">${esc(regWho(r))} · ${c.marked} marked</span>
     <span style="display:flex;height:8px;border-radius:99px;overflow:hidden;margin-top:6px;background:var(--line-2);max-width:280px">${['P','L','A','E'].map(k => `<i style="width:${c[k]*100/tot}%;background:var(--st-${k.toLowerCase()})"></i>`).join('')}</span></span>
     <b class="num" style="font-family:var(--f-head);font-size:1.15rem">${c.pct}%</b>${r.status==='final' ? chip(ic('lock','sm')+' Final') : chip('Draft','gold')}</button>`; }).join('') || empty('clipboard','No registers match','Change the filters or start a new register.')}</div>`;
 }
 C.regFilter = el => { R.q[el.dataset.k] = el.value; renderMain(); };
-A.quickRegister = () => createRegister({ date:TODAY(), type:'Regular session', patrol:curBatch() ? 'b:'+curBatch().id : 'all' });
-const whoOpts = () => [['all','Whole troop'], ...batches().map(b => ['b:'+b.id, `${b.name} (${b.stage})`]), ...S.patrols.map(p=>[p.id, p.name+' patrol'])];
+A.quickRegister = () => createRegister({ date:TODAY(), type:'Regular session', patrol:'all', forBatches:curBatch() ? [curBatch().id] : [] });
 A.newRegister = () => modal({ title:'New attendance register', form:'newRegister', body:`<div class="form-grid">
   ${field('Date', inp('date', TODAY(), 'type="date" required'))}${field('Session type', sel('type', S.settings.sessionTypes, 'Regular session'))}
-  ${field('Who', sel('patrol', whoOpts(), curBatch() ? 'b:'+curBatch().id : 'all'), 'full')}
+  <div class="field full"><label>Batches (leave all unticked for the whole troop)</label><div class="row" id="reg-fb">${batches().map(b => `<label class="check"><input type="checkbox" name="forBatches" value="${b.id}" ${curBatch()?.id===b.id ? 'checked' : ''}> <span class="bic" style="color:${b.color}">${ic('users','sm')}</span> ${esc(b.name)} <span class="small muted">${esc(b.stage)}</span></label>`).join('')}</div></div>
   ${field('Link to session plan (optional)', sel('sessionId', [['','None'], ...S.sessions.filter(s=>!s.template).sort((a,b)=>a.date<b.date?1:-1).slice(0,15).map(s=>[s.id, `${fmtD(s.date,'short')} · ${s.title}${(s.forBatches||[]).length ? ' (' + sesFor(s) + ')' : ''}`])], nextSession()?.date===TODAY()?nextSession().id:'', 'data-c="regSes"'), 'full')}</div>`,
   foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Open register</button>` });
 /* picking a session plan that is for one batch sets "Who" to that batch (several batches: the register lists only them) */
-C.regSes = el => { const ses = S.sessions.find(x => x.id===el.value), fb = (ses?.forBatches||[]).filter(batchOf), who = el.form.querySelector('[name=patrol]');
-  if(who && fb.length===1) who.value = 'b:' + fb[0]; else if(who && fb.length > 1) who.value = 'all'; };
+C.regSes = el => { const ses = S.sessions.find(x => x.id===el.value); if(!ses) return; const fb = (ses.forBatches||[]).filter(batchOf);
+  el.form.querySelectorAll('[name=forBatches]').forEach(x => x.checked = fb.includes(x.value)); };
 F.newRegister = d => { closeModal(); createRegister(d); };
-function createRegister(d){
-  const ex = S.registers.find(r => r.date===d.date && r.type===d.type && r.patrol===d.patrol);
+function createRegister(d){ const fb = [].concat(d.forBatches ?? []).filter(batchOf).sort(), patrol = d.patrol || 'all';
+  const ex = S.registers.find(r => r.date===d.date && r.type===d.type && r.patrol===patrol && (r.forBatches||[]).slice().sort().join()===fb.join());
   if(ex){ toast('A register for that session already exists. Opening it.'); return go('register', { id:ex.id }); }
-  const r = { id:uid('r'), date:d.date, type:d.type, patrol:d.patrol, status:'draft', entries:{}, createdBy:ME.id, sessionId:d.sessionId||null, log:[] };
+  const r = { id:uid('r'), date:d.date, type:d.type, patrol, forBatches:fb, status:'draft', entries:{}, createdBy:ME.id, sessionId:d.sessionId||null, log:[] };
   S.registers.push(r); if(r.sessionId){ const s = S.sessions.find(x => x.id===r.sessionId); if(s) s.registerId = r.id; }
-  audit(`Created register ${fmtD(r.date)} (${r.type}, ${pName(r.patrol)})`); save(); go('register', { id:r.id });
+  audit(`Created register ${fmtD(r.date)} (${r.type}, ${regWho(r)})`); save(); go('register', { id:r.id });
 }
 const regLocked = r => r.status==='final' && !(!rmPos(ME) && R.q.unlock);
 /* ---- Changing a finalized register needs approval (same chain as badge removal). While asking, the new marks are kept
@@ -2701,7 +2702,7 @@ VIEWS.register = () => {
   const groups = [['Girl','Girls'],['Boy','Boys'],['','Gender not set']].map(([g,l]) => [l, shown.filter(s => genderOf(s.gender)===g).sort((a,b) => sname(a).localeCompare(sname(b)))]).filter(([,ss]) => ss.length);
   return `<button class="btn ghost sm" data-a="go" data-r="attendance" style="margin-bottom:10px">${ic('left','sm')} All registers</button>
   ${pageH('Attendance register', fmtD(r.date,'long'), `<button class="btn" data-a="regExport" data-id="${r.id}">${ic('download','sm')} Export</button>${r.status==='draft' && can('attendance.delete') ? `<button class="icon-btn" data-a="regDelete" data-id="${r.id}" aria-label="Delete register">${ic('trash')}</button>` : ''}`)}
-  <div class="rmeta"><div><small>Date</small><b>${fmtD(r.date)}</b></div><div><small>Meeting</small><b>${esc(r.type)}</b></div><div><small>Group</small><b>${esc(regSesBatches(r).length && r.patrol==='all' ? regSesBatches(r).map(bName).join(', ') : pName(r.patrol))}</b></div>
+  <div class="rmeta"><div><small>Date</small><b>${fmtD(r.date)}</b></div><div><small>Meeting</small><b>${esc(r.type)}</b></div><div><small>Group</small><b>${esc(regWho(r))}</b></div>
     <div><small>Session</small>${ses ? `<a href="#" data-a="go" data-r="session" data-id="${ses.id}"><b>${esc(ses.title)}</b></a>` : '<b class="muted">—</b>'}</div><div><small>Status</small><span class="rst ${r.status==='final'?'fin':''}">${r.status==='final'?'FINAL':'DRAFT'}</span></div></div>
   ${r.status==='final' ? (cm ? `<div class="alert warn" style="margin-bottom:12px;align-items:center">${ic('edit','sm')}<span style="flex:1"><b>Change request</b> · tap the marks to change. Nothing changes on the register until it is approved.</span></div>`
     : `<div class="alert ${!rmPos(ME)?'':'info'}" style="margin-bottom:12px;align-items:center;flex-wrap:wrap">${ic('lock','sm')}<span style="flex:1;min-width:200px">${R.q.unlock ? 'Edit mode. Every change is written to the change log and the audit log.' : `Finalized ${r.finalizedAt?ago(r.finalizedAt):''}${r.finalizedBy && user(r.finalizedBy) ? ' by '+esc(user(r.finalizedBy).name) : ''}.${(r.chgReq||[]).length ? ` <span class="rm-pend" style="margin:0 0 0 4px">⏳ ${r.chgReq.length} change request${r.chgReq.length>1?'s':''} waiting</span>` : ''}`}</span>
@@ -2780,11 +2781,11 @@ A.regDelete = el => confirmBox('Delete this draft register?', () => { const r = 
 A.regExport = el => { const r = S.registers.find(x => x.id===el.dataset.id);
   modal({ title:'Export register', body:`<div class="stack"><button class="btn primary" data-a="regPDF" data-id="${r.id}">${ic('file','sm')} Register as PDF</button><button class="btn" data-a="regXLSX" data-id="${r.id}">${ic('download','sm')} Register as Excel (.xlsx)</button><button class="btn" data-a="regSheet" data-id="${r.id}">${ic('clipboard','sm')} Printable sign-in sheet (PDF)</button><p class="small muted">The sign-in sheet lists every scout with blank columns, ready to print for camps or days without a phone.</p></div>` }); };
 const regRowsOut = r => regScouts(r).map(s => { const e = r.entries[s.id] || {}; return [sname(s), s.sid, pName(s.patrol), e.s ? ST_LABEL[e.s] : '—', e.time ? fmtT(e.time) : '', e.remark || '']; });
-A.regXLSX = el => { const r = S.registers.find(x => x.id===el.dataset.id); const c = regCounts(r); exportXLSX(`register-${r.date}.xlsx`, [['Register', [[`${S.settings.groupName} · ${r.type} · ${pName(r.patrol)} · ${fmtD(r.date)}`], [], ['Scout','Scout ID','Patrol','Status','Arrival','Remark'], ...regRowsOut(r), [], ['Present',c.P],['Late',c.L],['Absent',c.A],['Excused',c.E],['Attendance %',c.pct]]]]); };
-A.regPDF = el => withPDF(async () => { const r = S.registers.find(x => x.id===el.dataset.id); const c = regCounts(r); const ctx = await pdfDoc('Attendance register', `${fmtD(r.date,'long')}  ·  ${r.type}  ·  ${pName(r.patrol)}  ·  ${r.status==='final'?'Finalized':'Draft'}`);
+A.regXLSX = el => { const r = S.registers.find(x => x.id===el.dataset.id); const c = regCounts(r); exportXLSX(`register-${r.date}.xlsx`, [['Register', [[`${S.settings.groupName} · ${r.type} · ${regWho(r)} · ${fmtD(r.date)}`], [], ['Scout','Scout ID','Patrol','Status','Arrival','Remark'], ...regRowsOut(r), [], ['Present',c.P],['Late',c.L],['Absent',c.A],['Excused',c.E],['Attendance %',c.pct]]]]); };
+A.regPDF = el => withPDF(async () => { const r = S.registers.find(x => x.id===el.dataset.id); const c = regCounts(r); const ctx = await pdfDoc('Attendance register', `${fmtD(r.date,'long')}  ·  ${r.type}  ·  ${regWho(r)}  ·  ${r.status==='final'?'Finalized':'Draft'}`);
   pdfTable(ctx, ['Present','Late','Absent','Excused','Unmarked','Attendance'], [[c.P,c.L,c.A,c.E,c.U,c.pct+'%']], [88,88,88,88,88,91]);
   pdfTable(ctx, ['Scout','ID','Patrol','Status','Arrival','Remark'], regRowsOut(r), [130,82,70,62,52,135]); await pdfSave(ctx, `register-${r.date}.pdf`); });
-A.regSheet = el => withPDF(async () => { const r = S.registers.find(x => x.id===el.dataset.id); const ctx = await pdfDoc('Sign-in sheet', `${fmtD(r.date,'long')}  ·  ${r.type}  ·  ${pName(r.patrol)}  ·  Leader: ____________________`);
+A.regSheet = el => withPDF(async () => { const r = S.registers.find(x => x.id===el.dataset.id); const ctx = await pdfDoc('Sign-in sheet', `${fmtD(r.date,'long')}  ·  ${r.type}  ·  ${regWho(r)}  ·  Leader: ____________________`);
   pdfTable(ctx, ['#','Scout','Patrol','P','L','A','E','Arrival','Remark / signature'], regScouts(r).map((s,i) => [i+1, sname(s), pName(s.patrol), '☐','☐','☐','☐','','']).map(row => row.map(v => v==='☐' ? '[  ]' : v)), [22,130,62,28,28,28,28,50,155]); await pdfSave(ctx, `signin-sheet-${r.date}.pdf`); });
 
 /* ---- reports ---- */
@@ -2822,7 +2823,7 @@ function attSessions(){ const d = sesRepData(), { tot } = d, can2 = can('export'
   <div class="rstat sesk" style="position:static">${[['T', d.rows.length, 'Sessions'], ['P', tot.P, 'Present'], ['L', tot.L, 'Late'], ['A', tot.A, 'Absent'], ['E', tot.E, 'Excused'], ['T', d.overall + '%', 'Attendance']].map(([k,v,l]) => `<div class="rs-${k}"><b class="num">${v}</b><span>${l}</span></div>`).join('')}</div>
   <div class="card" style="padding:0"><div class="tbl-wrap" style="border:0"><table class="tbl ses-t"><thead><tr><th>#</th><th>Date</th><th>Session</th><th class="c-hide">Who</th><th class="n">P</th><th class="n">L</th><th class="n">A</th><th class="n">E</th><th style="min-width:110px">Attendance</th></tr></thead><tbody>
     ${d.rows.map(({ r, i, c, ses }) => `<tr class="click" data-a="go" data-r="register" data-id="${r.id}"><td class="num muted">${i}</td><td class="nw">${fmtD(r.date,'short')}<small class="muted" style="display:block">${DOW[pd(r.date).getDay()]}</small></td>
-      <td><b>${esc(r.type)}</b>${ses ? `<small class="muted" style="display:block">${esc(ses.title)}</small>` : ''}${r.status!=='final' ? ` <span class="chip gold" style="font-size:.66rem">Draft</span>` : ''}</td><td class="c-hide">${esc(pName(r.patrol))}</td>
+      <td><b>${esc(r.type)}</b>${ses ? `<small class="muted" style="display:block">${esc(ses.title)}</small>` : ''}${r.status!=='final' ? ` <span class="chip gold" style="font-size:.66rem">Draft</span>` : ''}</td><td class="c-hide">${esc(regWho(r))}</td>
       <td class="n" style="color:var(--fm-P)">${c.P}</td><td class="n" style="color:var(--fm-L)">${c.L}</td><td class="n" style="color:var(--fm-A)">${c.A}</td><td class="n" style="color:var(--fm-E)">${c.E}</td>
       <td><div class="row nw" style="gap:8px"><span style="flex:1;min-width:40px">${bar(c.pct)}</span><b class="num small">${c.pct}%</b></div></td></tr>`).join('') || `<tr><td colspan="9">${empty('clipboard','No sessions in this year', 'Registers you take appear here, one row per session.')}</td></tr>`}
     ${d.rows.length ? `<tr class="ses-tot"><td></td><td colspan="2"><b>Total · ${d.rows.length} session${d.rows.length>1?'s':''}</b></td><td class="c-hide"></td><td class="n">${tot.P}</td><td class="n">${tot.L}</td><td class="n">${tot.A}</td><td class="n">${tot.E}</td><td><b class="num">${d.overall}%</b> <span class="small muted">overall</span></td></tr>` : ''}
@@ -2831,7 +2832,7 @@ function attSessions(){ const d = sesRepData(), { tot } = d, can2 = can('export'
 const repPick = cur => field('Report', `<select class="inp" data-c="repType">${opts([['ind','Individual & patrol'],['session','By session']], cur)}</select>`, '" style="min-width:170px');
 C.repType = el => { R.tab = 'reports'; R.q.rt = el.value; renderMain(); };
 C.sesRep = el => { R.q[el.dataset.k] = el.value; renderMain(); };
-const sesRepRows = d => d.rows.map(({ r, i, c, ses }) => [i, fmtD(r.date,'short'), r.type + (ses ? ' · ' + ses.title : ''), pName(r.patrol), c.P, c.L, c.A, c.E, c.pct + '%']);
+const sesRepRows = d => d.rows.map(({ r, i, c, ses }) => [i, fmtD(r.date,'short'), r.type + (ses ? ' · ' + ses.title : ''), regWho(r), c.P, c.L, c.A, c.E, c.pct + '%']);
 A.sesRepXLSX = () => { const d = sesRepData(); exportXLSX(`session-attendance-${d.yr}.xlsx`, [['Sessions', [[`${S.settings.groupName} · Session attendance · ${d.yr}${d.tp ? ' · ' + d.tp : ''}${curBatch() ? ' · ' + curBatch().name : ''}`], [], ['#','Date','Session','Who','Present','Late','Absent','Excused','Attendance'], ...sesRepRows(d), [], ['', 'Total', `${d.rows.length} sessions`, '', d.tot.P, d.tot.L, d.tot.A, d.tot.E, d.overall + '%']]]]); };
 /* Report PDF kit (design A): colour summary boxes, a table header that repeats on new pages, section rows,
    P / L / A / E colour pills and attendance bars (green, amber or red). Used by both attendance reports. */
@@ -2881,14 +2882,14 @@ A.sesRepPDF = () => withPDF(async () => { const d = sesRepData();
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...k.MUTED); doc.text(DOW[pd(r.date).getDay()], X[1] + 6 + dw, mid + 3);
     doc.setFontSize(8.5); doc.setTextColor(...k.INK); doc.text(doc.splitTextToSize(r.type + (r.status!=='final' ? ' (draft)' : ''), cols[2][1]-8)[0], X[2] + 4, sub ? y + 12 : mid + 3);
     if(sub){ doc.setFontSize(7.3); doc.setTextColor(...k.MUTED); doc.text(sub, X[2] + 4, y + 22); }
-    k.tag(pName(r.patrol), X[3] + 4, cols[3][1]-8, mid); k.pills(c, 4, mid); k.bar(c.pct, X[8] + 4, 36, mid); k.line(y + rh); ctx.y += rh; });
+    k.tag(regWho(r), X[3] + 4, cols[3][1]-8, mid); k.pills(c, 4, mid); k.bar(c.pct, X[8] + 4, 36, mid); k.line(y + rh); ctx.y += rh; });
   if(d.rows.length) k.total(`Total · ${d.rows.length} session${d.rows.length===1?'':'s'}`, [d.tot.P, d.tot.L, d.tot.A, d.tot.E], 4, d.overall + '%'); else k.none('No sessions in this year yet.');
   await pdfSave(ctx, `session-attendance-${d.yr}.pdf`); });
 A.lowNotify = () => { const low = lowAttendance(); notify('attendance', `${low.length} scouts below ${S.settings.lowAttendance}% attendance`, low.map(x => `${sname(x.s)} (${x.a.pct}%)`).join(', '), { route:'attendance', tab:'reports' }); refresh(); toast('Alert sent to all leaders'); };
 function repData(){ const regs = reportRegs(); const ind = viewScouts().map(s => ({ s, a:attOf(s.id, regs) })).filter(x => x.a.total).sort((a,b) => sname(a.s).localeCompare(sname(b.s)));
   return { regs, rows: ind.map(({s,a}) => [sname(s), s.sid, pName(s.patrol), a.P, a.L, a.A, a.E, a.total, a.pct+'%']),
     prow: S.patrols.map(p => { const ids = S.scouts.filter(s=>s.patrol===p.id && inBatch(s)); let c = {P:0,L:0,A:0,E:0}; regs.forEach(r => ids.forEach(s => { const e = r.entries[s.id]; if(e?.s) c[e.s]++; })); const t = c.P+c.L+c.A+c.E; return [p.name, c.P, c.L, c.A, c.E, pct(c.P+c.L,t)+'%']; }),
-    log: regs.sort(by('date')).map(r => { const c = regCountsB(r); return [r.date, r.type, pName(r.patrol), c.P, c.L, c.A, c.E, c.pct+'%', r.status]; }) }; }
+    log: regs.sort(by('date')).map(r => { const c = regCountsB(r); return [r.date, r.type, regWho(r), c.P, c.L, c.A, c.E, c.pct+'%', r.status]; }) }; }
 A.repXLSX = () => { const d = repData(); const per = R.q.rp && R.q.rp!=='all' ? S.settings.terms[+R.q.rp].name : 'Year';
   exportXLSX(`attendance-report-${per.replace(/\s/g,'')}-${TODAY()}.xlsx`, [['Individuals', [['Scout','ID','Patrol','Present','Late','Absent','Excused','Sessions','Rate'], ...d.rows]], ['Patrols', [['Patrol','Present','Late','Absent','Excused','Rate'], ...d.prow]], ['Registers', [['Date','Type','Who','Present','Late','Absent','Excused','Rate','Status'], ...d.log]]]); };
 /* Attendance report PDF (Individual & patrol), same style as the session report: patrols by attendance, then every scout A-Z with a LOW flag */
@@ -3395,7 +3396,7 @@ VIEWS.session = () => { const s = S.sessions.find(x => x.id===R.id); if(!s) retu
   </div></div>`; };
 C.matTick = el => { const s = S.sessions.find(x => x.id===el.dataset.id); s.materials[+el.dataset.i].done = el.checked; refresh(); };
 F.reflection = d => { const s = S.sessions.find(x => x.id===d.id); s.reflection = d.reflection; audit(`Added reflection for ${s.title}`); save(); toast('Reflection saved'); };
-A.sessionRegister = el => { const s = S.sessions.find(x => x.id===el.dataset.id); const fb = s.forBatches||[]; createRegister({ date:s.date, type:s.type || 'Regular session', patrol:fb.length===1 ? 'b:'+fb[0] : 'all', sessionId:s.id }); };
+A.sessionRegister = el => { const s = S.sessions.find(x => x.id===el.dataset.id); const fb = s.forBatches||[]; createRegister({ date:s.date, type:s.type || 'Regular session', patrol:'all', forBatches:fb, sessionId:s.id }); };
 const sesTags = s => (s.forBatches||[]).length ? s.forBatches.map(batchOf).filter(Boolean).map(b => `<span class="btag"><span class="bdot" style="background:${b.color};width:8px;height:8px"></span>${esc(b.name)}</span>`).join('') : '<span class="btag">Whole troop</span>';
 function sessionForm(s){ s = s || { title:'', date:TODAY(), time:'15:30', end:'17:00', location:'School hall', objectives:'', syllabus:[], badges:[], timeline:[{time:'15:30',label:'Opening',detail:''},{time:'15:45',label:'Game',detail:''},{time:'16:00',label:'Skills',detail:''},{time:'16:45',label:'Closing',detail:''}], materials:[], leaders:[ME.id], risk:'', template:false };
   return `<div class="form-grid">${field('Title', inp('title', s.title, 'required'), 'full')}
