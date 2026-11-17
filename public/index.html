@@ -837,7 +837,7 @@ textarea[data-i=autoGrow]{resize:none;overflow:hidden;line-height:1.45;padding-t
 .rm-h td{vertical-align:middle}
 .st-t{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;margin-top:8px;border:1px solid #F0D9A8;border-left:4px solid #B8860B;border-radius:14px;background:color-mix(in srgb,#FFF4DC 45%,var(--surface))}
 .st-art{flex:none;display:grid;place-items:center;width:40px}.st-reg{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:var(--wash);color:var(--primary)}
-.st-in{flex:1;min-width:0}.st-ttl{line-height:1.35}.sent-wait{display:inline-flex;white-space:nowrap;align-items:center;gap:5px;margin-top:6px;font-size:.72rem;font-weight:700;color:#9A6A10;background:#FFF0CC;border-radius:99px;padding:2px 9px}
+.st-in{flex:1;min-width:0}.st-ttl{line-height:1.35}.sent-wait{display:inline-flex;flex-wrap:wrap;max-width:100%;align-items:center;gap:5px;margin-top:6px;font-size:.72rem;font-weight:700;color:#9A6A10;background:#FFF0CC;border-radius:99px;padding:2px 9px}
 .st-q{margin-top:6px;font-size:.85rem;font-style:italic;color:var(--ink-2)}.st-ch{margin-top:4px}
 .alert.warn{background:#FFF4DC;border:1px solid #F0D9A8;color:#6B4A07}
 .rl-r.chg{background:#FFFBF2;box-shadow:inset 3px 0 0 #B8860B}.chg-was{display:block;font-size:.72rem;font-weight:600;color:#9A6A10}
@@ -3017,7 +3017,7 @@ function rmRequest(ids, bid, reason, clear){ const b = badge(bid), pos = rmPos(M
 const rmRow = (s, q, b, inner, actions) => `<div class="rm-it"><div class="rm-r">${b ? bArt(b,'','width:36px;height:36px') : ''}<div style="flex:1;min-width:0">${inner}</div>${actions ? `<span class="row nw" style="gap:6px">${actions}</span>` : ''}</div>${q.reason ? `<div class="rm-why">“${esc(q.reason)}”</div>` : ''}</div>`;
 /* "Sent by you" ticket (design B): yellow edge, waiting label, reason in italics, Cancel at the side */
 const sentTicket = (art, title, at, reason, extra, cancel) => `<div class="st-t">${art ? `<span class="st-art">${art}</span>` : ''}<div class="st-in"><div class="st-ttl">${title}</div>
-  <span class="sent-wait">⏳ Waiting · ${ago(at)}</span>${extra || ''}${reason ? `<div class="st-q">“${esc(reason)}”</div>` : ''}</div>${cancel}</div>`;
+  <span class="sent-wait">⏳ Waiting for Approval · ${ago(at)}</span>${extra || ''}${reason ? `<div class="st-q">“${esc(reason)}”</div>` : ''}</div>${cancel}</div>`;
 const rmWhat = (s, b) => `<b>Remove ${esc(b?.name||'badge')}</b> from <a href="#" data-a="go" data-r="scout" data-id="${s.id}" data-tab="badges"><b>${esc(sname(s))}</b></a>`;
 function badgeApprovals(){ const mine = rmMine(), sent = S.scouts.flatMap(s => (s.rmReq||[]).filter(q => q.by===ME.id).map(q => ({ s, q }))).sort((a,b) => b.q.at - a.q.at);
   const hist = S.scouts.flatMap(s => (s.rmLog||[]).map(h => ({ s, h }))).sort((a,b) => b.h.at - a.h.at).slice(0, 200);
