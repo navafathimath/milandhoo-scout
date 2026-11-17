@@ -1388,7 +1388,8 @@ function regVisible(r){ const pf = REG_PF[r.id]; return regScouts(r).filter(s =>
 function regCountsOf(r, list){ const c = {P:0,L:0,A:0,E:0,U:0}; list.forEach(s => { const e = r.entries[s.id]; if(e && e.s) c[e.s]++; else c.U++; }); return c; }
 /* a register's batches: the ones ticked when it was made, else its session plan's; it lists only those batches' scouts (anyone already marked stays) */
 const regSesBatches = r => { const ses = r.sessionId && S.sessions.find(x => x.id===r.sessionId); return (ses?.forBatches||[]).filter(batchOf); };
-const regBatches = r => { const own = (r.forBatches||[]).filter(batchOf); return own.length ? own : isBReg(r.patrol) ? [r.patrol.slice(2)].filter(batchOf) : regSesBatches(r); };
+const regSes = r => r.sessionId && S.sessions.find(x => x.id===r.sessionId && !x.template);
+const regBatches = r => { if(regSes(r)) return regSesBatches(r); const own = (r.forBatches||[]).filter(batchOf); return own.length ? own : isBReg(r.patrol) ? [r.patrol.slice(2)].filter(batchOf) : []; };
 const regWho = r => { const fb = regBatches(r); return fb.length && !isBReg(r.patrol) ? fb.map(bName).join(', ') : pName(r.patrol); };
 function regScouts(r){ const fb = regBatches(r); return S.scouts.filter(s => (r.patrol==='all' || (isBReg(r.patrol) ? s.batch===r.patrol.slice(2) : s.patrol===r.patrol)) && (!fb.length || fb.includes(s.batch) || r.entries[s.id]) && (!isFormer(s) || r.entries[s.id])).sort((a,b) => (a.patrol+a.first).localeCompare(b.patrol+b.first)); }
 const regsSorted = () => [...S.registers].sort((a,b) => a.date < b.date ? 1 : -1);
@@ -2631,7 +2632,8 @@ A.newRegister = () => modal({ title:'New attendance register', form:'newRegister
   foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">Open register</button>` });
 /* picking a session plan that is for one batch sets "Who" to that batch (several batches: the register lists only them) */
 C.regSes = el => { const ses = S.sessions.find(x => x.id===el.value); if(!ses) return; const fb = (ses.forBatches||[]).filter(batchOf);
-  el.form.querySelectorAll('[name=forBatches]').forEach(x => x.checked = fb.includes(x.value)); };
+  el.form.querySelectorAll('[name=forBatches]').forEach(x => x.checked = fb.includes(x.value));
+  const dt = el.form.querySelector('[name=date]'), ty = el.form.querySelector('[name=type]'); if(dt && ses.date) dt.value = ses.date; if(ty && ses.type && [...ty.options].some(o => o.value===ses.type)) ty.value = ses.type; };
 F.newRegister = d => { closeModal(); createRegister(d); };
 /* Edit a register's details. A draft (or the admin) changes straight away; a finalized register needs approval, like changing marks. */
 const regDet = r => ({ date:r.date, type:r.type, forBatches:(r.forBatches||[]).filter(batchOf).slice().sort(), sessionId:r.sessionId||null });
@@ -2642,11 +2644,39 @@ function applyDet(r, to){ if(r.sessionId!==to.sessionId){ S.sessions.forEach(x =
   Object.assign(r, { date:to.date, type:to.type, forBatches:to.forBatches, sessionId:to.sessionId }); if(r.forBatches.length && isBReg(r.patrol)) r.patrol = 'all'; }
 A.regEdit = el => { const r = S.registers.find(x => x.id===el.dataset.id); if(!r || !can('attendance.take')) return; const ask = r.status==='final' && rmPos(ME);
   if(ask && (r.chgReq||[]).some(q => q.by===ME.id)) return toast('You already have a change waiting for this register');
+  const ses = regSes(r);
+  if(ses) return modal({ title:'Edit register', form:'regUnlink', body:`<input type="hidden" name="rid" value="${r.id}">
+    <div class="alert info" style="align-items:flex-start;margin-bottom:12px">${ic('lock','sm')}<span>This register is linked to the session plan <b>${esc(ses.title)}</b>. Its date, session type and batches come from the session plan, so the two always match. To change them, edit the session plan${can('session.edit') ? '' : ' (ask a leader who plans sessions)'}.</span></div>
+    <dl class="facts" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin:0 0 12px">${[['Date', fmtD(r.date)], ['Session type', r.type], ['Batches', regBatches(r).map(bName).join(', ') || 'Whole troop']].map(([k,v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+    <p class="small muted" style="margin:0">To edit this register on its own, unlink it from the session plan first.${ask ? ' Because it is finalized, unlinking needs approval.' : ''}</p>
+    ${ask ? `${field('Reason for unlinking (required)', inp('reason','', 'placeholder="e.g. Attendance was taken for a different session"'))}<div class="rm-who">${ic('lock','sm')}<span><b>${esc(rmWho(rmPos(ME)))}</b> (${rmPosName(rmPos(ME))}) can approve.</span></div>` : ''}<div id="re-err"></div>`,
+    foot:`${can('session.edit') ? `<button type="button" class="btn" data-a="go" data-r="session" data-id="${ses.id}">${ic('edit','sm')} Edit session plan</button>` : ''}<span class="spacer"></span><button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn danger">${ask ? 'Ask to unlink' : 'Unlink from session plan'}</button>` });
   modal({ title: ask ? 'Request register change' : 'Edit register', form:'regEdit', body:`<input type="hidden" name="rid" value="${r.id}">${regForm({ date:r.date, type:r.type, fb:regBatches(r), sessionId:r.sessionId })}
     ${ask ? `${field('Reason (required)', inp('reason','', 'required placeholder="e.g. Wrong date was picked"'))}<div class="rm-who">${ic('lock','sm')}<span>This register is finalized. <b>${esc(rmWho(rmPos(ME)))}</b> (${rmPosName(rmPos(ME))}) can approve the change.</span></div>` : ''}<div id="re-err"></div>`,
     foot:`<button type="button" class="btn" data-a="closeModal">Cancel</button><button class="btn primary">${ask ? 'Send for approval' : 'Save changes'}</button>` }); };
+/* unlink a register from its session plan: it keeps the session's batches as its own; a finalized register needs approval */
+F.regUnlink = d => { const r = S.registers.find(x => x.id===d.rid), ses = r && regSes(r); if(!r || !ses) return closeModal();
+  const from = regDet(r); from.forBatches = regBatches(r).slice().sort(); const to = { ...from, sessionId:null };
+  if(r.status==='final' && rmPos(ME)){ const why = String(d.reason||'').trim(); if(!why) return $('#re-err').innerHTML = `<div class="alert" style="margin-top:10px">${ic('alert','sm')}<span>Write the reason, so the approver knows why.</span></div>`;
+    const pos = rmPos(ME); r.chgReq = [...(r.chgReq||[]), { id:uid('cq'), by:ME.id, at:Date.now(), reason:why, pos, ch:{}, det:{ from, to } }];
+    notifyTo(rmApprovers(pos).map(u => u.id), 'approval', `Approval needed: unlink the ${fmtD(r.date,'short')} register from “${ses.title}”`, `Asked by ${ME.name}: ${why}`, { route:'attendance', tab:'approvals' });
+    audit(`Asked to unlink the finalized register of ${fmtD(r.date)} from ${ses.title}: ${why}`); closeModal(); refresh(); return toast(`Sent for approval to ${rmWho(pos)}`); }
+  if(r.status==='final'){ r.log = r.log || []; r.log.push({ ts:Date.now(), user:ME.id, text:`Session plan: ${ses.title} → None (unlinked)` }); }
+  applyDet(r, to); audit(`Unlinked the register of ${fmtD(r.date)} from ${ses.title}`); closeModal(); refresh(); toast('Unlinked. You can now edit this register on its own'); };
+/* keep a linked register's date, type and batches the same as its session plan; a finalized register needs approval for that */
+function syncSesReg(s){ if(s.template) return; S.registers.filter(r => r.sessionId===s.id).forEach(r => {
+    const from = regDet(r), to = { ...from, date:s.date, type:s.type, forBatches:(s.forBatches||[]).filter(batchOf).slice().sort() }; from.forBatches = (r.forBatches||[]).filter(batchOf).slice().sort();
+    if(!detDiff(from, to).length) return;
+    if(r.status==='final' && rmPos(ME)){ if((r.chgReq||[]).some(q => q.det && q.by===ME.id)) return; const pos = rmPos(ME), why = `The session plan “${s.title}” was edited`;
+      r.chgReq = [...(r.chgReq||[]), { id:uid('cq'), by:ME.id, at:Date.now(), reason:why, pos, ch:{}, det:{ from, to } }];
+      notifyTo(rmApprovers(pos).map(u => u.id), 'approval', `Approval needed: update the ${fmtD(r.date,'short')} register to match “${s.title}”`, `Asked by ${ME.name}`, { route:'attendance', tab:'approvals' });
+      toast('The linked register is finalized, so its update was sent for approval'); return; }
+    if(r.status==='final'){ r.log = r.log || []; detDiff(from, to).forEach(k => r.log.push({ ts:Date.now(), user:ME.id, text:`${DET_LBL[k]}: ${detTxt(k, from[k])} → ${detTxt(k, to[k])} (from the session plan)` })); }
+    Object.assign(r, { date:to.date, type:to.type, forBatches:to.forBatches }); if(isBReg(r.patrol)) r.patrol = 'all'; }); }
 F.regEdit = d => { const r = S.registers.find(x => x.id===d.rid); if(!r) return closeModal();
-  const to = { date:d.date || r.date, type:d.type || r.type, forBatches:[].concat(d.forBatches ?? []).filter(batchOf).sort(), sessionId:d.sessionId || null }, from = regDet(r), diff = detDiff(from, to);
+  const to = { date:d.date || r.date, type:d.type || r.type, forBatches:[].concat(d.forBatches ?? []).filter(batchOf).sort(), sessionId:d.sessionId || null }, from = regDet(r);
+  const ls = to.sessionId && S.sessions.find(x => x.id===to.sessionId); if(ls){ to.date = ls.date || to.date; to.type = ls.type || to.type; to.forBatches = (ls.forBatches||[]).filter(batchOf).slice().sort(); }   // linking takes the session's details
+  const diff = detDiff(from, to);
   if(!diff.length){ closeModal(); return toast('Nothing changed'); }
   if(r.status==='final' && rmPos(ME)){ const why = String(d.reason||'').trim(); if(!why) return $('#re-err').innerHTML = `<div class="alert" style="margin-top:10px">${ic('alert','sm')}<span>Write the reason, so the approver knows why.</span></div>`;
     const pos = rmPos(ME); r.chgReq = [...(r.chgReq||[]), { id:uid('cq'), by:ME.id, at:Date.now(), reason:why, pos, ch:{}, det:{ from, to } }];
@@ -2654,7 +2684,8 @@ F.regEdit = d => { const r = S.registers.find(x => x.id===d.rid); if(!r) return 
     audit(`Asked to change the details of the finalized register of ${fmtD(r.date)} (${diff.map(k => DET_LBL[k]).join(', ')}): ${why}`); closeModal(); refresh(); return toast(`Sent for approval to ${rmWho(pos)}`); }
   if(r.status==='final'){ r.log = r.log || []; diff.forEach(k => r.log.push({ ts:Date.now(), user:ME.id, text:`${DET_LBL[k]}: ${detTxt(k, from[k])} → ${detTxt(k, to[k])}` })); }
   applyDet(r, to); audit(`Edited register ${fmtD(r.date)}: ${diff.map(k => `${DET_LBL[k]} ${detTxt(k, from[k])} → ${detTxt(k, to[k])}`).join('; ')}`); closeModal(); refresh(); toast('Register updated'); };
-function createRegister(d){ const fb = [].concat(d.forBatches ?? []).filter(batchOf).sort(), patrol = d.patrol || 'all';
+function createRegister(d){ const ls = d.sessionId && S.sessions.find(x => x.id===d.sessionId && !x.template); if(ls){ d = { ...d, date:ls.date || d.date, type:ls.type || d.type, forBatches:ls.forBatches||[] }; }
+  const fb = [].concat(d.forBatches ?? []).filter(batchOf).sort(), patrol = d.patrol || 'all';
   const ex = S.registers.find(r => r.date===d.date && r.type===d.type && r.patrol===patrol && (r.forBatches||[]).slice().sort().join()===fb.join());
   if(ex){ toast('A register for that session already exists. Opening it.'); return go('register', { id:ex.id }); }
   const r = { id:uid('r'), date:d.date, type:d.type, patrol, forBatches:fb, status:'draft', entries:{}, createdBy:ME.id, sessionId:d.sessionId||null, log:[] };
@@ -3463,6 +3494,7 @@ F.session = d => { if(!d.title?.trim()) return toast('Give the session a title')
     timeline: times.map((t,i) => ({ time:t, label:labels[i], detail:details[i] })).filter(t => t.time || t.detail).sort((a,b) => (a.time||'').localeCompare(b.time||'')),
     materials: String(d.materials||'').split('\n').map(x=>x.trim()).filter(Boolean).map(t => ({ t, done: !!oldMat.find(m => m.t===t && m.done) })), leaders:arr(d.leaders), risk:d.risk, template:!!d.template, forBatches:d.template ? [] : arr(d.forBatches) });
   if(isNew && !s.template) s.leaders.filter(id => id!==ME.id).forEach(id => notify('task', `You are leading “${s.title}”`, `${fmtD(s.date,'dow')} at ${fmtT(s.time)}. Assigned by ${ME.name}.`, { route:'session', id:s.id }));
+  if(!isNew) syncSesReg(s);
   audit(`${isNew?'Planned':'Edited'} session ${s.title}`); closeModal(); save(); go('session', { id:s.id }); toast('Session saved'); };
 A.delSession = el => confirmBox('Delete this session plan?', () => { S.sessions = S.sessions.filter(x => x.id!==el.dataset.id); audit('Deleted a session plan'); save(); go('sessions'); });
 
